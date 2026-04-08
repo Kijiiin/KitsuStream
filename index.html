@@ -25,6 +25,10 @@ body {
 .topbar-center {
     flex: 1;
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
 }
 
 h2 {
@@ -158,6 +162,7 @@ button {
     <div class="topbar-left"></div>
 
     <div class="topbar-center">
+        <button class="list-btn" onclick="goHome()">🏠 Home</button>
         <h2>🎬 KitsuStream</h2>
     </div>
 
@@ -168,7 +173,10 @@ button {
 
 <div class="container">
 
-    <input type="text" id="movie" placeholder="Cerca film...">
+    <div>
+        <input type="text" id="movie" placeholder="Cerca film...">
+        <button onclick="clearSearch()">❌ Cancella</button>
+    </div>
 
     <!-- GENRES -->
     <div class="genres">
@@ -194,7 +202,6 @@ button {
 
     <div id="results" class="grid"></div>
 
-    <!-- PAGINATION -->
     <div class="pagination">
         <button onclick="prevPage()">⬅️ Indietro</button>
         <span id="pageNumber">Pagina 1</span>
@@ -206,6 +213,30 @@ button {
 <script>
 const API_KEY = "7fe396e6f50677047459e8c173f2bd9d";
 const IMG_BASE = "https://image.tmdb.org/t/p/w500";
+
+let searchTimeout;
+
+document.getElementById("movie").addEventListener("input", () => {
+    clearTimeout(searchTimeout);
+
+    const query = document.getElementById("movie").value.trim();
+
+    if (query.length === 0) {
+        loadTrendingMovies(1);
+        return;
+    }
+
+    searchTimeout = setTimeout(() => {
+        searchMovieLive(query);
+    }, 400); // ritardo per evitare troppe richieste
+});
+
+async function searchMovieLive(query) {
+    const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${query}&language=it-IT`);
+    const data = await res.json();
+
+    displayMovies(data.results);
+}
 
 let currentPage = 1;
 
@@ -223,6 +254,24 @@ document.addEventListener("keydown", function(e) {
 
 function goToList() {
     window.location.href = "list.html";
+}
+
+/* HOME */
+function goHome() {
+    document.getElementById("movie").value = "";
+
+    selectedGenres = [];
+    document.querySelectorAll(".genre-btn").forEach(btn => {
+        btn.classList.remove("active");
+    });
+
+    loadTrendingMovies(1);
+}
+
+/* CLEAR SEARCH */
+function clearSearch() {
+    document.getElementById("movie").value = "";
+    loadTrendingMovies(1);
 }
 
 /* GENRES */
@@ -247,37 +296,6 @@ document.querySelectorAll(".genre-btn").forEach(btn => {
         }
     });
 });
-
-/* STORAGE */
-function getList() {
-    return JSON.parse(localStorage.getItem("myMovies")) || [];
-}
-
-function saveList(list) {
-    localStorage.setItem("myMovies", JSON.stringify(list));
-}
-
-function isInList(id) {
-    return getList().some(m => m.id === id);
-}
-
-function toggleList(id, title, poster) {
-    let list = getList();
-    const exists = list.find(m => m.id === id);
-
-    if (exists) {
-        list = list.filter(m => m.id !== id);
-    } else {
-        list.push({ id, title, poster });
-    }
-
-    saveList(list);
-
-    const btn = document.getElementById(`btn-${id}`);
-    if (btn) {
-        btn.innerText = exists ? "➕ Lista" : "❌ Rimuovi";
-    }
-}
 
 /* MOVIES */
 async function loadTrendingMovies(page = 1) {
@@ -354,6 +372,37 @@ function displayMovies(movies) {
             </div>
         `;
     });
+}
+
+/* STORAGE */
+function getList() {
+    return JSON.parse(localStorage.getItem("myMovies")) || [];
+}
+
+function saveList(list) {
+    localStorage.setItem("myMovies", JSON.stringify(list));
+}
+
+function isInList(id) {
+    return getList().some(m => m.id === id);
+}
+
+function toggleList(id, title, poster) {
+    let list = getList();
+    const exists = list.find(m => m.id === id);
+
+    if (exists) {
+        list = list.filter(m => m.id !== id);
+    } else {
+        list.push({ id, title, poster });
+    }
+
+    saveList(list);
+
+    const btn = document.getElementById(`btn-${id}`);
+    if (btn) {
+        btn.innerText = exists ? "➕ Lista" : "❌ Rimuovi";
+    }
 }
 </script>
 
