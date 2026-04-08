@@ -34,7 +34,6 @@ body {
 h2 {
     margin: 0;
     color: #c084fc;
-    text-shadow: 0 0 10px rgba(168,85,247,0.6);
 }
 
 .list-btn {
@@ -63,7 +62,6 @@ input {
     outline: none;
 }
 
-/* GENRES */
 .genres {
     margin-top: 20px;
     display: flex;
@@ -79,19 +77,12 @@ input {
     background: transparent;
     color: white;
     cursor: pointer;
-    transition: 0.3s;
-}
-
-.genre-btn:hover {
-    box-shadow: 0 0 10px rgba(168,85,247,0.8);
 }
 
 .genre-btn.active {
     background: #7c3aed;
-    box-shadow: 0 0 15px rgba(168,85,247,0.9);
 }
 
-/* GRID */
 .grid {
     margin-top: 30px;
     display: grid;
@@ -99,23 +90,17 @@ input {
     gap: 20px;
 }
 
-/* CARD */
 .card {
     background: #1f1b3a;
     border-radius: 12px;
     overflow: hidden;
-    transition: 0.3s;
-}
-
-.card:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 20px rgba(168,85,247,0.8);
 }
 
 .card img {
     width: 100%;
     height: 270px;
     object-fit: cover;
+    cursor: pointer;
 }
 
 .card-content {
@@ -127,14 +112,6 @@ input {
     font-size: 14px;
 }
 
-.card a {
-    display: inline-block;
-    margin-top: 5px;
-    font-size: 12px;
-    color: #00d4ff;
-    text-decoration: none;
-}
-
 button {
     padding: 8px 12px;
     border: none;
@@ -142,16 +119,51 @@ button {
     background: #7c3aed;
     color: white;
     cursor: pointer;
-    margin-top: 5px;
 }
 
-/* PAGINATION */
 .pagination {
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 15px;
     margin-top: 30px;
+}
+
+/* PLAYER */
+.player-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.9);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.player-box {
+    width: 90%;
+    max-width: 1000px;
+}
+
+.player-box iframe {
+    width: 100%;
+    height: 500px;
+    border: none;
+    border-radius: 10px;
+}
+
+.player-controls {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.close-btn {
+    background: red;
+}
+
+.fullscreen-btn {
+    background: #00d4ff;
 }
 </style>
 </head>
@@ -166,7 +178,7 @@ button {
         <h2>🎬 KitsuStream</h2>
     </div>
 
-    <div class="topbar-right" style="text-align:right;">
+    <div class="topbar-right">
         <button class="list-btn" onclick="goToList()">⭐ Lista</button>
     </div>
 </div>
@@ -174,11 +186,11 @@ button {
 <div class="container">
 
     <div>
-        <input type="text" id="movie" placeholder="Cerca film...">
+        <input type="text" id="movie" placeholder="Cerca film..." autofocus>
         <button onclick="clearSearch()">❌ Cancella</button>
     </div>
 
-    <!-- GENRES -->
+    <!-- GENERI COMPLETI -->
     <div class="genres">
         <button class="genre-btn" data-id="28">Azione</button>
         <button class="genre-btn" data-id="12">Avventura</button>
@@ -203,42 +215,31 @@ button {
     <div id="results" class="grid"></div>
 
     <div class="pagination">
-        <button onclick="prevPage()">⬅️ Indietro</button>
+        <button onclick="prevPage()">⬅️</button>
         <span id="pageNumber">Pagina 1</span>
-        <button onclick="nextPage()">Avanti ➡️</button>
+        <button onclick="nextPage()">➡️</button>
     </div>
 
+</div>
+
+<!-- PLAYER -->
+<div id="playerModal" class="player-modal" onclick="handleOutsideClick(event)">
+    <div class="player-box" id="playerBox">
+        <iframe id="videoFrame" allowfullscreen></iframe>
+
+        <div class="player-controls">
+            <button class="close-btn" onclick="closePlayer()">❌</button>
+            <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶</button>
+        </div>
+    </div>
 </div>
 
 <script>
 const API_KEY = "7fe396e6f50677047459e8c173f2bd9d";
 const IMG_BASE = "https://image.tmdb.org/t/p/w500";
 
-let searchTimeout;
-
-document.getElementById("movie").addEventListener("input", () => {
-    clearTimeout(searchTimeout);
-
-    const query = document.getElementById("movie").value.trim();
-
-    if (query.length === 0) {
-        loadTrendingMovies(1);
-        return;
-    }
-
-    searchTimeout = setTimeout(() => {
-        searchMovieLive(query);
-    }, 400); // ritardo per evitare troppe richieste
-});
-
-async function searchMovieLive(query) {
-    const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${query}&language=it-IT`);
-    const data = await res.json();
-
-    displayMovies(data.results);
-}
-
 let currentPage = 1;
+let selectedGenres = [];
 
 /* INIT */
 window.onload = function() {
@@ -246,37 +247,43 @@ window.onload = function() {
     document.getElementById("movie").focus();
 };
 
-document.addEventListener("keydown", function(e) {
-    if (e.key === "Enter") {
-        searchMovie();
-    }
-});
-
+/* NAV */
 function goToList() {
     window.location.href = "list.html";
 }
 
-/* HOME */
 function goHome() {
     document.getElementById("movie").value = "";
-
     selectedGenres = [];
-    document.querySelectorAll(".genre-btn").forEach(btn => {
-        btn.classList.remove("active");
-    });
-
+    document.querySelectorAll(".genre-btn").forEach(btn => btn.classList.remove("active"));
     loadTrendingMovies(1);
 }
 
-/* CLEAR SEARCH */
 function clearSearch() {
     document.getElementById("movie").value = "";
     loadTrendingMovies(1);
 }
 
-/* GENRES */
-let selectedGenres = [];
+/* CLICK POSTER */
+function openMoviePage(id) {
+    window.location.href = `movie.html?id=${id}`;
+}
 
+/* SEARCH */
+document.getElementById("movie").addEventListener("input", async () => {
+    const query = document.getElementById("movie").value.trim();
+
+    if (!query) {
+        loadTrendingMovies(1);
+        return;
+    }
+
+    const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${query}&language=it-IT`);
+    const data = await res.json();
+    displayMovies(data.results);
+});
+
+/* GENRES */
 document.querySelectorAll(".genre-btn").forEach(btn => {
     btn.addEventListener("click", () => {
         const id = btn.getAttribute("data-id");
@@ -289,15 +296,11 @@ document.querySelectorAll(".genre-btn").forEach(btn => {
             btn.classList.add("active");
         }
 
-        if (selectedGenres.length > 0) {
-            filterByGenre();
-        } else {
-            loadTrendingMovies(1);
-        }
+        filterByGenre();
     });
 });
 
-/* MOVIES */
+/* API */
 async function loadTrendingMovies(page = 1) {
     currentPage = page;
 
@@ -308,18 +311,12 @@ async function loadTrendingMovies(page = 1) {
     updatePageNumber();
 }
 
-async function searchMovie() {
-    const query = document.getElementById("movie").value;
-    if (!query) return;
-
-    const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${query}&language=it-IT`);
-    const data = await res.json();
-
-    displayMovies(data.results);
-}
-
-/* FILTER GENRES */
 async function filterByGenre() {
+    if (selectedGenres.length === 0) {
+        loadTrendingMovies(1);
+        return;
+    }
+
     const genreQuery = selectedGenres.join(",");
 
     const res = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_genres=${genreQuery}&language=it-IT`);
@@ -328,53 +325,7 @@ async function filterByGenre() {
     displayMovies(data.results);
 }
 
-/* PAGINATION */
-function nextPage() {
-    currentPage++;
-    loadTrendingMovies(currentPage);
-}
-
-function prevPage() {
-    if (currentPage > 1) {
-        currentPage--;
-        loadTrendingMovies(currentPage);
-    }
-}
-
-function updatePageNumber() {
-    document.getElementById("pageNumber").innerText = "Pagina " + currentPage;
-}
-
-/* DISPLAY */
-function displayMovies(movies) {
-    const results = document.getElementById("results");
-    results.innerHTML = "";
-
-    movies.forEach(movie => {
-        const poster = movie.poster_path
-            ? IMG_BASE + movie.poster_path
-            : "https://via.placeholder.com/500x750";
-
-        const link = `https://vixsrc.to/movie/${movie.id}?lang=it`;
-        const inList = isInList(movie.id);
-
-        results.innerHTML += `
-            <div class="card">
-                <img src="${poster}">
-                <div class="card-content">
-                    <h4>${movie.title}</h4>
-                    <a href="${link}" target="_blank">▶ Apri</a><br>
-
-                    <button id="btn-${movie.id}" onclick="toggleList(${movie.id}, '${movie.title}', '${poster.replace(/'/g,"\\'")}')">
-                        ${inList ? "❌ Rimuovi" : "➕ Lista"}
-                    </button>
-                </div>
-            </div>
-        `;
-    });
-}
-
-/* STORAGE */
+/* LIST STORAGE */
 function getList() {
     return JSON.parse(localStorage.getItem("myMovies")) || [];
 }
@@ -400,9 +351,90 @@ function toggleList(id, title, poster) {
     saveList(list);
 
     const btn = document.getElementById(`btn-${id}`);
-    if (btn) {
-        btn.innerText = exists ? "➕ Lista" : "❌ Rimuovi";
+    const nowInList = !exists;
+
+    btn.innerText = nowInList ? "❌ Rimuovi" : "⭐ Lista";
+    btn.style.background = nowInList ? "#ef4444" : "#7c3aed";
+}
+
+/* DISPLAY */
+function displayMovies(movies) {
+    const results = document.getElementById("results");
+    results.innerHTML = "";
+
+    movies.forEach(movie => {
+        const poster = movie.poster_path
+            ? IMG_BASE + movie.poster_path
+            : "https://via.placeholder.com/500x750";
+
+        const link = `https://vixsrc.to/movie/${movie.id}?lang=it`;
+        const inList = isInList(movie.id);
+
+        results.innerHTML += `
+            <div class="card">
+                <img src="${poster}" onclick="openMoviePage(${movie.id})">
+
+                <div class="card-content">
+                    <h4>${movie.title}</h4>
+
+                    <div style="display:flex; flex-direction:column; gap:6px;">
+                        <button onclick="openPlayer('${link}')">▶ Guarda</button>
+
+                        <button 
+                            id="btn-${movie.id}"
+                            onclick="toggleList(${movie.id}, '${movie.title.replace(/'/g,"\\'")}', '${poster.replace(/'/g,"\\'")}')"
+                            style="background:${inList ? '#ef4444' : '#7c3aed'}"
+                        >
+                            ${inList ? "❌ Rimuovi" : "⭐ Lista"}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+}
+
+/* PLAYER */
+function openPlayer(url) {
+    document.getElementById("videoFrame").src = url;
+    document.getElementById("playerModal").style.display = "flex";
+}
+
+function closePlayer() {
+    document.getElementById("videoFrame").src = "";
+    document.getElementById("playerModal").style.display = "none";
+}
+
+function handleOutsideClick(e) {
+    const box = document.getElementById("playerBox");
+    if (!box.contains(e.target)) closePlayer();
+}
+
+function toggleFullscreen() {
+    const box = document.getElementById("playerBox");
+
+    if (!document.fullscreenElement) {
+        box.requestFullscreen();
+    } else {
+        document.exitFullscreen();
     }
+}
+
+/* PAGINATION */
+function nextPage() {
+    currentPage++;
+    loadTrendingMovies(currentPage);
+}
+
+function prevPage() {
+    if (currentPage > 1) {
+        currentPage--;
+        loadTrendingMovies(currentPage);
+    }
+}
+
+function updatePageNumber() {
+    document.getElementById("pageNumber").innerText = "Pagina " + currentPage;
 }
 </script>
 
