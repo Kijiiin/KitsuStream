@@ -5,153 +5,307 @@
 <title>KitsuStream</title>
 
 <style>
-    body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-        background: linear-gradient(135deg, #1e1e2f, #2c3e50);
-        color: white;
-    }
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    color: white;
+}
 
-    .container {
-        max-width: 1000px;
-        margin: auto;
-        padding: 30px;
-        text-align: center;
-    }
+.topbar {
+    display: flex;
+    align-items: center;
+    padding: 20px 30px;
+}
 
-    h2 {
-        margin-bottom: 20px;
-    }
+.topbar-left, .topbar-right {
+    width: 120px;
+}
 
-    input {
-        width: 60%;
-        padding: 12px;
-        border-radius: 8px;
-        border: none;
-        outline: none;
-        font-size: 14px;
-    }
+.topbar-center {
+    flex: 1;
+    text-align: center;
+}
 
-    button {
-        padding: 12px 18px;
-        border: none;
-        border-radius: 8px;
-        background: #4CAF50;
-        color: white;
-        font-size: 14px;
-        cursor: pointer;
-        margin-left: 10px;
-    }
+h2 {
+    margin: 0;
+    color: #c084fc;
+    text-shadow: 0 0 10px rgba(168,85,247,0.6);
+}
 
-    button:hover {
-        background: #45a049;
-    }
+.list-btn {
+    background: #7c3aed;
+    border: none;
+    padding: 10px 14px;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+}
 
-    .grid {
-        margin-top: 30px;
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-        gap: 20px;
-    }
+.container {
+    max-width: 1000px;
+    margin: auto;
+    padding: 30px;
+    text-align: center;
+}
 
-    .card {
-        background: #ffffff15;
-        border-radius: 12px;
-        overflow: hidden;
-        transition: transform 0.2s;
-    }
+input {
+    width: 60%;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    background: #1f1b3a;
+    color: white;
+    outline: none;
+}
 
-    .card:hover {
-        transform: scale(1.05);
-    }
+.genres {
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
 
-    .card img {
-        width: 100%;
-        height: 270px;
-        object-fit: cover;
-    }
+.genre-btn {
+    padding: 8px 12px;
+    border-radius: 20px;
+    border: 1px solid #7c3aed;
+    background: transparent;
+    color: white;
+    cursor: pointer;
+    transition: 0.3s;
+}
 
-    .card-content {
-        padding: 10px;
-    }
+.genre-btn:hover {
+    box-shadow: 0 0 10px rgba(168,85,247,0.8);
+}
 
-    .card h4 {
-        margin: 5px 0;
-        font-size: 14px;
-    }
+.genre-btn.active {
+    background: #7c3aed;
+    box-shadow: 0 0 15px rgba(168,85,247,0.9);
+}
 
-    .card a {
-        display: inline-block;
-        margin-top: 8px;
-        font-size: 12px;
-        color: #00d4ff;
-        text-decoration: none;
-    }
+.grid {
+    margin-top: 30px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
+}
+
+.card {
+    background: #1f1b3a;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: 0.3s;
+}
+
+.card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(168,85,247,0.8);
+}
+
+.card img {
+    width: 100%;
+    height: 270px;
+    object-fit: cover;
+}
+
+.card-content {
+    padding: 10px;
+}
+
+.card h4 {
+    margin: 5px 0;
+    font-size: 14px;
+}
+
+.card a {
+    display: inline-block;
+    margin-top: 5px;
+    font-size: 12px;
+    color: #00d4ff;
+    text-decoration: none;
+}
+
+button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    background: #7c3aed;
+    color: white;
+    cursor: pointer;
+    margin-top: 5px;
+}
 </style>
 </head>
 
 <body>
 
-<div class="container">
-    <h2>🎬 KitsuStream</h2>
+<div class="topbar">
+    <div class="topbar-left"></div>
 
-    <div>
-        <input type="text" id="movie" placeholder="Inserisci nome film">
-        <button onclick="searchMovie()">Cerca</button>
+    <div class="topbar-center">
+        <h2>🎬 KitsuStream</h2>
     </div>
 
+    <div class="topbar-right" style="text-align:right;">
+        <button class="list-btn" onclick="goToList()">⭐ Lista</button>
+    </div>
+</div>
+
+<div class="container">
+
+    <input type="text" id="movie" placeholder="Cerca film...">
+
+    <!-- GENRES -->
+    <div class="genres">
+        <button class="genre-btn" data-id="28">Azione</button>
+        <button class="genre-btn" data-id="12">Avventura</button>
+        <button class="genre-btn" data-id="16">Animazione</button>
+        <button class="genre-btn" data-id="35">Commedia</button>
+        <button class="genre-btn" data-id="80">Crime</button>
+        <button class="genre-btn" data-id="99">Documentario</button>
+        <button class="genre-btn" data-id="18">Dramma</button>
+        <button class="genre-btn" data-id="10751">Famiglia</button>
+        <button class="genre-btn" data-id="14">Fantasy</button>
+        <button class="genre-btn" data-id="36">Storico</button>
+        <button class="genre-btn" data-id="27">Horror</button>
+        <button class="genre-btn" data-id="10402">Musica</button>
+        <button class="genre-btn" data-id="9648">Mistero</button>
+        <button class="genre-btn" data-id="10749">Romance</button>
+        <button class="genre-btn" data-id="878">Fantascienza</button>
+        <button class="genre-btn" data-id="10770">Film TV</button>
+        <button class="genre-btn" data-id="53">Thriller</button>
+        <button class="genre-btn" data-id="10752">Guerra</button>
+        <button class="genre-btn" data-id="37">Western</button>
+    </div>
+
+    <br>
+    <button onclick="filterByGenre()">Filtra generi</button>
+
     <div id="results" class="grid"></div>
+
 </div>
 
 <script>
 const API_KEY = "7fe396e6f50677047459e8c173f2bd9d";
 const IMG_BASE = "https://image.tmdb.org/t/p/w500";
 
-// 👉 carica film “in voga / trending” all’apertura
-window.onload = loadTrendingMovies;
+window.onload = function() {
+    loadTrendingMovies();
+    document.getElementById("movie").focus();
+};
 
+document.addEventListener("keydown", function(e) {
+    if (e.key === "Enter") {
+        searchMovie();
+    }
+});
+
+function goToList() {
+    window.location.href = "list.html";
+}
+
+/* GENRES MULTI SELECT */
+let selectedGenres = [];
+
+document.querySelectorAll(".genre-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-id");
+
+        if (selectedGenres.includes(id)) {
+            selectedGenres = selectedGenres.filter(g => g !== id);
+            btn.classList.remove("active");
+        } else {
+            selectedGenres.push(id);
+            btn.classList.add("active");
+        }
+    });
+});
+
+/* STORAGE */
+function getList() {
+    return JSON.parse(localStorage.getItem("myMovies")) || [];
+}
+
+function saveList(list) {
+    localStorage.setItem("myMovies", JSON.stringify(list));
+}
+
+function isInList(id) {
+    return getList().some(m => m.id === id);
+}
+
+function toggleList(id, title, poster) {
+    let list = getList();
+    const exists = list.find(m => m.id === id);
+
+    if (exists) {
+        list = list.filter(m => m.id !== id);
+    } else {
+        list.push({ id, title, poster });
+    }
+
+    saveList(list);
+
+    const btn = document.getElementById(`btn-${id}`);
+    if (btn) {
+        btn.innerText = exists ? "➕ Lista" : "❌ Rimuovi";
+    }
+}
+
+/* MOVIES */
 async function loadTrendingMovies() {
-    const url = `https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}&language=it-IT`;
-
-    const res = await fetch(url);
+    const res = await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}&language=it-IT`);
     const data = await res.json();
-
     displayMovies(data.results);
 }
 
 async function searchMovie() {
     const query = document.getElementById("movie").value;
-
     if (!query) return;
 
-    const url = `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${query}&language=it-IT`;
-
-    const res = await fetch(url);
+    const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${query}&language=it-IT`);
     const data = await res.json();
 
     displayMovies(data.results);
 }
 
+async function filterByGenre() {
+    if (selectedGenres.length === 0) return;
+
+    const genreQuery = selectedGenres.join(",");
+
+    const res = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_genres=${genreQuery}&language=it-IT`);
+    const data = await res.json();
+
+    displayMovies(data.results);
+}
+
+/* DISPLAY */
 function displayMovies(movies) {
-    const resultsDiv = document.getElementById("results");
-    resultsDiv.innerHTML = "";
+    const results = document.getElementById("results");
+    results.innerHTML = "";
 
     movies.forEach(movie => {
-        const tmdb_id = movie.id;
-        const title = movie.title;
+        const poster = movie.poster_path
+            ? IMG_BASE + movie.poster_path
+            : "https://via.placeholder.com/500x750";
 
-        const poster = movie.poster_path 
-            ? IMG_BASE + movie.poster_path 
-            : "https://via.placeholder.com/500x750?text=No+Image";
+        const link = `https://vixsrc.to/movie/${movie.id}?lang=it`;
+        const inList = isInList(movie.id);
 
-        const link = `https://vixsrc.to/movie/${tmdb_id}?lang=it`;
-
-        resultsDiv.innerHTML += `
+        results.innerHTML += `
             <div class="card">
-                <img src="${poster}" alt="${title}">
+                <img src="${poster}">
                 <div class="card-content">
-                    <h4>${title}</h4>
-                    <a href="${link}" target="_blank">▶ Apri</a>
+                    <h4>${movie.title}</h4>
+                    <a href="${link}" target="_blank">▶ Apri</a><br>
+
+                    <button id="btn-${movie.id}" onclick="toggleList(${movie.id}, '${movie.title}', '${poster.replace(/'/g,"\\'")}')">
+                        ${inList ? "❌ Rimuovi" : "➕ Lista"}
+                    </button>
                 </div>
             </div>
         `;
