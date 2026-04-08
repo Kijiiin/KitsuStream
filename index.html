@@ -59,6 +59,7 @@ input {
     outline: none;
 }
 
+/* GENRES */
 .genres {
     margin-top: 20px;
     display: flex;
@@ -86,6 +87,7 @@ input {
     box-shadow: 0 0 15px rgba(168,85,247,0.9);
 }
 
+/* GRID */
 .grid {
     margin-top: 30px;
     display: grid;
@@ -93,6 +95,7 @@ input {
     gap: 20px;
 }
 
+/* CARD */
 .card {
     background: #1f1b3a;
     border-radius: 12px;
@@ -175,14 +178,10 @@ button {
         <button class="genre-btn" data-id="9648">Mistero</button>
         <button class="genre-btn" data-id="10749">Romance</button>
         <button class="genre-btn" data-id="878">Fantascienza</button>
-        <button class="genre-btn" data-id="10770">Film TV</button>
         <button class="genre-btn" data-id="53">Thriller</button>
         <button class="genre-btn" data-id="10752">Guerra</button>
         <button class="genre-btn" data-id="37">Western</button>
     </div>
-
-    <br>
-    <button onclick="filterByGenre()">Filtra generi</button>
 
     <div id="results" class="grid"></div>
 
@@ -192,6 +191,7 @@ button {
 const API_KEY = "7fe396e6f50677047459e8c173f2bd9d";
 const IMG_BASE = "https://image.tmdb.org/t/p/w500";
 
+/* AUTO FOCUS + ENTER */
 window.onload = function() {
     loadTrendingMovies();
     document.getElementById("movie").focus();
@@ -203,11 +203,12 @@ document.addEventListener("keydown", function(e) {
     }
 });
 
+/* NAV */
 function goToList() {
     window.location.href = "list.html";
 }
 
-/* GENRES MULTI SELECT */
+/* GENRES LIVE */
 let selectedGenres = [];
 
 document.querySelectorAll(".genre-btn").forEach(btn => {
@@ -220,6 +221,13 @@ document.querySelectorAll(".genre-btn").forEach(btn => {
         } else {
             selectedGenres.push(id);
             btn.classList.add("active");
+        }
+
+        // 🔥 AUTO UPDATE
+        if (selectedGenres.length > 0) {
+            filterByGenre();
+        } else {
+            loadTrendingMovies();
         }
     });
 });
@@ -272,9 +280,8 @@ async function searchMovie() {
     displayMovies(data.results);
 }
 
+/* FILTER GENRES */
 async function filterByGenre() {
-    if (selectedGenres.length === 0) return;
-
     const genreQuery = selectedGenres.join(",");
 
     const res = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_genres=${genreQuery}&language=it-IT`);
