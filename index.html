@@ -140,6 +140,15 @@ button {
     cursor: pointer;
     margin-top: 5px;
 }
+
+/* PAGINATION */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-top: 30px;
+}
 </style>
 </head>
 
@@ -185,15 +194,24 @@ button {
 
     <div id="results" class="grid"></div>
 
+    <!-- PAGINATION -->
+    <div class="pagination">
+        <button onclick="prevPage()">⬅️ Indietro</button>
+        <span id="pageNumber">Pagina 1</span>
+        <button onclick="nextPage()">Avanti ➡️</button>
+    </div>
+
 </div>
 
 <script>
 const API_KEY = "7fe396e6f50677047459e8c173f2bd9d";
 const IMG_BASE = "https://image.tmdb.org/t/p/w500";
 
-/* AUTO FOCUS + ENTER */
+let currentPage = 1;
+
+/* INIT */
 window.onload = function() {
-    loadTrendingMovies();
+    loadTrendingMovies(1);
     document.getElementById("movie").focus();
 };
 
@@ -203,12 +221,11 @@ document.addEventListener("keydown", function(e) {
     }
 });
 
-/* NAV */
 function goToList() {
     window.location.href = "list.html";
 }
 
-/* GENRES LIVE */
+/* GENRES */
 let selectedGenres = [];
 
 document.querySelectorAll(".genre-btn").forEach(btn => {
@@ -223,11 +240,10 @@ document.querySelectorAll(".genre-btn").forEach(btn => {
             btn.classList.add("active");
         }
 
-        // 🔥 AUTO UPDATE
         if (selectedGenres.length > 0) {
             filterByGenre();
         } else {
-            loadTrendingMovies();
+            loadTrendingMovies(1);
         }
     });
 });
@@ -264,10 +280,14 @@ function toggleList(id, title, poster) {
 }
 
 /* MOVIES */
-async function loadTrendingMovies() {
-    const res = await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}&language=it-IT`);
+async function loadTrendingMovies(page = 1) {
+    currentPage = page;
+
+    const res = await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}&language=it-IT&page=${page}`);
     const data = await res.json();
+
     displayMovies(data.results);
+    updatePageNumber();
 }
 
 async function searchMovie() {
@@ -288,6 +308,23 @@ async function filterByGenre() {
     const data = await res.json();
 
     displayMovies(data.results);
+}
+
+/* PAGINATION */
+function nextPage() {
+    currentPage++;
+    loadTrendingMovies(currentPage);
+}
+
+function prevPage() {
+    if (currentPage > 1) {
+        currentPage--;
+        loadTrendingMovies(currentPage);
+    }
+}
+
+function updatePageNumber() {
+    document.getElementById("pageNumber").innerText = "Pagina " + currentPage;
 }
 
 /* DISPLAY */
