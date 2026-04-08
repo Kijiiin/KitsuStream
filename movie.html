@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Dettagli Film</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial;
+    background: #0f0c29;
+    color: white;
+}
+
+.container {
+    max-width: 900px;
+    margin: auto;
+    padding: 20px;
+}
+
+.poster {
+    width: 250px;
+    border-radius: 10px;
+}
+
+.flex {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+button {
+    padding: 10px 15px;
+    background: #7c3aed;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+}
+
+.back {
+    background: #444;
+}
+
+/* TOP BAR */
+.top-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+/* PLAYER */
+.player-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.9);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.player-box {
+    width: 90%;
+    max-width: 1000px;
+}
+
+.player-box iframe {
+    width: 100%;
+    height: 500px;
+    border: none;
+    border-radius: 10px;
+}
+
+.player-controls {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.close-btn {
+    background: red;
+}
+
+.fullscreen-btn {
+    background: #00d4ff;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="top-actions">
+        <button class="back" onclick="goBack()">⬅ Torna indietro</button>
+        <button onclick="goToList()">⭐ Lista</button>
+    </div>
+
+    <div id="movieDetails"></div>
+
+</div>
+
+<!-- PLAYER -->
+<div id="playerModal" class="player-modal" onclick="handleOutsideClick(event)">
+    <div class="player-box" id="playerBox">
+        <iframe id="videoFrame" allowfullscreen></iframe>
+
+        <div class="player-controls">
+            <button class="close-btn" onclick="closePlayer()">❌ Chiudi</button>
+            <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const API_KEY = "7fe396e6f50677047459e8c173f2bd9d";
+const IMG_BASE = "https://image.tmdb.org/t/p/w500";
+
+const params = new URLSearchParams(window.location.search);
+const movieId = params.get("id");
+
+let currentVideoUrl = "";
+let lastWatchTime = 0;
+
+loadMovie();
+
+/* LOAD MOVIE */
+async function loadMovie() {
+    const res = await fetch(`https://api.themoviedb.org/3/movie/${movieId}?api_key=${API_KEY}&language=it-IT`);
+    const movie = await res.json();
+
+    const poster = movie.poster_path
+        ? IMG_BASE + movie.poster_path
+        : "https://via.placeholder.com/500x750";
+
+    const link = `https://vixsrc.to/movie/${movie.id}?lang=it`;
+    const inList = isInList(movie.id);
+
+    document.getElementById("movieDetails").innerHTML = `
+        <div class="flex">
+            <img class="poster" src="${poster}">
+
+            <div>
+                <h1>${movie.title}</h1>
+                <p><b>Data:</b> ${movie.release_date}</p>
+                <p><b>Voto:</b> ${movie.vote_average}</p>
+                <p><b>Durata:</b> ${movie.runtime} min</p>
+                <p><b>Generi:</b> ${movie.genres.map(g => g.name).join(", ")}</p>
+
+                <p style="margin-top:15px;">
+                    ${movie.overview || "Nessuna descrizione disponibile"}
+                </p>
+
+                <div style="display:flex; gap:10px; margin-top:15px;">
+                    <button onclick="openPlayer('${link}')">▶ Guarda ora</button>
+
+                    <button 
+                        id="listBtn"
+                        onclick="toggleList(${movie.id}, '${movie.title.replace(/'/g,"\\'")}', '${poster.replace(/'/g,"\\'")}', '${link}')"
+                        style="background:${inList ? '#ef4444' : '#7c3aed'}"
+                    >
+                        ${inList ? "❌ Rimuovi" : "⭐ Lista"}
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+/* NAV */
+function goBack() {
+    window.history.back();
+}
+
+function goToList() {
+    window.location.href = "list.html";
+}
+
+/* PLAYER */
+function openPlayer(url) {
+    const modal = document.getElementById("playerModal");
+    const frame = document.getElementById("videoFrame");
+
+    let savedTime = localStorage.getItem("time_" + url);
+    let finalUrl = url;
+
+    if (savedTime) {
+        finalUrl += (url.includes("?") ? "&" : "?") + "startAt=" + savedTime;
+    }
+
+    currentVideoUrl = url;
+    frame.src = finalUrl;
+
+    modal.style.display = "flex";
+}
+
+function closePlayer() {
+    const frame = document.getElementById("videoFrame");
+    frame.src = "";
+    document.getElementById("playerModal").style.display = "none";
+
+    if (document.fullscreenElement) {
+        document.exitFullscreen();
+    }
+}
+
+function handleOutsideClick(e) {
+    const box = document.getElementById("playerBox");
+    if (!box.contains(e.target)) closePlayer();
+}
+
+function toggleFullscreen() {
+    const box = document.getElementById("playerBox");
+
+    if (!document.fullscreenElement) {
+        box.requestFullscreen();
+    } else {
+        document.exitFullscreen();
+    }
+}
+
+/* LIST */
+function getList() {
+    return JSON.parse(localStorage.getItem("myMovies")) || [];
+}
+
+function saveList(list) {
+    localStorage.setItem("myMovies", JSON.stringify(list));
+}
+
+function isInList(id) {
+    return getList().some(m => m.id === id);
+}
+
+function toggleList(id, title, poster, link) {
+    let list = getList();
+    const exists = list.find(m => m.id === id);
+
+    if (exists) {
+        list = list.filter(m => m.id !== id);
+    } else {
+        list.push({ id, title, poster, link });
+    }
+
+    saveList(list);
+
+    const btn = document.getElementById("listBtn");
+    const nowInList = !exists;
+
+    btn.innerText = nowInList ? "❌ Rimuovi" : "⭐ Lista";
+    btn.style.background = nowInList ? "#ef4444" : "#7c3aed";
+}
+
+/* SAVE PROGRESS */
+setInterval(() => {
+    if (!currentVideoUrl) return;
+
+    lastWatchTime += 5;
+    localStorage.setItem("time_" + currentVideoUrl, lastWatchTime);
+}, 5000);
+</script>
+
+</body>
+</html>
