@@ -15,34 +15,49 @@ body {
 .topbar {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     padding: 20px 30px;
+    position: relative;
+}
+
+.topbar-center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
 }
 
 .topbar-left, .topbar-right {
     width: 120px;
 }
 
-.topbar-center {
-    flex: 1;
-    text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 15px;
-}
-
 h2 {
     margin: 0;
-    color: #c084fc;
+    font-size: 28px;
+    font-weight: bold;
+
+    background: linear-gradient(90deg, #a855f7, #00d4ff, #7c3aed);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+    text-shadow: 0 0 20px rgba(124,58,237,0.3);
 }
 
 .list-btn {
-    background: #7c3aed;
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
     border: none;
-    padding: 10px 14px;
-    border-radius: 8px;
+    padding: 10px 16px;
+    border-radius: 12px;
     color: white;
     cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+    box-shadow: 0 0 10px rgba(124,58,237,0.4);
+}
+
+.list-btn:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 0 20px rgba(124,58,237,0.7);
 }
 
 .container {
@@ -219,6 +234,12 @@ button {
         <span id="pageNumber">Pagina 1</span>
         <button onclick="nextPage()">➡️</button>
     </div>
+    
+    <div style="margin-top: 15px;">
+    <button onclick="resetGenres()" class="list-btn">
+        🧹 Reset generi
+    </button>
+</div>
 
 </div>
 
@@ -322,6 +343,12 @@ async function filterByGenre() {
     const data = await res.json();
 
     displayMovies(data.results);
+
+    function resetGenres() {
+    selectedGenres = [];
+    document.querySelectorAll(".genre-btn").forEach(btn => btn.classList.remove("active"));
+    loadTrendingMovies(1);
+}
 }
 
 /* LIST STORAGE */
