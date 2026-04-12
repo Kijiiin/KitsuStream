@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<title>Dettagli Film</title>
+<title>KitsuFilm</title>
 
 <style>
 body {
@@ -10,6 +10,21 @@ body {
     font-family: Arial;
     background: #0f0c29;
     color: white;
+}
+
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 30px;
+    position: relative;
+}
+
+.topbar-center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
 }
 
 .container {
@@ -27,6 +42,18 @@ body {
     display: flex;
     gap: 20px;
     flex-wrap: wrap;
+}
+
+h2 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: bold;
+
+    background: linear-gradient(90deg, #a855f7, #00d4ff, #7c3aed);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+    text-shadow: 0 0 20px rgba(124,58,237,0.3);
 }
 
 button {
