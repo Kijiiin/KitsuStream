@@ -5,37 +5,34 @@
 <title>La mia lista</title>
 
 <style>
-html, body {
-    margin: 0;
+html {
     min-height: 100%;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
 }
 
 body {
+    margin: 0;
     font-family: Arial, sans-serif;
-    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-    background-attachment: fixed;
+    background: transparent;
     color: white;
 }
 
 /* TOPBAR */
 .topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 30px;
     position: relative;
+    padding: 20px 30px;
 }
 
-/* SINISTRA */
+/* SINISTRA (bottone centrato verticalmente) */
 .topbar-left {
-    z-index: 2;
+    position: absolute;
+    left: 30px;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 /* CENTRO */
 .topbar-center {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
     text-align: center;
 }
 
@@ -165,8 +162,6 @@ button:hover {
         <h2 class="title-gradient">🎬 KitsuStream</h2>
         <h2 class="title-purple">⭐ La mia lista</h2>
     </div>
-
-    <div class="topbar-right"></div>
 </div>
 
 <div class="container">
