@@ -29,6 +29,12 @@ body {
     text-align: center;
 }
 
+.top-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
 h2.title-purple {
     margin: 0;
     color: #c084fc;
@@ -147,7 +153,7 @@ button:hover {
 
 <div class="topbar">
     <div class="topbar-left">
-    <button onclick="goBack()">⬅ Indietro</button>
+    <button class="top-action" onclick="goBack()">⬅ Indietro</button>
 </div>
 
     <div class="topbar-center">
