@@ -26,6 +26,10 @@ body {
     transform: translateX(-50%);
     text-align: center;
 }
+.topbar-flex {
+    display: flex;
+    gap: 10px;
+}
 
 .topbar-left, .topbar-right {
     width: 120px;
@@ -190,12 +194,14 @@ button {
 
     <div class="topbar-center">
         <h2>🎬 KitsuStream</h2>
-        <button class="list-btn" onclick="goHome()">🏠 Home</button>
-    </div>
+        </div>
 
-    <div class="topbar-right">
+    <div class="topbar-flex">
+        <button class="list-btn" onclick="goHome()">🏠 Home</button>
         <button class="list-btn" onclick="goToList()">⭐ Lista</button>
     </div>
+      
+    <div class="topbar-right"></div>
 </div>
 
 <div class="container">
