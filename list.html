@@ -5,8 +5,12 @@
 <title>La mia lista</title>
 
 <style>
-body {
+html, body {
     margin: 0;
+    min-height: 100%;
+}
+
+body {
     font-family: Arial, sans-serif;
     background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
     background-attachment: fixed;
@@ -22,6 +26,12 @@ body {
     position: relative;
 }
 
+/* SINISTRA */
+.topbar-left {
+    z-index: 2;
+}
+
+/* CENTRO */
 .topbar-center {
     position: absolute;
     left: 50%;
@@ -29,29 +39,22 @@ body {
     text-align: center;
 }
 
-.top-actions {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 20px;
-    margin-left: 760px;
-    margin-top: 60px;
+.topbar-center h2 {
+    margin: 0;
 }
 
+/* TITOLI */
 h2.title-purple {
-    margin: 0;
     color: #c084fc;
     text-shadow: 0 0 10px rgba(168,85,247,0.6);
 }
 
 h2.title-gradient {
-    margin: 0;
     font-size: 28px;
     font-weight: bold;
-
     background: linear-gradient(90deg, #a855f7, #00d4ff, #7c3aed);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-
     text-shadow: 0 0 20px rgba(124,58,237,0.3);
 }
 
@@ -154,18 +157,16 @@ button:hover {
 <body>
     
 <div class="topbar">
-       <div class="topbar-left">
-           <div class="top-actions">
-           <button onclick="goBack()">⬅ Torna indietro</button>
-           </div>
-       </div>
+    <div class="topbar-left">
+        <button onclick="goBack()">⬅ Torna indietro</button>
+    </div>
 
-       <div class="topbar-center">
-           <h2 class="title-gradient">🎬 KitsuStream</h2>
-           <h2 class="title-purple">⭐ La mia lista</h2>
-       </div>
+    <div class="topbar-center">
+        <h2 class="title-gradient">🎬 KitsuStream</h2>
+        <h2 class="title-purple">⭐ La mia lista</h2>
+    </div>
 
-       <div class="topbar-right" style="text-align:right;"></div>
+    <div class="topbar-right"></div>
 </div>
 
 <div class="container">
@@ -203,12 +204,10 @@ function removeMovie(id) {
     renderList();
 }
 
-/* NAV MOVIE PAGE */
 function openMoviePage(id) {
     window.location.href = "movie.html?id=" + id;
 }
 
-/* PLAYER */
 function openPlayer(url) {
     document.getElementById("videoFrame").src = url;
     document.getElementById("playerModal").style.display = "flex";
@@ -224,7 +223,6 @@ function handleOutsideClick(e) {
     if (!box.contains(e.target)) closePlayer();
 }
 
-/* RENDER */
 function renderList() {
     const container = document.getElementById("list");
     const list = getList();
@@ -242,7 +240,6 @@ function renderList() {
 
         container.innerHTML += `
             <div class="card">
-
                 <img src="${movie.poster}" onclick="openMoviePage(${movie.id})">
 
                 <div class="card-content">
@@ -256,7 +253,6 @@ function renderList() {
                         ❌ Rimuovi
                     </button>
                 </div>
-
             </div>
         `;
     });
