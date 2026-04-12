@@ -345,6 +345,17 @@ async function filterByGenre() {
     displayMovies(data.results);
     
 }
+    function resetGenres() {
+    selectedGenres = [];
+
+    document.querySelectorAll(".genre-btn").forEach(btn => {
+        btn.classList.remove("active");
+    });
+
+    document.getElementById("movie").value = "";
+
+    loadTrendingMovies(1);
+}
 
 /* LIST STORAGE */
 function getList() {
