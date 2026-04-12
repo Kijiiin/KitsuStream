@@ -97,15 +97,37 @@ button:hover {
     font-size: 14px;
 }
 
-/* LINK APRI */
-.card a {
-    color: #00d4ff;
-    text-decoration: none;
-    font-size: 12px;
+/* PLAYER */
+.player-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.9);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
 }
 
-.card a:hover {
-    text-shadow: 0 0 10px rgba(0, 212, 255, 0.8);
+.player-box {
+    width: 90%;
+    max-width: 1000px;
+}
+
+.player-box iframe {
+    width: 100%;
+    height: 500px;
+    border: none;
+    border-radius: 10px;
+}
+
+.player-controls {
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+}
+
+.close-btn {
+    background: red;
 }
 </style>
 </head>
@@ -128,7 +150,19 @@ button:hover {
     <div id="list" class="grid"></div>
 </div>
 
+<!-- PLAYER -->
+<div id="playerModal" class="player-modal" onclick="handleOutsideClick(event)">
+    <div class="player-box" id="playerBox">
+        <iframe id="videoFrame" allowfullscreen></iframe>
+
+        <div class="player-controls">
+            <button class="close-btn" onclick="closePlayer()">❌ Chiudi</button>
+        </div>
+    </div>
+</div>
+
 <script>
+
 function goBack() {
     window.location.href = "index.html";
 }
@@ -147,11 +181,28 @@ function removeMovie(id) {
     renderList();
 }
 
-/* 👉 NUOVA FUNZIONE CLICK LOCANDINA */
+/* NAV MOVIE PAGE */
 function openMoviePage(id) {
     window.location.href = "movie.html?id=" + id;
 }
 
+/* PLAYER */
+function openPlayer(url) {
+    document.getElementById("videoFrame").src = url;
+    document.getElementById("playerModal").style.display = "flex";
+}
+
+function closePlayer() {
+    document.getElementById("videoFrame").src = "";
+    document.getElementById("playerModal").style.display = "none";
+}
+
+function handleOutsideClick(e) {
+    const box = document.getElementById("playerBox");
+    if (!box.contains(e.target)) closePlayer();
+}
+
+/* RENDER */
 function renderList() {
     const container = document.getElementById("list");
     const list = getList();
@@ -164,6 +215,7 @@ function renderList() {
     }
 
     list.forEach(movie => {
+
         const link = `https://vixsrc.to/movie/${movie.id}?lang=it`;
 
         container.innerHTML += `
@@ -174,9 +226,11 @@ function renderList() {
                 <div class="card-content">
                     <h4>${movie.title}</h4>
 
-                    <a href="${link}" target="_blank">▶ Apri</a><br>
+                    <button onclick="openPlayer('${link}')">
+                        ▶ Guarda
+                    </button>
 
-                    <button onclick="removeMovie(${movie.id})">
+                    <button onclick="removeMovie(${movie.id})" style="margin-top:8px; background:#ef4444;">
                         ❌ Rimuovi
                     </button>
                 </div>
@@ -187,6 +241,7 @@ function renderList() {
 }
 
 renderList();
+
 </script>
 
 </body>
