@@ -48,11 +48,9 @@ h2 {
     margin: 0;
     font-size: 28px;
     font-weight: bold;
-
     background: linear-gradient(90deg, #a855f7, #00d4ff, #7c3aed);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-
     text-shadow: 0 0 20px rgba(124,58,237,0.3);
 }
 
@@ -69,7 +67,6 @@ button {
     background: #444;
 }
 
-/* TOP BAR */
 .top-actions {
     display: flex;
     justify-content: space-between;
@@ -103,6 +100,8 @@ button {
     margin-top: 10px;
     display: flex;
     justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
 .close-btn {
@@ -111,6 +110,52 @@ button {
 
 .fullscreen-btn {
     background: #00d4ff;
+}
+
+.save-btn {
+    background: #f59e0b;
+}
+
+.reset-btn {
+    background: #ef4444;
+}
+
+.saved-info {
+    background: #1f1b3a;
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    margin-left: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* PULSANTE TORNA SU */
+#tornaSu {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    color: white;
+    font-size: 24px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(124,58,237,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    transition: 0.3s;
+    z-index: 9998;
+}
+
+#tornaSu:hover {
+    transform: translateY(-5px);
+    background: linear-gradient(135deg, #a855f7, #c084fc);
+    box-shadow: 0 6px 20px rgba(124,58,237,0.8);
 }
 </style>
 </head>
@@ -138,10 +183,18 @@ button {
         <iframe id="videoFrame" allowfullscreen></iframe>
 
         <div class="player-controls">
+            <button class="fullscreen-btn" onclick="toggleFullscreen()">🖥 Schermo intero</button>
+            <button class="save-btn" onclick="saveCurrentSpot()">💾 Salva posizione</button>
+            <button class="reset-btn" onclick="resetSavedSpot()">🗑 Reset posizione</button>
             <button class="close-btn" onclick="closePlayer()">❌ Chiudi</button>
         </div>
+        
+        <div id="savedInfo" style="text-align: center; margin-top: 8px; min-height: 30px;"></div>
     </div>
 </div>
+
+<!-- PULSANTE TORNA SU -->
+<button id="tornaSu" title="Torna su">↑</button>
 
 <script>
 const API_KEY = "7fe396e6f50677047459e8c173f2bd9d";
@@ -151,7 +204,6 @@ const params = new URLSearchParams(window.location.search);
 const movieId = params.get("id");
 
 let currentVideoUrl = "";
-let lastWatchTime = 0;
 
 loadMovie();
 
@@ -164,7 +216,7 @@ async function loadMovie() {
         ? IMG_BASE + movie.poster_path
         : "https://via.placeholder.com/500x750";
 
-    const link = `https://vixsrc.to/movie/${movie.id}?lang=it`;
+    const link = `https://vixsrc.to/movie/${movie.id}`;
     const inList = isInList(movie.id);
 
     document.getElementById("movieDetails").innerHTML = `
@@ -211,17 +263,26 @@ function goToList() {
 function openPlayer(url) {
     const modal = document.getElementById("playerModal");
     const frame = document.getElementById("videoFrame");
-
-    let savedTime = localStorage.getItem("time_" + url);
+    
+    // Controlla se c'è un tempo salvato per questo video
+    const savedTime = localStorage.getItem("time_" + url);
     let finalUrl = url;
-
-    if (savedTime) {
-        finalUrl += (url.includes("?") ? "&" : "?") + "startAt=" + savedTime;
+    let savedInfo = document.getElementById("savedInfo");
+    
+    if (savedTime && parseInt(savedTime) > 0) {
+        const secondi = parseInt(savedTime);
+        const minuti = Math.floor(secondi / 60);
+        const secondiRestanti = secondi % 60;
+        finalUrl += `?startAt=${secondi}`;
+        savedInfo.innerHTML = `📌 Riprenderò da ${minuti}:${secondiRestanti.toString().padStart(2,'0')} (${secondi} secondi)`;
+        savedInfo.style.color = "#f59e0b";
+    } else {
+        savedInfo.innerHTML = `🎬 Nessun salvataggio - il video partirà dall'inizio`;
+        savedInfo.style.color = "#888";
     }
-
+    
     currentVideoUrl = url;
     frame.src = finalUrl;
-
     modal.style.display = "flex";
 }
 
@@ -229,6 +290,7 @@ function closePlayer() {
     const frame = document.getElementById("videoFrame");
     frame.src = "";
     document.getElementById("playerModal").style.display = "none";
+    document.getElementById("savedInfo").innerHTML = "";
 
     if (document.fullscreenElement) {
         document.exitFullscreen();
@@ -247,6 +309,78 @@ function toggleFullscreen() {
         box.requestFullscreen();
     } else {
         document.exitFullscreen();
+    }
+}
+
+/* SALVA POSIZIONE MANUALE */
+function saveCurrentSpot() {
+    if (!currentVideoUrl) {
+        alert("Apri prima un video!");
+        return;
+    }
+    
+    const input = prompt("A che minuto sei? (es: 15.30 per 15 minuti e 30 secondi)\nUsa il punto per i decimali:");
+    
+    if (input === null) return;
+    
+    // Converti minuti (es. 15.30) in secondi
+    let minuti = parseFloat(input.replace(',', '.'));
+    
+    if (isNaN(minuti) || minuti < 0) {
+        alert("Inserisci un numero valido!");
+        return;
+    }
+    
+    const secondi = Math.floor(minuti * 60);
+    localStorage.setItem("time_" + currentVideoUrl, secondi);
+    
+    // Aggiorna l'informazione a schermo
+    const savedInfo = document.getElementById("savedInfo");
+    const minutiMostra = Math.floor(secondi / 60);
+    const secondiMostra = secondi % 60;
+    savedInfo.innerHTML = `✅ Salvato! Riprenderò da ${minutiMostra}:${secondiMostra.toString().padStart(2,'0')} (${secondi} secondi)`;
+    savedInfo.style.color = "#4ade80";
+    
+    setTimeout(() => {
+        if (document.getElementById("playerModal").style.display === "flex") {
+            savedInfo.style.color = "#f59e0b";
+        }
+    }, 3000);
+    
+    alert(`✅ Posizione salvata a ${minuti} minuti (${secondi} secondi)!\nLa prossima volta che apri questo video ripartirai da qui.`);
+}
+
+/* RESET POSIZIONE */
+function resetSavedSpot() {
+    if (!currentVideoUrl) {
+        alert("Apri prima un video!");
+        return;
+    }
+    
+    const savedTime = localStorage.getItem("time_" + currentVideoUrl);
+    if (!savedTime) {
+        alert("⚠️ Non c'è nessun salvataggio per questo video!");
+        return;
+    }
+    
+    const conferma = confirm("Sei sicuro di voler cancellare la posizione salvata?\nIl video ripartirà dall'inizio la prossima volta.");
+    
+    if (conferma) {
+        localStorage.removeItem("time_" + currentVideoUrl);
+        
+        // Aggiorna l'informazione a schermo
+        const savedInfo = document.getElementById("savedInfo");
+        savedInfo.innerHTML = `🗑 Salvataggio rimosso! Il video ripartirà dall'inizio`;
+        savedInfo.style.color = "#ef4444";
+        
+        setTimeout(() => {
+            if (document.getElementById("playerModal").style.display === "flex") {
+                savedInfo.innerHTML = `🎬 Nessun salvataggio - il video partirà dall'inizio`;
+                savedInfo.style.color = "#888";
+            }
+        }, 3000);
+        
+        alert("✅ Posizione cancellata! La prossima volta il video partirà dall'inizio.");
     }
 }
 
@@ -282,13 +416,23 @@ function toggleList(id, title, poster, link) {
     btn.style.background = nowInList ? "#ef4444" : "#7c3aed";
 }
 
-/* SAVE PROGRESS */
-setInterval(() => {
-    if (!currentVideoUrl) return;
+/* TORNA SU */
+const tornaSuBtn = document.getElementById("tornaSu");
 
-    lastWatchTime += 5;
-    localStorage.setItem("time_" + currentVideoUrl, lastWatchTime);
-}, 5000);
+window.addEventListener("scroll", function() {
+    if (window.scrollY > 300) {
+        tornaSuBtn.style.display = "flex";
+    } else {
+        tornaSuBtn.style.display = "none";
+    }
+});
+
+tornaSuBtn.addEventListener("click", function() {
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+});
 </script>
 
 </body>
