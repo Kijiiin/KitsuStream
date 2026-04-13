@@ -187,6 +187,33 @@ button {
 .fullscreen-btn {
     background: #00d4ff;
 }
+
+/* ===== PULSANTE TORNA SU ===== */
+#tornaSu {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    color: white;
+    font-size: 24px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(124,58,237,0.5);
+    display: none; /* nascosto all'inizio */
+    align-items: center;
+    justify-content: center;
+    transition: 0.3s;
+    z-index: 9998;
+}
+
+#tornaSu:hover {
+    transform: translateY(-5px);
+    background: linear-gradient(135deg, #a855f7, #c084fc);
+    box-shadow: 0 6px 20px rgba(124,58,237,0.8);
+}
 </style>
 </head>
 
@@ -261,6 +288,9 @@ button {
         </div>
     </div>
 </div>
+
+<!-- PULSANTE TORNA SU -->
+<button id="tornaSu" title="Torna su">↑</button>
 
 <script>
 const API_KEY = "7fe396e6f50677047459e8c173f2bd9d";
@@ -476,6 +506,24 @@ function prevPage() {
 function updatePageNumber() {
     document.getElementById("pageNumber").innerText = "Pagina " + currentPage;
 }
+
+/* ===== TORNA SU ===== */
+const tornaSuBtn = document.getElementById("tornaSu");
+
+window.addEventListener("scroll", function() {
+    if (window.scrollY > 300) {
+        tornaSuBtn.style.display = "flex";
+    } else {
+        tornaSuBtn.style.display = "none";
+    }
+});
+
+tornaSuBtn.addEventListener("click", function() {
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+});
 </script>
 
 </body>
