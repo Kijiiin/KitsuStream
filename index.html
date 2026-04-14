@@ -121,11 +121,6 @@ button {
     cursor: pointer;
 }
 
-button:disabled {
-    background: #555;
-    cursor: not-allowed;
-}
-
 .pagination {
     display: flex;
     justify-content: center;
@@ -245,46 +240,6 @@ const IMG_BASE = "https://image.tmdb.org/t/p/w500";
 
 let currentPage = 1;
 let selectedGenres = [];
-let availabilityCache = {};
-
-/* VERIFICA DISPONIBILITÀ SU VIXSRC */
-async function isAvailableOnVixsrc(tmdbId, type = 'movie') {
-    // Check cache
-    const cacheKey = `${type}_${tmdbId}`;
-    if (availabilityCache[cacheKey] !== undefined) {
-        return availabilityCache[cacheKey];
-    }
-    
-    try {
-        // Usa CORS proxy per evitare blocchi
-        const apiUrl = `https://vixsrc.to/api/list/${type}?lang=it`;
-        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`;
-        
-        const response = await fetch(proxyUrl);
-        const data = await response.json();
-        
-        let isAvailable = false;
-        
-        if (Array.isArray(data)) {
-            isAvailable = data.includes(tmdbId.toString()) || data.includes(parseInt(tmdbId));
-        } else if (data.results && Array.isArray(data.results)) {
-            isAvailable = data.results.some(item => item.id == tmdbId);
-        } else if (data.data && Array.isArray(data.data)) {
-            isAvailable = data.data.some(item => item.id == tmdbId);
-        } else if (typeof data === 'object') {
-            isAvailable = Object.keys(data).some(key => key == tmdbId);
-        }
-        
-        availabilityCache[cacheKey] = isAvailable;
-        return isAvailable;
-        
-    } catch (error) {
-        console.error('Errore verifica Vixsrc:', error);
-        // In caso di errore, mostra comunque il pulsante (meglio falso positivo)
-        availabilityCache[cacheKey] = true;
-        return true;
-    }
-}
 
 /* INIT */
 window.onload = function() {
@@ -348,14 +303,12 @@ document.querySelectorAll(".genre-btn").forEach(btn => {
 /* API */
 async function loadTrendingMovies(page = 1) {
     currentPage = page;
-    showLoading(true);
-    
+
     const res = await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}&language=it-IT&page=${page}`);
     const data = await res.json();
 
-    await displayMovies(data.results);
+    displayMovies(data.results);
     updatePageNumber();
-    showLoading(false);
 }
 
 async function filterByGenre() {
@@ -365,20 +318,11 @@ async function filterByGenre() {
     }
 
     const genreQuery = selectedGenres.join(",");
-    showLoading(true);
 
     const res = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_genres=${genreQuery}&language=it-IT`);
     const data = await res.json();
 
-    await displayMovies(data.results);
-    showLoading(false);
-}
-
-function showLoading(show) {
-    const results = document.getElementById("results");
-    if (show) {
-        results.innerHTML = '<div style="text-align:center; padding:50px;">⏳ Caricamento in corso...</div>';
-    }
+    displayMovies(data.results);
 }
 
 /* LIST STORAGE */
@@ -407,58 +351,47 @@ function toggleList(id, title, poster) {
     saveList(list);
 
     const btn = document.getElementById(`btn-${id}`);
-    if (btn) {
-        const nowInList = !exists;
-        btn.innerText = nowInList ? "❌ Rimuovi" : "⭐ Lista";
-        btn.style.background = nowInList ? "#ef4444" : "#7c3aed";
-    }
+    const nowInList = !exists;
+
+    btn.innerText = nowInList ? "❌ Rimuovi" : "⭐ Lista";
+    btn.style.background = nowInList ? "#ef4444" : "#7c3aed";
 }
 
 /* DISPLAY */
-async function displayMovies(movies) {
+function displayMovies(movies) {
     const results = document.getElementById("results");
     results.innerHTML = "";
 
-    for (const movie of movies) {
+    movies.forEach(movie => {
         const poster = movie.poster_path
             ? IMG_BASE + movie.poster_path
             : "https://via.placeholder.com/500x750";
 
         const link = `https://vixsrc.to/movie/${movie.id}?lang=it`;
         const inList = isInList(movie.id);
-        
-        // Verifica disponibilità
-        const available = await isAvailableOnVixsrc(movie.id, 'movie');
 
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-            <img src="${poster}" onclick="openMoviePage(${movie.id})">
-            <div class="card-content">
-                <h4>${escapeHtml(movie.title)}</h4>
-                <div style="display:flex; flex-direction:column; gap:6px;">
-                    ${available ? 
-                        `<button onclick="openPlayer('${link}')">▶ Guarda</button>` : 
-                        `<button disabled style="background:#555; cursor:not-allowed;" title="Non disponibile su Vixsrc">🚫 Non disponibile</button>`
-                    }
-                    <button 
-                        id="btn-${movie.id}"
-                        onclick="toggleList(${movie.id}, '${escapeHtml(movie.title)}', '${escapeHtml(poster)}')"
-                        style="background:${inList ? '#ef4444' : '#7c3aed'}"
-                    >
-                        ${inList ? "❌ Rimuovi" : "⭐ Lista"}
-                    </button>
+        results.innerHTML += `
+            <div class="card">
+                <img src="${poster}" onclick="openMoviePage(${movie.id})">
+
+                <div class="card-content">
+                    <h4>${movie.title}</h4>
+
+                    <div style="display:flex; flex-direction:column; gap:6px;">
+                        <button onclick="openPlayer('${link}')">▶ Guarda</button>
+
+                        <button 
+                            id="btn-${movie.id}"
+                            onclick="toggleList(${movie.id}, '${movie.title.replace(/'/g,"\\'")}', '${poster.replace(/'/g,"\\'")}')"
+                            style="background:${inList ? '#ef4444' : '#7c3aed'}"
+                        >
+                            ${inList ? "❌ Rimuovi" : "⭐ Lista"}
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
-        results.appendChild(card);
-    }
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    });
 }
 
 /* PLAYER */
