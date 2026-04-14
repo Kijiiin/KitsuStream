@@ -6,6 +6,7 @@
 
 <style>
 body {
+    padding-top: 15px;
     margin: 0;
     font-family: Arial, sans-serif;
     background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
@@ -15,34 +16,55 @@ body {
 .topbar {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     padding: 20px 30px;
+    position: relative;
+}
+
+.topbar-center {
+    position: absolute;
+    left: 50%;
+    flex-direction: column;
+    transform: translateX(-50%);
+    text-align: center;
+}
+.topbar-flex {
+    display: flex;
+    gap: 10px;
+    margin-left:20px;
 }
 
 .topbar-left, .topbar-right {
     width: 120px;
 }
 
-.topbar-center {
-    flex: 1;
-    text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 15px;
-}
-
 h2 {
     margin: 0;
-    color: #c084fc;
+    font-size: 28px;
+    font-weight: bold;
+
+    background: linear-gradient(90deg, #a855f7, #00d4ff, #7c3aed);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+    text-shadow: 0 0 20px rgba(124,58,237,0.3);
 }
 
 .list-btn {
-    background: #7c3aed;
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
     border: none;
-    padding: 10px 14px;
-    border-radius: 8px;
+    padding: 10px 16px;
+    border-radius: 12px;
     color: white;
     cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+    box-shadow: 0 0 10px rgba(124,58,237,0.4);
+}
+
+.list-btn:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 0 20px rgba(124,58,237,0.7);
 }
 
 .container {
@@ -155,7 +177,7 @@ button {
 .player-controls {
     margin-top: 10px;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
 }
 
 .close-btn {
@@ -164,6 +186,33 @@ button {
 
 .fullscreen-btn {
     background: #00d4ff;
+}
+
+/* ===== PULSANTE TORNA SU ===== */
+#tornaSu {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    color: white;
+    font-size: 24px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(124,58,237,0.5);
+    display: none; /* nascosto all'inizio */
+    align-items: center;
+    justify-content: center;
+    transition: 0.3s;
+    z-index: 9998;
+}
+
+#tornaSu:hover {
+    transform: translateY(-5px);
+    background: linear-gradient(135deg, #a855f7, #c084fc);
+    box-shadow: 0 6px 20px rgba(124,58,237,0.8);
 }
 </style>
 </head>
@@ -174,13 +223,15 @@ button {
     <div class="topbar-left"></div>
 
     <div class="topbar-center">
-        <button class="list-btn" onclick="goHome()">🏠 Home</button>
         <h2>🎬 KitsuStream</h2>
+        
+        <div class="topbar-flex">
+            <button class="list-btn" onclick="goHome()">🏠 Home</button>
+            <button class="list-btn" onclick="goToList()">⭐ Lista</button>
+        </div>
     </div>
-
-    <div class="topbar-right">
-        <button class="list-btn" onclick="goToList()">⭐ Lista</button>
-    </div>
+      
+    <div class="topbar-right"></div>
 </div>
 
 <div class="container">
@@ -210,6 +261,9 @@ button {
         <button class="genre-btn" data-id="53">Thriller</button>
         <button class="genre-btn" data-id="10752">Guerra</button>
         <button class="genre-btn" data-id="37">Western</button>
+        <button onclick="resetGenres()" class="list-btn">
+        🧹 Reset generi
+    </button>
     </div>
 
     <div id="results" class="grid"></div>
@@ -219,6 +273,8 @@ button {
         <span id="pageNumber">Pagina 1</span>
         <button onclick="nextPage()">➡️</button>
     </div>
+    
+    <div style="margin-top: 15px;"></div>
 
 </div>
 
@@ -228,11 +284,13 @@ button {
         <iframe id="videoFrame" allowfullscreen></iframe>
 
         <div class="player-controls">
-            <button class="close-btn" onclick="closePlayer()">❌</button>
-            <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶</button>
+            <button class="close-btn" onclick="closePlayer()">❌ Chiudi</button>
         </div>
     </div>
 </div>
+
+<!-- PULSANTE TORNA SU -->
+<button id="tornaSu" title="Torna su">↑</button>
 
 <script>
 const API_KEY = "7fe396e6f50677047459e8c173f2bd9d";
@@ -323,6 +381,18 @@ async function filterByGenre() {
     const data = await res.json();
 
     displayMovies(data.results);
+    
+}
+    function resetGenres() {
+    selectedGenres = [];
+
+    document.querySelectorAll(".genre-btn").forEach(btn => {
+        btn.classList.remove("active");
+    });
+
+    document.getElementById("movie").value = "";
+
+    loadTrendingMovies(1);
 }
 
 /* LIST STORAGE */
@@ -436,6 +506,24 @@ function prevPage() {
 function updatePageNumber() {
     document.getElementById("pageNumber").innerText = "Pagina " + currentPage;
 }
+
+/* ===== TORNA SU ===== */
+const tornaSuBtn = document.getElementById("tornaSu");
+
+window.addEventListener("scroll", function() {
+    if (window.scrollY > 300) {
+        tornaSuBtn.style.display = "flex";
+    } else {
+        tornaSuBtn.style.display = "none";
+    }
+});
+
+tornaSuBtn.addEventListener("click", function() {
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+});
 </script>
 
 </body>
