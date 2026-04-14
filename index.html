@@ -6,7 +6,6 @@
 
 <style>
 body {
-    padding-top: 15px;
     margin: 0;
     font-family: Arial, sans-serif;
     background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
@@ -16,55 +15,34 @@ body {
 .topbar {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     padding: 20px 30px;
-    position: relative;
-}
-
-.topbar-center {
-    position: absolute;
-    left: 50%;
-    flex-direction: column;
-    transform: translateX(-50%);
-    text-align: center;
-}
-.topbar-flex {
-    display: flex;
-    gap: 10px;
-    margin-left:20px;
 }
 
 .topbar-left, .topbar-right {
     width: 120px;
 }
 
+.topbar-center {
+    flex: 1;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
 h2 {
     margin: 0;
-    font-size: 28px;
-    font-weight: bold;
-
-    background: linear-gradient(90deg, #a855f7, #00d4ff, #7c3aed);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-
-    text-shadow: 0 0 20px rgba(124,58,237,0.3);
+    color: #c084fc;
 }
 
 .list-btn {
-    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    background: #7c3aed;
     border: none;
-    padding: 10px 16px;
-    border-radius: 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
     color: white;
     cursor: pointer;
-    font-weight: bold;
-    transition: 0.3s;
-    box-shadow: 0 0 10px rgba(124,58,237,0.4);
-}
-
-.list-btn:hover {
-    transform: translateY(-2px) scale(1.05);
-    box-shadow: 0 0 20px rgba(124,58,237,0.7);
 }
 
 .container {
@@ -143,6 +121,11 @@ button {
     cursor: pointer;
 }
 
+button:disabled {
+    background: #555;
+    cursor: not-allowed;
+}
+
 .pagination {
     display: flex;
     justify-content: center;
@@ -177,7 +160,7 @@ button {
 .player-controls {
     margin-top: 10px;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
 }
 
 .close-btn {
@@ -186,33 +169,6 @@ button {
 
 .fullscreen-btn {
     background: #00d4ff;
-}
-
-/* ===== PULSANTE TORNA SU ===== */
-#tornaSu {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #7c3aed, #a855f7);
-    color: white;
-    font-size: 24px;
-    border: none;
-    cursor: pointer;
-    box-shadow: 0 4px 15px rgba(124,58,237,0.5);
-    display: none; /* nascosto all'inizio */
-    align-items: center;
-    justify-content: center;
-    transition: 0.3s;
-    z-index: 9998;
-}
-
-#tornaSu:hover {
-    transform: translateY(-5px);
-    background: linear-gradient(135deg, #a855f7, #c084fc);
-    box-shadow: 0 6px 20px rgba(124,58,237,0.8);
 }
 </style>
 </head>
@@ -223,15 +179,13 @@ button {
     <div class="topbar-left"></div>
 
     <div class="topbar-center">
+        <button class="list-btn" onclick="goHome()">🏠 Home</button>
         <h2>🎬 KitsuStream</h2>
-        
-        <div class="topbar-flex">
-            <button class="list-btn" onclick="goHome()">🏠 Home</button>
-            <button class="list-btn" onclick="goToList()">⭐ Lista</button>
-        </div>
     </div>
-      
-    <div class="topbar-right"></div>
+
+    <div class="topbar-right">
+        <button class="list-btn" onclick="goToList()">⭐ Lista</button>
+    </div>
 </div>
 
 <div class="container">
@@ -261,9 +215,6 @@ button {
         <button class="genre-btn" data-id="53">Thriller</button>
         <button class="genre-btn" data-id="10752">Guerra</button>
         <button class="genre-btn" data-id="37">Western</button>
-        <button onclick="resetGenres()" class="list-btn">
-        🧹 Reset generi
-    </button>
     </div>
 
     <div id="results" class="grid"></div>
@@ -273,8 +224,6 @@ button {
         <span id="pageNumber">Pagina 1</span>
         <button onclick="nextPage()">➡️</button>
     </div>
-    
-    <div style="margin-top: 15px;"></div>
 
 </div>
 
@@ -284,13 +233,11 @@ button {
         <iframe id="videoFrame" allowfullscreen></iframe>
 
         <div class="player-controls">
-            <button class="close-btn" onclick="closePlayer()">❌ Chiudi</button>
+            <button class="close-btn" onclick="closePlayer()">❌</button>
+            <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶</button>
         </div>
     </div>
 </div>
-
-<!-- PULSANTE TORNA SU -->
-<button id="tornaSu" title="Torna su">↑</button>
 
 <script>
 const API_KEY = "7fe396e6f50677047459e8c173f2bd9d";
@@ -298,6 +245,46 @@ const IMG_BASE = "https://image.tmdb.org/t/p/w500";
 
 let currentPage = 1;
 let selectedGenres = [];
+let availabilityCache = {};
+
+/* VERIFICA DISPONIBILITÀ SU VIXSRC */
+async function isAvailableOnVixsrc(tmdbId, type = 'movie') {
+    // Check cache
+    const cacheKey = `${type}_${tmdbId}`;
+    if (availabilityCache[cacheKey] !== undefined) {
+        return availabilityCache[cacheKey];
+    }
+    
+    try {
+        // Usa CORS proxy per evitare blocchi
+        const apiUrl = `https://vixsrc.to/api/list/${type}?lang=it`;
+        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`;
+        
+        const response = await fetch(proxyUrl);
+        const data = await response.json();
+        
+        let isAvailable = false;
+        
+        if (Array.isArray(data)) {
+            isAvailable = data.includes(tmdbId.toString()) || data.includes(parseInt(tmdbId));
+        } else if (data.results && Array.isArray(data.results)) {
+            isAvailable = data.results.some(item => item.id == tmdbId);
+        } else if (data.data && Array.isArray(data.data)) {
+            isAvailable = data.data.some(item => item.id == tmdbId);
+        } else if (typeof data === 'object') {
+            isAvailable = Object.keys(data).some(key => key == tmdbId);
+        }
+        
+        availabilityCache[cacheKey] = isAvailable;
+        return isAvailable;
+        
+    } catch (error) {
+        console.error('Errore verifica Vixsrc:', error);
+        // In caso di errore, mostra comunque il pulsante (meglio falso positivo)
+        availabilityCache[cacheKey] = true;
+        return true;
+    }
+}
 
 /* INIT */
 window.onload = function() {
@@ -361,12 +348,14 @@ document.querySelectorAll(".genre-btn").forEach(btn => {
 /* API */
 async function loadTrendingMovies(page = 1) {
     currentPage = page;
-
+    showLoading(true);
+    
     const res = await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}&language=it-IT&page=${page}`);
     const data = await res.json();
 
-    displayMovies(data.results);
+    await displayMovies(data.results);
     updatePageNumber();
+    showLoading(false);
 }
 
 async function filterByGenre() {
@@ -376,23 +365,20 @@ async function filterByGenre() {
     }
 
     const genreQuery = selectedGenres.join(",");
+    showLoading(true);
 
     const res = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_genres=${genreQuery}&language=it-IT`);
     const data = await res.json();
 
-    displayMovies(data.results);
-    
+    await displayMovies(data.results);
+    showLoading(false);
 }
-    function resetGenres() {
-    selectedGenres = [];
 
-    document.querySelectorAll(".genre-btn").forEach(btn => {
-        btn.classList.remove("active");
-    });
-
-    document.getElementById("movie").value = "";
-
-    loadTrendingMovies(1);
+function showLoading(show) {
+    const results = document.getElementById("results");
+    if (show) {
+        results.innerHTML = '<div style="text-align:center; padding:50px;">⏳ Caricamento in corso...</div>';
+    }
 }
 
 /* LIST STORAGE */
@@ -421,47 +407,58 @@ function toggleList(id, title, poster) {
     saveList(list);
 
     const btn = document.getElementById(`btn-${id}`);
-    const nowInList = !exists;
-
-    btn.innerText = nowInList ? "❌ Rimuovi" : "⭐ Lista";
-    btn.style.background = nowInList ? "#ef4444" : "#7c3aed";
+    if (btn) {
+        const nowInList = !exists;
+        btn.innerText = nowInList ? "❌ Rimuovi" : "⭐ Lista";
+        btn.style.background = nowInList ? "#ef4444" : "#7c3aed";
+    }
 }
 
 /* DISPLAY */
-function displayMovies(movies) {
+async function displayMovies(movies) {
     const results = document.getElementById("results");
     results.innerHTML = "";
 
-    movies.forEach(movie => {
+    for (const movie of movies) {
         const poster = movie.poster_path
             ? IMG_BASE + movie.poster_path
             : "https://via.placeholder.com/500x750";
 
         const link = `https://vixsrc.to/movie/${movie.id}?lang=it`;
         const inList = isInList(movie.id);
+        
+        // Verifica disponibilità
+        const available = await isAvailableOnVixsrc(movie.id, 'movie');
 
-        results.innerHTML += `
-            <div class="card">
-                <img src="${poster}" onclick="openMoviePage(${movie.id})">
-
-                <div class="card-content">
-                    <h4>${movie.title}</h4>
-
-                    <div style="display:flex; flex-direction:column; gap:6px;">
-                        <button onclick="openPlayer('${link}')">▶ Guarda</button>
-
-                        <button 
-                            id="btn-${movie.id}"
-                            onclick="toggleList(${movie.id}, '${movie.title.replace(/'/g,"\\'")}', '${poster.replace(/'/g,"\\'")}')"
-                            style="background:${inList ? '#ef4444' : '#7c3aed'}"
-                        >
-                            ${inList ? "❌ Rimuovi" : "⭐ Lista"}
-                        </button>
-                    </div>
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+            <img src="${poster}" onclick="openMoviePage(${movie.id})">
+            <div class="card-content">
+                <h4>${escapeHtml(movie.title)}</h4>
+                <div style="display:flex; flex-direction:column; gap:6px;">
+                    ${available ? 
+                        `<button onclick="openPlayer('${link}')">▶ Guarda</button>` : 
+                        `<button disabled style="background:#555; cursor:not-allowed;" title="Non disponibile su Vixsrc">🚫 Non disponibile</button>`
+                    }
+                    <button 
+                        id="btn-${movie.id}"
+                        onclick="toggleList(${movie.id}, '${escapeHtml(movie.title)}', '${escapeHtml(poster)}')"
+                        style="background:${inList ? '#ef4444' : '#7c3aed'}"
+                    >
+                        ${inList ? "❌ Rimuovi" : "⭐ Lista"}
+                    </button>
                 </div>
             </div>
         `;
-    });
+        results.appendChild(card);
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 /* PLAYER */
@@ -506,24 +503,6 @@ function prevPage() {
 function updatePageNumber() {
     document.getElementById("pageNumber").innerText = "Pagina " + currentPage;
 }
-
-/* ===== TORNA SU ===== */
-const tornaSuBtn = document.getElementById("tornaSu");
-
-window.addEventListener("scroll", function() {
-    if (window.scrollY > 300) {
-        tornaSuBtn.style.display = "flex";
-    } else {
-        tornaSuBtn.style.display = "none";
-    }
-});
-
-tornaSuBtn.addEventListener("click", function() {
-    window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-    });
-});
 </script>
 
 </body>
