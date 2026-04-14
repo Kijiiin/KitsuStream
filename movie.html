@@ -12,21 +12,6 @@ body {
     color: white;
 }
 
-.topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 30px;
-    position: relative;
-}
-
-.topbar-center {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    text-align: center;
-}
-
 .container {
     max-width: 900px;
     margin: auto;
@@ -44,16 +29,6 @@ body {
     flex-wrap: wrap;
 }
 
-h2 {
-    margin: 0;
-    font-size: 28px;
-    font-weight: bold;
-    background: linear-gradient(90deg, #a855f7, #00d4ff, #7c3aed);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-shadow: 0 0 20px rgba(124,58,237,0.3);
-}
-
 button {
     padding: 10px 15px;
     background: #7c3aed;
@@ -63,10 +38,16 @@ button {
     cursor: pointer;
 }
 
+button:disabled {
+    background: #555;
+    cursor: not-allowed;
+}
+
 .back {
     background: #444;
 }
 
+/* TOP BAR */
 .top-actions {
     display: flex;
     justify-content: space-between;
@@ -99,9 +80,7 @@ button {
 .player-controls {
     margin-top: 10px;
     display: flex;
-    justify-content: center;
-    gap: 10px;
-    flex-wrap: wrap;
+    justify-content: space-between;
 }
 
 .close-btn {
@@ -112,50 +91,10 @@ button {
     background: #00d4ff;
 }
 
-.save-btn {
-    background: #f59e0b;
-}
-
-.reset-btn {
-    background: #ef4444;
-}
-
-.saved-info {
-    background: #1f1b3a;
-    padding: 5px 10px;
-    border-radius: 8px;
-    font-size: 12px;
-    margin-left: 10px;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-}
-
-/* PULSANTE TORNA SU */
-#tornaSu {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #7c3aed, #a855f7);
-    color: white;
-    font-size: 24px;
-    border: none;
-    cursor: pointer;
-    box-shadow: 0 4px 15px rgba(124,58,237,0.5);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    transition: 0.3s;
-    z-index: 9998;
-}
-
-#tornaSu:hover {
-    transform: translateY(-5px);
-    background: linear-gradient(135deg, #a855f7, #c084fc);
-    box-shadow: 0 6px 20px rgba(124,58,237,0.8);
+.loading {
+    text-align: center;
+    padding: 50px;
+    font-size: 18px;
 }
 </style>
 </head>
@@ -164,16 +103,14 @@ button {
 
 <div class="container">
 
-    <div class="topbar-center">
-        <h2>🎬 KitsuStream</h2>
-    </div>
-
     <div class="top-actions">
-        <button onclick="goBack()">⬅ Torna indietro</button>
+        <button class="back" onclick="goBack()">⬅ Torna indietro</button>
         <button onclick="goToList()">⭐ Lista</button>
     </div>
 
-    <div id="movieDetails"></div>
+    <div id="movieDetails">
+        <div class="loading">⏳ Caricamento in corso...</div>
+    </div>
 
 </div>
 
@@ -183,18 +120,11 @@ button {
         <iframe id="videoFrame" allowfullscreen></iframe>
 
         <div class="player-controls">
-            <button class="fullscreen-btn" onclick="toggleFullscreen()">🖥 Schermo intero</button>
-            <button class="save-btn" onclick="saveCurrentSpot()">💾 Salva posizione</button>
-            <button class="reset-btn" onclick="resetSavedSpot()">🗑 Reset posizione</button>
             <button class="close-btn" onclick="closePlayer()">❌ Chiudi</button>
+            <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
         </div>
-        
-        <div id="savedInfo" style="text-align: center; margin-top: 8px; min-height: 30px;"></div>
     </div>
 </div>
-
-<!-- PULSANTE TORNA SU -->
-<button id="tornaSu" title="Torna su">↑</button>
 
 <script>
 const API_KEY = "7fe396e6f50677047459e8c173f2bd9d";
@@ -204,50 +134,100 @@ const params = new URLSearchParams(window.location.search);
 const movieId = params.get("id");
 
 let currentVideoUrl = "";
+let lastWatchTime = 0;
 
-loadMovie();
+/* VERIFICA DISPONIBILITÀ SU VIXSRC */
+async function isAvailableOnVixsrc(tmdbId, type = 'movie') {
+    try {
+        const apiUrl = `https://vixsrc.to/api/list/${type}?lang=it`;
+        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`;
+        
+        const response = await fetch(proxyUrl);
+        const data = await response.json();
+        
+        if (Array.isArray(data)) {
+            return data.includes(tmdbId.toString()) || data.includes(parseInt(tmdbId));
+        } else if (data.results && Array.isArray(data.results)) {
+            return data.results.some(item => item.id == tmdbId);
+        } else if (data.data && Array.isArray(data.data)) {
+            return data.data.some(item => item.id == tmdbId);
+        } else if (typeof data === 'object') {
+            return Object.keys(data).some(key => key == tmdbId);
+        }
+        
+        return false;
+    } catch (error) {
+        console.error('Errore verifica Vixsrc:', error);
+        return true; // Default true per non bloccare l'utente
+    }
+}
 
 /* LOAD MOVIE */
 async function loadMovie() {
-    const res = await fetch(`https://api.themoviedb.org/3/movie/${movieId}?api_key=${API_KEY}&language=it-IT`);
-    const movie = await res.json();
+    try {
+        const res = await fetch(`https://api.themoviedb.org/3/movie/${movieId}?api_key=${API_KEY}&language=it-IT`);
+        const movie = await res.json();
 
-    const poster = movie.poster_path
-        ? IMG_BASE + movie.poster_path
-        : "https://via.placeholder.com/500x750";
+        const poster = movie.poster_path
+            ? IMG_BASE + movie.poster_path
+            : "https://via.placeholder.com/500x750";
 
-    const link = `https://vixsrc.to/movie/${movie.id}`;
-    const inList = isInList(movie.id);
+        const link = `https://vixsrc.to/movie/${movie.id}?lang=it`;
+        const inList = isInList(movie.id);
+        
+        // Verifica disponibilità
+        const available = await isAvailableOnVixsrc(movie.id, 'movie');
 
-    document.getElementById("movieDetails").innerHTML = `
-        <div class="flex">
-            <img class="poster" src="${poster}">
-
-            <div>
-                <h1>${movie.title}</h1>
-                <p><b>Data:</b> ${movie.release_date}</p>
-                <p><b>Voto:</b> ${movie.vote_average}</p>
-                <p><b>Durata:</b> ${movie.runtime} min</p>
-                <p><b>Generi:</b> ${movie.genres.map(g => g.name).join(", ")}</p>
-
-                <p style="margin-top:15px;">
-                    ${movie.overview || "Nessuna descrizione disponibile"}
-                </p>
-
-                <div style="display:flex; gap:10px; margin-top:15px;">
-                    <button onclick="openPlayer('${link}')">▶ Guarda ora</button>
-
-                    <button 
-                        id="listBtn"
-                        onclick="toggleList(${movie.id}, '${movie.title.replace(/'/g,"\\'")}', '${poster.replace(/'/g,"\\'")}', '${link}')"
-                        style="background:${inList ? '#ef4444' : '#7c3aed'}"
-                    >
-                        ${inList ? "❌ Rimuovi" : "⭐ Lista"}
-                    </button>
+        document.getElementById("movieDetails").innerHTML = `
+            <div class="flex">
+                <img class="poster" src="${poster}" alt="${escapeHtml(movie.title)}">
+                
+                <div>
+                    <h1>${escapeHtml(movie.title)}</h1>
+                    <p><b>Data:</b> ${movie.release_date || 'N/D'}</p>
+                    <p><b>Voto:</b> ${movie.vote_average ? movie.vote_average.toFixed(1) : 'N/D'}/10</p>
+                    <p><b>Durata:</b> ${movie.runtime ? movie.runtime + ' min' : 'N/D'}</p>
+                    <p><b>Generi:</b> ${movie.genres ? movie.genres.map(g => g.name).join(", ") : 'N/D'}</p>
+                    
+                    <p style="margin-top:15px; line-height:1.5;">
+                        ${movie.overview ? escapeHtml(movie.overview) : "Nessuna descrizione disponibile"}
+                    </p>
+                    
+                    <div style="display:flex; gap:10px; margin-top:15px; flex-wrap:wrap;">
+                        ${available ? 
+                            `<button onclick="openPlayer('${link}')" style="background:#10b981;">▶ Guarda ora</button>` : 
+                            `<button disabled style="background:#555; cursor:not-allowed;" title="Film non trovato su Vixsrc">🚫 Non disponibile su Vixsrc</button>
+                             <span style="color:#f87171; font-size:13px;">⚠️ Questo film non è attualmente disponibile sulle nostre fonti</span>`
+                        }
+                        
+                        <button 
+                            id="listBtn"
+                            onclick="toggleList(${movie.id}, '${escapeHtml(movie.title)}', '${escapeHtml(poster)}', '${link}')"
+                            style="background:${inList ? '#ef4444' : '#7c3aed'}"
+                        >
+                            ${inList ? "❌ Rimuovi" : "⭐ Aggiungi alla lista"}
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
-    `;
+        `;
+    } catch (error) {
+        console.error('Errore caricamento film:', error);
+        document.getElementById("movieDetails").innerHTML = `
+            <div style="text-align:center; padding:50px;">
+                <h2>❌ Errore nel caricamento</h2>
+                <p>Impossibile caricare i dettagli del film.</p>
+                <button onclick="goBack()">Torna indietro</button>
+            </div>
+        `;
+    }
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 /* NAV */
@@ -264,21 +244,12 @@ function openPlayer(url) {
     const modal = document.getElementById("playerModal");
     const frame = document.getElementById("videoFrame");
     
-    // Controlla se c'è un tempo salvato per questo video
-    const savedTime = localStorage.getItem("time_" + url);
+    // Recupera tempo salvato
+    let savedTime = localStorage.getItem("time_" + url);
     let finalUrl = url;
-    let savedInfo = document.getElementById("savedInfo");
     
     if (savedTime && parseInt(savedTime) > 0) {
-        const secondi = parseInt(savedTime);
-        const minuti = Math.floor(secondi / 60);
-        const secondiRestanti = secondi % 60;
-        finalUrl += `?startAt=${secondi}`;
-        savedInfo.innerHTML = `📌 Riprenderò da ${minuti}:${secondiRestanti.toString().padStart(2,'0')} (${secondi} secondi)`;
-        savedInfo.style.color = "#f59e0b";
-    } else {
-        savedInfo.innerHTML = `🎬 Nessun salvataggio - il video partirà dall'inizio`;
-        savedInfo.style.color = "#888";
+        finalUrl += (url.includes("?") ? "&" : "?") + "startAt=" + savedTime;
     }
     
     currentVideoUrl = url;
@@ -290,8 +261,7 @@ function closePlayer() {
     const frame = document.getElementById("videoFrame");
     frame.src = "";
     document.getElementById("playerModal").style.display = "none";
-    document.getElementById("savedInfo").innerHTML = "";
-
+    
     if (document.fullscreenElement) {
         document.exitFullscreen();
     }
@@ -304,83 +274,11 @@ function handleOutsideClick(e) {
 
 function toggleFullscreen() {
     const box = document.getElementById("playerBox");
-
+    
     if (!document.fullscreenElement) {
         box.requestFullscreen();
     } else {
         document.exitFullscreen();
-    }
-}
-
-/* SALVA POSIZIONE MANUALE */
-function saveCurrentSpot() {
-    if (!currentVideoUrl) {
-        alert("Apri prima un video!");
-        return;
-    }
-    
-    const input = prompt("A che minuto sei? (es: 15.30 per 15 minuti e 30 secondi)\nUsa il punto per i decimali:");
-    
-    if (input === null) return;
-    
-    // Converti minuti (es. 15.30) in secondi
-    let minuti = parseFloat(input.replace(',', '.'));
-    
-    if (isNaN(minuti) || minuti < 0) {
-        alert("Inserisci un numero valido!");
-        return;
-    }
-    
-    const secondi = Math.floor(minuti * 60);
-    localStorage.setItem("time_" + currentVideoUrl, secondi);
-    
-    // Aggiorna l'informazione a schermo
-    const savedInfo = document.getElementById("savedInfo");
-    const minutiMostra = Math.floor(secondi / 60);
-    const secondiMostra = secondi % 60;
-    savedInfo.innerHTML = `✅ Salvato! Riprenderò da ${minutiMostra}:${secondiMostra.toString().padStart(2,'0')} (${secondi} secondi)`;
-    savedInfo.style.color = "#4ade80";
-    
-    setTimeout(() => {
-        if (document.getElementById("playerModal").style.display === "flex") {
-            savedInfo.style.color = "#f59e0b";
-        }
-    }, 3000);
-    
-    alert(`✅ Posizione salvata a ${minuti} minuti (${secondi} secondi)!\nLa prossima volta che apri questo video ripartirai da qui.`);
-}
-
-/* RESET POSIZIONE */
-function resetSavedSpot() {
-    if (!currentVideoUrl) {
-        alert("Apri prima un video!");
-        return;
-    }
-    
-    const savedTime = localStorage.getItem("time_" + currentVideoUrl);
-    if (!savedTime) {
-        alert("⚠️ Non c'è nessun salvataggio per questo video!");
-        return;
-    }
-    
-    const conferma = confirm("Sei sicuro di voler cancellare la posizione salvata?\nIl video ripartirà dall'inizio la prossima volta.");
-    
-    if (conferma) {
-        localStorage.removeItem("time_" + currentVideoUrl);
-        
-        // Aggiorna l'informazione a schermo
-        const savedInfo = document.getElementById("savedInfo");
-        savedInfo.innerHTML = `🗑 Salvataggio rimosso! Il video ripartirà dall'inizio`;
-        savedInfo.style.color = "#ef4444";
-        
-        setTimeout(() => {
-            if (document.getElementById("playerModal").style.display === "flex") {
-                savedInfo.innerHTML = `🎬 Nessun salvataggio - il video partirà dall'inizio`;
-                savedInfo.style.color = "#888";
-            }
-        }, 3000);
-        
-        alert("✅ Posizione cancellata! La prossima volta il video partirà dall'inizio.");
     }
 }
 
@@ -400,39 +298,39 @@ function isInList(id) {
 function toggleList(id, title, poster, link) {
     let list = getList();
     const exists = list.find(m => m.id === id);
-
+    
     if (exists) {
         list = list.filter(m => m.id !== id);
     } else {
         list.push({ id, title, poster, link });
     }
-
+    
     saveList(list);
-
+    
     const btn = document.getElementById("listBtn");
-    const nowInList = !exists;
-
-    btn.innerText = nowInList ? "❌ Rimuovi" : "⭐ Lista";
-    btn.style.background = nowInList ? "#ef4444" : "#7c3aed";
+    if (btn) {
+        const nowInList = !exists;
+        btn.innerText = nowInList ? "❌ Rimuovi" : "⭐ Aggiungi alla lista";
+        btn.style.background = nowInList ? "#ef4444" : "#7c3aed";
+    }
 }
 
-/* TORNA SU */
-const tornaSuBtn = document.getElementById("tornaSu");
-
-window.addEventListener("scroll", function() {
-    if (window.scrollY > 300) {
-        tornaSuBtn.style.display = "flex";
-    } else {
-        tornaSuBtn.style.display = "none";
+/* SALVA PROGRESSO */
+setInterval(() => {
+    if (!currentVideoUrl) return;
+    
+    // Simula il salvataggio del progresso ogni 5 secondi
+    // Nota: funziona solo se il player supporta il parametro startAt
+    const iframe = document.getElementById("videoFrame");
+    if (iframe && iframe.contentWindow) {
+        // Questo è un placeholder - il salvataggio reale dipende dal player
+        lastWatchTime += 5;
+        localStorage.setItem("time_" + currentVideoUrl, lastWatchTime);
     }
-});
+}, 5000);
 
-tornaSuBtn.addEventListener("click", function() {
-    window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-    });
-});
+// Avvia il caricamento
+loadMovie();
 </script>
 
 </body>
