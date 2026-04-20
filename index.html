@@ -37,19 +37,17 @@ body {
 .topbar-center {
     flex: 1;
     text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 20px;
 }
 
 h1 {
     margin: 0;
-    background: linear-gradient(135deg, #c084fc, #7c3aed);
+    font-size: 28px;
+    font-weight: bold;
+    background: linear-gradient(90deg, #a855f7, #00d4ff, #7c3aed);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    font-size: 24px;
+    text-shadow: 0 0 20px rgba(124,58,237,0.3);
 }
 
 .list-btn, .media-btn {
@@ -293,7 +291,6 @@ button:hover {
     background: #00d4ff;
 }
 
-/* Loading */
 .loading {
     text-align: center;
     padding: 50px;
@@ -308,20 +305,6 @@ button:hover {
     color: #888;
 }
 
-/* Scrollbar */
-::-webkit-scrollbar {
-    width: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: #1f1b3a;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #7c3aed;
-    border-radius: 4px;
-}
-
 @media (max-width: 768px) {
     .topbar {
         padding: 15px;
@@ -332,7 +315,7 @@ button:hover {
     }
     
     h1 {
-        font-size: 18px;
+        font-size: 20px;
     }
     
     .container {
@@ -379,13 +362,11 @@ button:hover {
         </div>
     </div>
 
-    <!-- Selettore Film/Serie TV -->
     <div class="media-selector">
         <button class="media-btn active" data-type="movie" onclick="switchMediaType('movie')">🎬 Film</button>
         <button class="media-btn" data-type="tv" onclick="switchMediaType('tv')">📺 Serie TV</button>
     </div>
 
-    <!-- Generi (cambiano in base al tipo) -->
     <div id="genresContainer" class="genres"></div>
 
     <div id="results" class="grid"></div>
@@ -397,7 +378,6 @@ button:hover {
     </div>
 </div>
 
-<!-- PLAYER MODAL -->
 <div id="playerModal" class="player-modal" onclick="handleOutsideClick(event)">
     <div class="player-box" id="playerBox">
         <iframe id="videoFrame" allowfullscreen></iframe>
@@ -414,59 +394,33 @@ const IMG_BASE = "https://image.tmdb.org/t/p/w500";
 
 let currentPage = 1;
 let selectedGenres = [];
-let currentMediaType = "movie"; // "movie" o "tv"
+let currentMediaType = "movie";
 let searchQuery = "";
 let totalPages = 1;
 
-// Generi per Film
 const movieGenres = [
-    { id: "28", name: "Azione" },
-    { id: "12", name: "Avventura" },
-    { id: "16", name: "Animazione" },
-    { id: "35", name: "Commedia" },
-    { id: "80", name: "Crime" },
-    { id: "99", name: "Documentario" },
-    { id: "18", name: "Dramma" },
-    { id: "10751", name: "Famiglia" },
-    { id: "14", name: "Fantasy" },
-    { id: "36", name: "Storico" },
-    { id: "27", name: "Horror" },
-    { id: "10402", name: "Musica" },
-    { id: "9648", name: "Mistero" },
-    { id: "10749", name: "Romance" },
-    { id: "878", name: "Fantascienza" },
-    { id: "53", name: "Thriller" },
-    { id: "10752", name: "Guerra" },
-    { id: "37", name: "Western" }
+    { id: "28", name: "Azione" }, { id: "12", name: "Avventura" }, { id: "16", name: "Animazione" },
+    { id: "35", name: "Commedia" }, { id: "80", name: "Crime" }, { id: "99", name: "Documentario" },
+    { id: "18", name: "Dramma" }, { id: "10751", name: "Famiglia" }, { id: "14", name: "Fantasy" },
+    { id: "36", name: "Storico" }, { id: "27", name: "Horror" }, { id: "10402", name: "Musica" },
+    { id: "9648", name: "Mistero" }, { id: "10749", name: "Romance" }, { id: "878", name: "Fantascienza" },
+    { id: "53", name: "Thriller" }, { id: "10752", name: "Guerra" }, { id: "37", name: "Western" }
 ];
 
-// Generi per Serie TV
 const tvGenres = [
-    { id: "10759", name: "Action & Adventure" },
-    { id: "16", name: "Animazione" },
-    { id: "35", name: "Commedia" },
-    { id: "80", name: "Crime" },
-    { id: "99", name: "Documentario" },
-    { id: "18", name: "Dramma" },
-    { id: "10751", name: "Famiglia" },
-    { id: "10762", name: "Kids" },
-    { id: "9648", name: "Mistero" },
-    { id: "10763", name: "News" },
-    { id: "10764", name: "Reality" },
-    { id: "10765", name: "Sci-Fi & Fantasy" },
-    { id: "10766", name: "Soap" },
-    { id: "10767", name: "Talk" },
-    { id: "10768", name: "War & Politics" },
+    { id: "10759", name: "Action & Adventure" }, { id: "16", name: "Animazione" }, { id: "35", name: "Commedia" },
+    { id: "80", name: "Crime" }, { id: "99", name: "Documentario" }, { id: "18", name: "Dramma" },
+    { id: "10751", name: "Famiglia" }, { id: "10762", name: "Kids" }, { id: "9648", name: "Mistero" },
+    { id: "10763", name: "News" }, { id: "10764", name: "Reality" }, { id: "10765", name: "Sci-Fi & Fantasy" },
+    { id: "10766", name: "Soap" }, { id: "10767", name: "Talk" }, { id: "10768", name: "War & Politics" },
     { id: "37", name: "Western" }
 ];
 
-// Inizializzazione
 window.onload = function() {
     loadContent();
     document.getElementById("searchInput").addEventListener("input", handleSearch);
 };
 
-// Cambia tra Film e Serie TV
 function switchMediaType(type) {
     currentMediaType = type;
     currentPage = 1;
@@ -474,18 +428,13 @@ function switchMediaType(type) {
     searchQuery = "";
     document.getElementById("searchInput").value = "";
     
-    // Aggiorna classe attiva dei bottoni
-    document.querySelectorAll(".media-btn").forEach(btn => {
-        btn.classList.remove("active");
-    });
+    document.querySelectorAll(".media-btn").forEach(btn => btn.classList.remove("active"));
     document.querySelector(`[data-type="${type}"]`).classList.add("active");
     
-    // Ricarica i generi
     renderGenres();
     loadContent();
 }
 
-// Renderizza i bottoni dei generi
 function renderGenres() {
     const genresContainer = document.getElementById("genresContainer");
     const genresList = currentMediaType === "movie" ? movieGenres : tvGenres;
@@ -497,7 +446,6 @@ function renderGenres() {
     `).join("");
 }
 
-// Toggle genere selezionato
 function toggleGenre(genreId) {
     const btn = document.querySelector(`.genre-btn[data-id="${genreId}"]`);
     
@@ -513,7 +461,6 @@ function toggleGenre(genreId) {
     loadContent();
 }
 
-// Gestione ricerca
 function handleSearch() {
     searchQuery = document.getElementById("searchInput").value.trim();
     currentPage = 1;
@@ -527,7 +474,6 @@ function clearSearch() {
     loadContent();
 }
 
-// Carica contenuti in base ai filtri
 async function loadContent() {
     showLoading();
     
@@ -535,15 +481,12 @@ async function loadContent() {
         let url = "";
         
         if (searchQuery) {
-            // Ricerca
             const searchType = currentMediaType === "movie" ? "movie" : "tv";
             url = `https://api.themoviedb.org/3/search/${searchType}?api_key=${API_KEY}&query=${encodeURIComponent(searchQuery)}&language=it-IT&page=${currentPage}`;
         } else if (selectedGenres.length > 0) {
-            // Filtro per genere
             const genreQuery = selectedGenres.join(",");
             url = `https://api.themoviedb.org/3/discover/${currentMediaType}?api_key=${API_KEY}&with_genres=${genreQuery}&language=it-IT&page=${currentPage}&sort_by=popularity.desc`;
         } else {
-            // Popolari
             url = `https://api.themoviedb.org/3/${currentMediaType}/popular?api_key=${API_KEY}&language=it-IT&page=${currentPage}`;
         }
         
@@ -554,8 +497,8 @@ async function loadContent() {
         displayItems(data.results);
         updatePageNumber();
     } catch (error) {
-        console.error("Errore nel caricamento:", error);
-        document.getElementById("results").innerHTML = '<div class="no-results">❌ Errore nel caricamento. Riprova più tardi.</div>';
+        console.error("Errore:", error);
+        document.getElementById("results").innerHTML = '<div class="no-results">❌ Errore nel caricamento</div>';
     }
 }
 
@@ -563,7 +506,6 @@ function showLoading() {
     document.getElementById("results").innerHTML = '<div class="loading">⏳ Caricamento in corso...</div>';
 }
 
-// Visualizza film o serie TV
 function displayItems(items) {
     const resultsDiv = document.getElementById("results");
     
@@ -573,10 +515,7 @@ function displayItems(items) {
     }
     
     resultsDiv.innerHTML = items.map(item => {
-        const posterUrl = item.poster_path 
-            ? IMG_BASE + item.poster_path 
-            : "https://via.placeholder.com/500x750?text=No+Image";
-        
+        const posterUrl = item.poster_path ? IMG_BASE + item.poster_path : "https://via.placeholder.com/500x750?text=No+Image";
         const title = currentMediaType === "movie" ? item.title : item.name;
         const date = currentMediaType === "movie" ? item.release_date : item.first_air_date;
         const year = date ? date.split("-")[0] : "N/D";
@@ -607,12 +546,10 @@ function displayItems(items) {
     }).join("");
 }
 
-// Apri pagina dettagli
 function openDetailsPage(id) {
     window.location.href = `${currentMediaType === "movie" ? "movie" : "tv"}.html?id=${id}`;
 }
 
-// Gestione lista (salva anche il tipo)
 function getList() {
     return JSON.parse(localStorage.getItem("myMediaList")) || [];
 }
@@ -633,11 +570,7 @@ function toggleList(id, title, poster, rating, year) {
         list = list.filter(item => !(item.id === id && item.type === currentMediaType));
     } else {
         list.push({ 
-            id, 
-            title, 
-            poster, 
-            rating, 
-            year,
+            id, title, poster, rating, year,
             type: currentMediaType,
             mediaType: currentMediaType === "movie" ? "Film" : "Serie TV"
         });
@@ -653,7 +586,6 @@ function toggleList(id, title, poster, rating, year) {
     }
 }
 
-// Navigazione
 function goHome() {
     searchQuery = "";
     selectedGenres = [];
@@ -687,16 +619,13 @@ function updatePageNumber() {
     document.getElementById("pageNumber").innerText = `Pagina ${currentPage} di ${totalPages}`;
 }
 
-// Player
 function openPlayer(url) {
-    const iframe = document.getElementById("videoFrame");
-    iframe.src = url;
+    document.getElementById("videoFrame").src = url;
     document.getElementById("playerModal").style.display = "flex";
 }
 
 function closePlayer() {
-    const iframe = document.getElementById("videoFrame");
-    iframe.src = "";
+    document.getElementById("videoFrame").src = "";
     document.getElementById("playerModal").style.display = "none";
 }
 
@@ -714,14 +643,12 @@ function toggleFullscreen() {
     }
 }
 
-// Utility
 function escapeHtml(text) {
     const div = document.createElement("div");
     div.textContent = text;
     return div.innerHTML;
 }
 
-// Ricarica generi all'avvio
 renderGenres();
 </script>
 
