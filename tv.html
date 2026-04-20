@@ -41,10 +41,13 @@ body {
 
 h1 {
     margin: 0;
-    background: linear-gradient(135deg, #c084fc, #7c3aed);
+    font-size: 28px;
+    font-weight: bold;
+    background: linear-gradient(90deg, #a855f7, #00d4ff, #7c3aed);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    text-shadow: 0 0 20px rgba(124,58,237,0.3);
 }
 
 .back-btn, .list-btn {
@@ -68,7 +71,6 @@ h1 {
     padding: 0 30px;
 }
 
-/* Dettagli Serie TV */
 .tv-details {
     background: rgba(31, 27, 58, 0.7);
     backdrop-filter: blur(10px);
@@ -172,8 +174,7 @@ h1 {
     transform: translateY(-2px);
 }
 
-/* Sezione Stagioni */
-.seasons-section {
+.seasons-section, .episodes-section {
     background: rgba(31, 27, 58, 0.7);
     backdrop-filter: blur(10px);
     border-radius: 20px;
@@ -223,15 +224,6 @@ h1 {
 .season-episodes {
     font-size: 12px;
     color: #aaa;
-}
-
-/* Sezione Episodi */
-.episodes-section {
-    background: rgba(31, 27, 58, 0.7);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 30px;
-    margin-top: 30px;
 }
 
 .season-selector {
@@ -294,7 +286,7 @@ h1 {
     margin-top: 10px;
 }
 
-/* Player Modal */
+/* PLAYER */
 .player-modal {
     position: fixed;
     inset: 0;
@@ -352,6 +344,33 @@ h1 {
     color: #c084fc;
 }
 
+/* TORNA SU */
+#tornaSu {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    color: white;
+    font-size: 24px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(124,58,237,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    transition: 0.3s;
+    z-index: 9998;
+}
+
+#tornaSu:hover {
+    transform: translateY(-5px);
+    background: linear-gradient(135deg, #a855f7, #c084fc);
+    box-shadow: 0 6px 20px rgba(124,58,237,0.8);
+}
+
 @media (max-width: 768px) {
     .tv-header {
         flex-direction: column;
@@ -374,6 +393,10 @@ h1 {
     .player-box iframe {
         height: 40vh;
     }
+    
+    h1 {
+        font-size: 20px;
+    }
 }
 </style>
 </head>
@@ -385,7 +408,7 @@ h1 {
         <button class="back-btn" onclick="goBack()">⬅️ Indietro</button>
     </div>
     <div class="topbar-center">
-        <h1>📺 KitsuStream - Serie TV</h1>
+        <h1>📺 KitsuStream</h1>
     </div>
     <div class="topbar-right">
         <button class="list-btn" onclick="goToList()">⭐ Lista</button>
@@ -398,7 +421,6 @@ h1 {
     </div>
 </div>
 
-<!-- Player Modal -->
 <div id="playerModal" class="player-modal" onclick="handleOutsideClick(event)">
     <div class="player-box" id="playerBox">
         <iframe id="videoFrame" allowfullscreen></iframe>
@@ -409,6 +431,8 @@ h1 {
     </div>
 </div>
 
+<button id="tornaSu" title="Torna su">↑</button>
+
 <script>
 const API_KEY = "7fe396e6f50677047459e8c173f2bd9d";
 const IMG_BASE = "https://image.tmdb.org/t/p/w500";
@@ -418,13 +442,11 @@ let tvId = null;
 let tvData = null;
 let selectedSeason = 1;
 
-// Prendi ID dalla URL
 function getTVIdFromURL() {
     const params = new URLSearchParams(window.location.search);
     return params.get('id');
 }
 
-// Carica dettagli serie TV
 async function loadTVDetails() {
     tvId = getTVIdFromURL();
     
@@ -434,31 +456,24 @@ async function loadTVDetails() {
     }
     
     try {
-        // Carica dettagli serie
         const response = await fetch(`https://api.themoviedb.org/3/tv/${tvId}?api_key=${API_KEY}&language=it-IT&append_to_response=credits`);
         const data = await response.json();
         tvData = data;
         
         displayTVDetails(data);
         loadSeasons(data.seasons);
-        loadEpisodes(1); // Carica episodi della prima stagione
+        loadEpisodes(1);
         
     } catch (error) {
-        console.error("Errore nel caricamento:", error);
-        document.getElementById("tvDetails").innerHTML = '<div class="loading">❌ Errore nel caricamento della serie TV</div>';
+        console.error("Errore:", error);
+        document.getElementById("tvDetails").innerHTML = '<div class="loading">❌ Errore nel caricamento</div>';
     }
 }
 
-// Visualizza dettagli serie TV
 function displayTVDetails(tv) {
     const posterUrl = tv.poster_path ? IMG_BASE + tv.poster_path : "https://via.placeholder.com/300x450?text=No+Image";
     const backdropUrl = tv.backdrop_path ? BACKDROP_BASE + tv.backdrop_path : "";
     
-    const genres = tv.genres.map(g => g.name).join(", ");
-    const year = tv.first_air_date ? tv.first_air_date.split("-")[0] : "N/D";
-    const rating = tv.vote_average ? tv.vote_average.toFixed(1) : "N/A";
-    
-    // Verifica se è nella lista
     const inList = isInList(tv.id);
     
     const html = `
@@ -469,13 +484,13 @@ function displayTVDetails(tv) {
             <div class="tv-info">
                 <h2 class="tv-title">${escapeHtml(tv.name)}</h2>
                 <div class="tv-meta">
-                    <span>📅 ${year}</span>
-                    <span>⭐ <span class="rating">${rating}/10</span></span>
+                    <span>📅 ${tv.first_air_date ? tv.first_air_date.split("-")[0] : "N/D"}</span>
+                    <span>⭐ <span class="rating">${tv.vote_average ? tv.vote_average.toFixed(1) : "N/A"}/10</span></span>
                     <span>🎬 ${tv.number_of_seasons} stagioni</span>
                     <span>📺 ${tv.number_of_episodes} episodi</span>
                 </div>
                 <div class="genres">
-                    ${tv.genres.map(g => `<span class="genre-tag">${g.name}</span>`).join("")}
+                    ${tv.genres ? tv.genres.map(g => `<span class="genre-tag">${g.name}</span>`).join("") : ""}
                 </div>
                 <div class="overview">
                     <strong>Trama:</strong><br>
@@ -493,7 +508,6 @@ function displayTVDetails(tv) {
     
     document.getElementById("tvDetails").innerHTML = html;
     
-    // Cambia sfondo se disponibile
     if (backdropUrl) {
         document.body.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url(${backdropUrl})`;
         document.body.style.backgroundSize = "cover";
@@ -501,9 +515,7 @@ function displayTVDetails(tv) {
     }
 }
 
-// Carica e mostra le stagioni
 function loadSeasons(seasons) {
-    // Filtra la stagione speciale (season 0)
     const validSeasons = seasons.filter(s => s.season_number > 0 && s.episode_count > 0);
     
     const seasonsHtml = `
@@ -525,7 +537,6 @@ function loadSeasons(seasons) {
     document.getElementById("tvDetails").insertAdjacentHTML("beforeend", seasonsHtml);
 }
 
-// Carica episodi di una stagione
 async function loadEpisodes(seasonNumber) {
     selectedSeason = seasonNumber;
     
@@ -536,13 +547,11 @@ async function loadEpisodes(seasonNumber) {
         displayEpisodes(seasonData);
         
     } catch (error) {
-        console.error("Errore nel caricamento episodi:", error);
+        console.error("Errore episodi:", error);
     }
 }
 
-// Visualizza episodi
 function displayEpisodes(seasonData) {
-    // Rimuovi sezione episodi esistente
     const existingSection = document.querySelector(".episodes-section");
     if (existingSection) existingSection.remove();
     
@@ -575,7 +584,6 @@ function displayEpisodes(seasonData) {
     document.getElementById("tvDetails").insertAdjacentHTML("beforeend", episodesHtml);
 }
 
-// Opzioni per il selettore stagioni
 function getSeasonOptions() {
     if (!tvData || !tvData.seasons) return "";
     
@@ -588,25 +596,20 @@ function getSeasonOptions() {
     `).join("");
 }
 
-// Cambia stagione
 function changeSeason(seasonNumber) {
     loadEpisodes(parseInt(seasonNumber));
 }
 
-// Seleziona stagione dal click sulla card
 function selectSeason(seasonNumber) {
     loadEpisodes(seasonNumber);
     document.querySelector(".episodes-section").scrollIntoView({ behavior: "smooth" });
 }
 
-// Riproduci episodio
 function playEpisode(season, episode) {
-    // URL di VixSrc per serie TV
     const url = `https://vixsrc.to/tv/${tvId}/${season}/${episode}?lang=it`;
     openPlayer(url);
 }
 
-// Riproduci primo episodio
 function playFirstEpisode() {
     if (tvData && tvData.seasons) {
         const firstSeason = tvData.seasons.find(s => s.season_number === 1 && s.episode_count > 0);
@@ -618,7 +621,6 @@ function playFirstEpisode() {
     }
 }
 
-// Gestione lista
 function getList() {
     return JSON.parse(localStorage.getItem("myMediaList")) || [];
 }
@@ -660,7 +662,6 @@ function toggleListFromDetails() {
     btn.style.background = nowInList ? "#ef4444" : "#7c3aed";
 }
 
-// Player
 function openPlayer(url) {
     document.getElementById("videoFrame").src = url;
     document.getElementById("playerModal").style.display = "flex";
@@ -685,7 +686,6 @@ function toggleFullscreen() {
     }
 }
 
-// Navigazione
 function goBack() {
     window.history.back();
 }
@@ -694,7 +694,6 @@ function goToList() {
     window.location.href = "list.html";
 }
 
-// Utility
 function escapeHtml(text) {
     if (!text) return "";
     const div = document.createElement("div");
@@ -702,7 +701,24 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Avvio
+/* TORNA SU */
+const tornaSuBtn = document.getElementById("tornaSu");
+
+window.addEventListener("scroll", function() {
+    if (window.scrollY > 300) {
+        tornaSuBtn.style.display = "flex";
+    } else {
+        tornaSuBtn.style.display = "none";
+    }
+});
+
+tornaSuBtn.addEventListener("click", function() {
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+});
+
 loadTVDetails();
 </script>
 
