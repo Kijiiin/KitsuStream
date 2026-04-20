@@ -103,6 +103,10 @@ h1 {
     font-size: 32px;
     margin-bottom: 10px;
     color: #c084fc;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 .movie-meta {
@@ -172,6 +176,22 @@ h1 {
 .list-toggle-btn:hover {
     background: #6d28d9;
     transform: translateY(-2px);
+}
+
+.italian-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: normal;
+}
+
+.italian-badge.available {
+    background: #22c55e;
+}
+
+.italian-badge.not-available {
+    background: #ef4444;
 }
 
 /* Sezione Info Aggiuntive */
@@ -426,6 +446,7 @@ h1 {
     
     .movie-title {
         font-size: 24px;
+        justify-content: center;
     }
     
     .container {
@@ -498,6 +519,23 @@ function getMovieIdFromURL() {
     return params.get('id');
 }
 
+async function checkItalianAvailability(type, id) {
+    try {
+        const url = `https://vixsrc.to/api/list/${type}?lang=it`;
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data && data.results) {
+            const found = data.results.some(item => item.id == id);
+            return found;
+        }
+        return false;
+    } catch (error) {
+        console.error("Errore verifica disponibilità italiana:", error);
+        return false;
+    }
+}
+
 async function loadMovieDetails() {
     movieId = getMovieIdFromURL();
     
@@ -511,8 +549,10 @@ async function loadMovieDetails() {
         const data = await response.json();
         movieData = data;
         
-        displayMovieDetails(data);
-        loadAdditionalInfo(data);
+        const hasItalian = await checkItalianAvailability('movie', movieId);
+        
+        displayMovieDetails(data, hasItalian);
+        loadAdditionalInfo(data, hasItalian);
         loadCast(data.credits);
         loadSimilar(data.similar);
         
@@ -522,12 +562,16 @@ async function loadMovieDetails() {
     }
 }
 
-function displayMovieDetails(movie) {
+function displayMovieDetails(movie, hasItalian) {
     const posterUrl = movie.poster_path ? IMG_BASE + movie.poster_path : "https://via.placeholder.com/300x450?text=No+Image";
     const backdropUrl = movie.backdrop_path ? BACKDROP_BASE + movie.backdrop_path : "";
     
     const inList = isInList(movie.id);
     const link = `https://vixsrc.to/movie/${movie.id}?lang=it`;
+    
+    const italianBadge = hasItalian ? 
+        '<span class="italian-badge available">🇮🇹 ITALIANO DISPONIBILE</span>' : 
+        '<span class="italian-badge not-available">⚠️ ITALIANO NON DISPONIBILE</span>';
     
     const html = `
         <div class="movie-header">
@@ -535,7 +579,7 @@ function displayMovieDetails(movie) {
                 <img src="${posterUrl}" alt="${movie.title}">
             </div>
             <div class="movie-info">
-                <h2 class="movie-title">${escapeHtml(movie.title)}</h2>
+                <h2 class="movie-title">${escapeHtml(movie.title)} ${italianBadge}</h2>
                 <div class="movie-meta">
                     <span>📅 ${movie.release_date ? movie.release_date.split("-")[0] : "N/D"}</span>
                     <span>⭐ <span class="rating">${movie.vote_average ? movie.vote_average.toFixed(1) : "N/A"}/10</span></span>
@@ -568,7 +612,11 @@ function displayMovieDetails(movie) {
     }
 }
 
-function loadAdditionalInfo(movie) {
+function loadAdditionalInfo(movie, hasItalian) {
+    const italianStatus = hasItalian ? 
+        '<span style="color: #22c55e;">✅ Disponibile in italiano</span>' : 
+        '<span style="color: #ef4444;">❌ Non disponibile in italiano</span>';
+    
     const infoHtml = `
         <div class="info-section">
             <h3 class="section-title">ℹ️ Informazioni aggiuntive</h3>
@@ -576,6 +624,10 @@ function loadAdditionalInfo(movie) {
                 <div class="info-card">
                     <div class="info-label">Titolo originale</div>
                     <div class="info-value">${escapeHtml(movie.original_title || "N/D")}</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">Lingua italiana</div>
+                    <div class="info-value">${italianStatus}</div>
                 </div>
                 <div class="info-card">
                     <div class="info-label">Budget</div>
@@ -703,7 +755,7 @@ function openPlayer(url) {
     const modal = document.getElementById("playerModal");
     const frame = document.getElementById("videoFrame");
     
-    const savedTime = localStorage.getItem("time_" + url);
+    const savedTime = localStorage.getItem("time_movie_" + url);
     let finalUrl = url;
     let savedInfo = document.getElementById("savedInfo");
     
@@ -767,7 +819,7 @@ function saveCurrentSpot() {
     }
     
     const secondi = Math.floor(minuti * 60);
-    localStorage.setItem("time_" + currentVideoUrl, secondi);
+    localStorage.setItem("time_movie_" + currentVideoUrl, secondi);
     
     const savedInfo = document.getElementById("savedInfo");
     const minutiMostra = Math.floor(secondi / 60);
@@ -790,7 +842,7 @@ function resetSavedSpot() {
         return;
     }
     
-    const savedTime = localStorage.getItem("time_" + currentVideoUrl);
+    const savedTime = localStorage.getItem("time_movie_" + currentVideoUrl);
     if (!savedTime) {
         alert("⚠️ Non c'è nessun salvataggio per questo video!");
         return;
@@ -799,7 +851,7 @@ function resetSavedSpot() {
     const conferma = confirm("Sei sicuro di voler cancellare la posizione salvata?");
     
     if (conferma) {
-        localStorage.removeItem("time_" + currentVideoUrl);
+        localStorage.removeItem("time_movie_" + currentVideoUrl);
         
         const savedInfo = document.getElementById("savedInfo");
         savedInfo.innerHTML = `🗑 Salvataggio rimosso! Il video ripartirà dall'inizio`;
