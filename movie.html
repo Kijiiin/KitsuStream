@@ -338,6 +338,34 @@ h1 {
     padding: 8px 16px;
     border-radius: 30px;
     font-size: 12px;
+    cursor: pointer;
+    border: none;
+    color: white;
+}
+
+.close-btn {
+    background: #ef4444;
+}
+
+.fullscreen-btn {
+    background: #00d4ff;
+}
+
+.save-btn {
+    background: #f59e0b;
+}
+
+.reset-btn {
+    background: #ef4444;
+}
+
+.auto-save-indicator {
+    text-align: center;
+    margin-top: 8px;
+    min-height: 30px;
+    padding: 0 15px 15px;
+    font-size: 12px;
+    transition: all 0.3s ease;
 }
 
 .loading {
@@ -664,11 +692,11 @@ h1 {
         <iframe id="videoFrame" allowfullscreen></iframe>
         <div class="player-controls">
             <button class="fullscreen-btn" onclick="toggleFullscreen()">🖥 Schermo intero</button>
-            <button class="save-btn" onclick="saveCurrentSpot()">💾 Salva</button>
+            <button class="save-btn" onclick="saveCurrentSpotManual()">💾 Salva manuale</button>
             <button class="reset-btn" onclick="resetSavedSpot()">🗑 Reset</button>
             <button class="close-btn" onclick="closePlayer()">❌ Chiudi</button>
         </div>
-        <div id="savedInfo" style="text-align: center; margin-top: 8px; min-height: 30px; padding: 0 15px 15px;"></div>
+        <div id="savedInfo" class="auto-save-indicator"></div>
     </div>
 </div>
 
@@ -683,6 +711,11 @@ const BACKDROP_BASE = "https://image.tmdb.org/t/p/original";
 let movieId = null;
 let movieData = null;
 let currentVideoUrl = "";
+
+// Variabili per l'auto-salvataggio
+let autoSaveEnabled = true;
+let lastAutoSaveTime = 0;
+let autoSaveTimer = null;
 
 function getMovieIdFromURL() {
     const params = new URLSearchParams(window.location.search);
@@ -741,7 +774,7 @@ function displayMovieDetails(movie) {
                     ${movie.overview || "Trama non disponibile."}
                 </div>
                 <div class="watch-buttons">
-                    <button class="watch-btn" onclick="openPlayer('${link}')">▶ Guarda ora</button>
+                    <button class="watch-btn" onclick="openPlayer('${link}')">▶ Guarda</button>
                     <button class="list-toggle-btn" id="listBtn" onclick="toggleListFromDetails('${link}')">
                         ${inList ? "❌ Rimuovi" : "⭐ Aggiungi"}
                     </button>
@@ -888,12 +921,113 @@ function toggleListFromDetails(link) {
     btn.style.background = nowInList ? "#ef4444" : "#7c3aed";
 }
 
+/* FUNZIONI AUTO-SALVATAGGIO */
+function autoSavePosition(currentTime) {
+    if (!autoSaveEnabled) return;
+    if (!currentVideoUrl) return;
+    
+    const now = Date.now();
+    // Salva ogni 5 secondi
+    if (now - lastAutoSaveTime > 5000) {
+        const seconds = Math.floor(currentTime);
+        if (seconds > 5 && seconds < 3600) { // Salva solo se tra 5 secondi e 1 ora
+            localStorage.setItem(`time_movie_${currentVideoUrl}`, seconds);
+            lastAutoSaveTime = now;
+            
+            // Aggiorna l'indicatore visivo
+            const savedInfo = document.getElementById("savedInfo");
+            if (savedInfo && document.getElementById("playerModal").style.display === "flex") {
+                const minutiMostra = Math.floor(seconds / 60);
+                const secondiMostra = seconds % 60;
+                savedInfo.innerHTML = `💾 Auto-salvato: ${minutiMostra}:${secondiMostra.toString().padStart(2,'0')}`;
+                savedInfo.style.color = "#4ade80";
+                setTimeout(() => {
+                    if (savedInfo && document.getElementById("playerModal").style.display === "flex") {
+                        savedInfo.innerHTML = `📌 Riprenderò da ${minutiMostra}:${secondiMostra.toString().padStart(2,'0')}`;
+                        savedInfo.style.color = "#f59e0b";
+                    }
+                }, 2000);
+            }
+        }
+    }
+}
+
+// Ascolta gli eventi dal player (auto-salvataggio)
+window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === "PLAYER_EVENT") {
+        const playerData = event.data.data;
+        
+        switch(playerData.event) {
+            case 'timeupdate':
+                // Salvataggio automatico ogni volta che arriva l'evento (throttlato)
+                autoSavePosition(playerData.currentTime);
+                break;
+                
+            case 'pause':
+                // Salva subito quando metti in pausa
+                if (currentVideoUrl) {
+                    const seconds = Math.floor(playerData.currentTime);
+                    if (seconds > 5) {
+                        localStorage.setItem(`time_movie_${currentVideoUrl}`, seconds);
+                        console.log(`📌 Salvato in pausa: ${seconds} secondi`);
+                        
+                        const savedInfo = document.getElementById("savedInfo");
+                        if (savedInfo) {
+                            const minutiMostra = Math.floor(seconds / 60);
+                            const secondiMostra = seconds % 60;
+                            savedInfo.innerHTML = `⏸️ Salvato in pausa: ${minutiMostra}:${secondiMostra.toString().padStart(2,'0')}`;
+                            savedInfo.style.color = "#4ade80";
+                            setTimeout(() => {
+                                if (savedInfo && document.getElementById("playerModal").style.display === "flex") {
+                                    savedInfo.innerHTML = `📌 Riprenderò da ${minutiMostra}:${secondiMostra.toString().padStart(2,'0')}`;
+                                    savedInfo.style.color = "#f59e0b";
+                                }
+                            }, 2000);
+                        }
+                    }
+                }
+                break;
+                
+            case 'seeked':
+                // Salva dopo un salto
+                if (currentVideoUrl) {
+                    const seconds = Math.floor(playerData.currentTime);
+                    if (seconds > 5) {
+                        localStorage.setItem(`time_movie_${currentVideoUrl}`, seconds);
+                        console.log(`📌 Salvato dopo seek: ${seconds} secondi`);
+                    }
+                }
+                break;
+                
+            case 'ended':
+                // Alla fine del video, cancella il salvataggio
+                if (currentVideoUrl) {
+                    localStorage.removeItem(`time_movie_${currentVideoUrl}`);
+                    console.log(`🎬 Film completato, salvataggio rimosso`);
+                    
+                    const savedInfo = document.getElementById("savedInfo");
+                    if (savedInfo) {
+                        savedInfo.innerHTML = `🎬 Film completato!`;
+                        savedInfo.style.color = "#4ade80";
+                        setTimeout(() => {
+                            if (savedInfo && document.getElementById("playerModal").style.display === "flex") {
+                                savedInfo.innerHTML = `🎬 Nessun salvataggio`;
+                                savedInfo.style.color = "#888";
+                            }
+                        }, 3000);
+                    }
+                }
+                break;
+        }
+    }
+});
+
 /* PLAYER */
 function openPlayer(url) {
     const modal = document.getElementById("playerModal");
     const frame = document.getElementById("videoFrame");
     
-    const savedTime = localStorage.getItem("time_movie_" + url);
+    const savedTime = localStorage.getItem(`time_movie_${url}`);
     let finalUrl = url;
     let savedInfo = document.getElementById("savedInfo");
     
@@ -905,13 +1039,16 @@ function openPlayer(url) {
         savedInfo.innerHTML = `📌 Riprenderò da ${minuti}:${secondiRestanti.toString().padStart(2,'0')}`;
         savedInfo.style.color = "#f59e0b";
     } else {
-        savedInfo.innerHTML = `🎬 Nessun salvataggio`;
+        savedInfo.innerHTML = `🎬 Nessun salvataggio - riparto dall'inizio`;
         savedInfo.style.color = "#888";
     }
     
     currentVideoUrl = url;
     frame.src = finalUrl;
     modal.style.display = "flex";
+    
+    // Reset timer per auto-salvataggio
+    lastAutoSaveTime = Date.now();
 }
 
 function closePlayer() {
@@ -939,7 +1076,7 @@ function toggleFullscreen() {
     }
 }
 
-function saveCurrentSpot() {
+function saveCurrentSpotManual() {
     if (!currentVideoUrl) {
         alert("Apri prima un video!");
         return;
@@ -957,19 +1094,22 @@ function saveCurrentSpot() {
     }
     
     const secondi = Math.floor(minuti * 60);
-    localStorage.setItem("time_movie_" + currentVideoUrl, secondi);
+    localStorage.setItem(`time_movie_${currentVideoUrl}`, secondi);
     
     const savedInfo = document.getElementById("savedInfo");
     const minutiMostra = Math.floor(secondi / 60);
     const secondiMostra = secondi % 60;
-    savedInfo.innerHTML = `✅ Salvato! Da ${minutiMostra}:${secondiMostra.toString().padStart(2,'0')}`;
+    savedInfo.innerHTML = `✅ Salvato manualmente! Da ${minutiMostra}:${secondiMostra.toString().padStart(2,'0')}`;
     savedInfo.style.color = "#4ade80";
     
     setTimeout(() => {
         if (document.getElementById("playerModal").style.display === "flex") {
+            savedInfo.innerHTML = `📌 Riprenderò da ${minutiMostra}:${secondiMostra.toString().padStart(2,'0')}`;
             savedInfo.style.color = "#f59e0b";
         }
     }, 3000);
+    
+    alert(`✅ Posizione salvata a ${minuti} minuti!`);
 }
 
 function resetSavedSpot() {
@@ -978,14 +1118,14 @@ function resetSavedSpot() {
         return;
     }
     
-    const savedTime = localStorage.getItem("time_movie_" + currentVideoUrl);
+    const savedTime = localStorage.getItem(`time_movie_${currentVideoUrl}`);
     if (!savedTime) {
         alert("⚠️ Nessun salvataggio!");
         return;
     }
     
     if (confirm("Cancellare la posizione salvata?")) {
-        localStorage.removeItem("time_movie_" + currentVideoUrl);
+        localStorage.removeItem(`time_movie_${currentVideoUrl}`);
         
         const savedInfo = document.getElementById("savedInfo");
         savedInfo.innerHTML = `🗑 Salvataggio rimosso!`;
@@ -993,13 +1133,16 @@ function resetSavedSpot() {
         
         setTimeout(() => {
             if (document.getElementById("playerModal").style.display === "flex") {
-                savedInfo.innerHTML = `🎬 Nessun salvataggio`;
+                savedInfo.innerHTML = `🎬 Nessun salvataggio - riparto dall'inizio`;
                 savedInfo.style.color = "#888";
             }
         }, 3000);
+        
+        alert("✅ Posizione cancellata!");
     }
 }
 
+/* NAVIGAZIONE */
 function goBack() {
     window.history.back();
 }
