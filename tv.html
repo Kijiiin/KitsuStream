@@ -190,7 +190,7 @@ h1 {
 }
 
 /* Sezioni mobile */
-.info-section, .cast-section, .similar-section, .seasons-section, .episodes-section {
+.info-section, .seasons-section, .episodes-section, .similar-section, .cast-section {
     background: rgba(31, 27, 58, 0.6);
     backdrop-filter: blur(10px);
     border-radius: 16px;
@@ -227,76 +227,6 @@ h1 {
     font-weight: bold;
     color: #c084fc;
     word-break: break-word;
-}
-
-/* Cast mobile */
-.cast-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-}
-
-.cast-card {
-    background: rgba(0,0,0,0.3);
-    border-radius: 10px;
-    padding: 10px;
-    text-align: center;
-}
-
-.cast-photo {
-    width: 100%;
-    height: 100px;
-    object-fit: cover;
-    border-radius: 8px;
-    margin-bottom: 8px;
-}
-
-.cast-name {
-    font-size: 12px;
-    font-weight: bold;
-    margin-bottom: 4px;
-}
-
-.cast-character {
-    font-size: 10px;
-    color: #aaa;
-}
-
-/* Similar mobile */
-.similar-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-}
-
-.similar-card {
-    background: rgba(0,0,0,0.3);
-    border-radius: 10px;
-    overflow: hidden;
-    cursor: pointer;
-}
-
-.similar-poster {
-    width: 100%;
-    height: 160px;
-    object-fit: cover;
-}
-
-.similar-info {
-    padding: 8px;
-}
-
-.similar-title {
-    font-size: 11px;
-    font-weight: bold;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.similar-year {
-    font-size: 9px;
-    color: #888;
 }
 
 /* Stagioni mobile */
@@ -403,6 +333,76 @@ h1 {
 
 .play-episode-btn:active {
     transform: scale(0.97);
+}
+
+/* Similar mobile */
+.similar-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.similar-card {
+    background: rgba(0,0,0,0.3);
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.similar-poster {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+}
+
+.similar-info {
+    padding: 8px;
+}
+
+.similar-title {
+    font-size: 11px;
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.similar-year {
+    font-size: 9px;
+    color: #888;
+}
+
+/* Cast mobile */
+.cast-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.cast-card {
+    background: rgba(0,0,0,0.3);
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+}
+
+.cast-photo {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.cast-name {
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.cast-character {
+    font-size: 10px;
+    color: #aaa;
 }
 
 /* Player mobile */
@@ -587,7 +587,7 @@ h1 {
     }
     
     /* Sezioni desktop */
-    .info-section, .cast-section, .similar-section, .seasons-section, .episodes-section {
+    .info-section, .seasons-section, .episodes-section, .similar-section, .cast-section {
         padding: 30px;
         margin-top: 30px;
         border-radius: 20px;
@@ -613,67 +613,6 @@ h1 {
     
     .info-value {
         font-size: 16px;
-    }
-    
-    /* Cast desktop */
-    .cast-grid {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 20px;
-    }
-    
-    .cast-card {
-        padding: 15px;
-        transition: all 0.3s ease;
-    }
-    
-    .cast-card:hover {
-        background: rgba(124, 58, 237, 0.3);
-        transform: translateY(-3px);
-    }
-    
-    .cast-photo {
-        height: 150px;
-        border-radius: 10px;
-    }
-    
-    .cast-name {
-        font-size: 14px;
-    }
-    
-    .cast-character {
-        font-size: 12px;
-    }
-    
-    /* Similar desktop */
-    .similar-grid {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 20px;
-    }
-    
-    .similar-card {
-        border-radius: 12px;
-        transition: all 0.3s ease;
-    }
-    
-    .similar-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    }
-    
-    .similar-poster {
-        height: 225px;
-    }
-    
-    .similar-info {
-        padding: 10px;
-    }
-    
-    .similar-title {
-        font-size: 12px;
-    }
-    
-    .similar-year {
-        font-size: 10px;
     }
     
     /* Stagioni desktop */
@@ -753,6 +692,67 @@ h1 {
         background: #dc2626;
     }
     
+    /* Similar desktop */
+    .similar-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 20px;
+    }
+    
+    .similar-card {
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+    
+    .similar-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    
+    .similar-poster {
+        height: 225px;
+    }
+    
+    .similar-info {
+        padding: 10px;
+    }
+    
+    .similar-title {
+        font-size: 12px;
+    }
+    
+    .similar-year {
+        font-size: 10px;
+    }
+    
+    /* Cast desktop */
+    .cast-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 20px;
+    }
+    
+    .cast-card {
+        padding: 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .cast-card:hover {
+        background: rgba(124, 58, 237, 0.3);
+        transform: translateY(-3px);
+    }
+    
+    .cast-photo {
+        height: 150px;
+        border-radius: 10px;
+    }
+    
+    .cast-name {
+        font-size: 14px;
+    }
+    
+    .cast-character {
+        font-size: 12px;
+    }
+    
     /* Player desktop */
     .player-box {
         width: 90%;
@@ -819,7 +819,7 @@ h1 {
     to { opacity: 1; transform: translateY(0); }
 }
 
-.tv-details, .info-section, .cast-section, .similar-section, .seasons-section, .episodes-section {
+.tv-details, .info-section, .seasons-section, .episodes-section, .similar-section, .cast-section {
     animation: fadeIn 0.3s ease;
 }
 </style>
@@ -892,10 +892,10 @@ async function loadTVDetails() {
         
         displayTVDetails(data);
         loadAdditionalInfo(data);
-        loadCast(data.credits);
-        loadSimilar(data.similar);
         loadSeasons(data.seasons);
         loadEpisodes(1);
+        loadSimilar(data.similar);
+        loadCast(data.credits);
         
     } catch (error) {
         console.error("Errore:", error);
@@ -982,58 +982,6 @@ function loadAdditionalInfo(tv) {
     `;
     
     document.getElementById("tvDetails").insertAdjacentHTML("beforeend", infoHtml);
-}
-
-function loadCast(credits) {
-    if (!credits || !credits.cast || credits.cast.length === 0) return;
-    
-    const mainCast = credits.cast.slice(0, 8);
-    
-    const castHtml = `
-        <div class="cast-section">
-            <h3 class="section-title">🎭 Cast</h3>
-            <div class="cast-grid">
-                ${mainCast.map(actor => `
-                    <div class="cast-card">
-                        <img class="cast-photo" src="${actor.profile_path ? IMG_BASE + actor.profile_path : 'https://via.placeholder.com/150x150?text=No+Photo'}" alt="${actor.name}" loading="lazy">
-                        <div class="cast-name">${escapeHtml(actor.name)}</div>
-                        <div class="cast-character">${escapeHtml(actor.character)}</div>
-                    </div>
-                `).join("")}
-            </div>
-        </div>
-    `;
-    
-    document.getElementById("tvDetails").insertAdjacentHTML("beforeend", castHtml);
-}
-
-function loadSimilar(similar) {
-    if (!similar || !similar.results || similar.results.length === 0) return;
-    
-    const similarShows = similar.results.slice(0, 6);
-    
-    const similarHtml = `
-        <div class="similar-section">
-            <h3 class="section-title">📺 Simili</h3>
-            <div class="similar-grid">
-                ${similarShows.map(show => `
-                    <div class="similar-card" onclick="openTVPage(${show.id})">
-                        <img class="similar-poster" src="${show.poster_path ? IMG_BASE + show.poster_path : 'https://via.placeholder.com/150x225?text=No+Poster'}" alt="${show.name}" loading="lazy">
-                        <div class="similar-info">
-                            <div class="similar-title">${escapeHtml(show.name)}</div>
-                            <div class="similar-year">${show.first_air_date ? show.first_air_date.split("-")[0] : "N/D"} | ⭐ ${show.vote_average ? show.vote_average.toFixed(1) : "N/A"}</div>
-                        </div>
-                    </div>
-                `).join("")}
-            </div>
-        </div>
-    `;
-    
-    document.getElementById("tvDetails").insertAdjacentHTML("beforeend", similarHtml);
-}
-
-function openTVPage(id) {
-    window.location.href = `tv.html?id=${id}`;
 }
 
 function loadSeasons(seasons) {
@@ -1126,6 +1074,58 @@ function selectSeason(seasonNumber) {
     if (window.innerWidth <= 768) {
         document.querySelector(".episodes-section").scrollIntoView({ behavior: "smooth" });
     }
+}
+
+function loadSimilar(similar) {
+    if (!similar || !similar.results || similar.results.length === 0) return;
+    
+    const similarShows = similar.results.slice(0, 6);
+    
+    const similarHtml = `
+        <div class="similar-section">
+            <h3 class="section-title">📺 Serie simili</h3>
+            <div class="similar-grid">
+                ${similarShows.map(show => `
+                    <div class="similar-card" onclick="openTVPage(${show.id})">
+                        <img class="similar-poster" src="${show.poster_path ? IMG_BASE + show.poster_path : 'https://via.placeholder.com/150x225?text=No+Poster'}" alt="${show.name}" loading="lazy">
+                        <div class="similar-info">
+                            <div class="similar-title">${escapeHtml(show.name)}</div>
+                            <div class="similar-year">${show.first_air_date ? show.first_air_date.split("-")[0] : "N/D"} | ⭐ ${show.vote_average ? show.vote_average.toFixed(1) : "N/A"}</div>
+                        </div>
+                    </div>
+                `).join("")}
+            </div>
+        </div>
+    `;
+    
+    document.getElementById("tvDetails").insertAdjacentHTML("beforeend", similarHtml);
+}
+
+function loadCast(credits) {
+    if (!credits || !credits.cast || credits.cast.length === 0) return;
+    
+    const mainCast = credits.cast.slice(0, 8);
+    
+    const castHtml = `
+        <div class="cast-section">
+            <h3 class="section-title">🎭 Cast</h3>
+            <div class="cast-grid">
+                ${mainCast.map(actor => `
+                    <div class="cast-card">
+                        <img class="cast-photo" src="${actor.profile_path ? IMG_BASE + actor.profile_path : 'https://via.placeholder.com/150x150?text=No+Photo'}" alt="${actor.name}" loading="lazy">
+                        <div class="cast-name">${escapeHtml(actor.name)}</div>
+                        <div class="cast-character">${escapeHtml(actor.character)}</div>
+                    </div>
+                `).join("")}
+            </div>
+        </div>
+    `;
+    
+    document.getElementById("tvDetails").insertAdjacentHTML("beforeend", castHtml);
+}
+
+function openTVPage(id) {
+    window.location.href = `tv.html?id=${id}`;
 }
 
 function playEpisode(season, episode) {
