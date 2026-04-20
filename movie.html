@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<title>Dettagli Film</title>
+<title>KitsuStream - Dettagli Film</title>
 
 <style>
 body {
@@ -27,6 +27,17 @@ body {
     text-align: center;
 }
 
+h2 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: bold;
+    background: linear-gradient(90deg, #a855f7, #00d4ff, #7c3aed);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 0 20px rgba(124,58,237,0.3);
+}
+
 .container {
     max-width: 900px;
     margin: auto;
@@ -44,14 +55,8 @@ body {
     flex-wrap: wrap;
 }
 
-h2 {
-    margin: 0;
-    font-size: 28px;
-    font-weight: bold;
-    background: linear-gradient(90deg, #a855f7, #00d4ff, #7c3aed);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-shadow: 0 0 20px rgba(124,58,237,0.3);
+h1 {
+    margin-top: 0;
 }
 
 button {
@@ -164,8 +169,12 @@ button {
 
 <div class="container">
 
-    <div class="topbar-center">
-        <h2>🎬 KitsuStream</h2>
+    <div class="topbar">
+        <div class="topbar-left"></div>
+        <div class="topbar-center">
+            <h2>🎬 KitsuStream</h2>
+        </div>
+        <div class="topbar-right"></div>
     </div>
 
     <div class="top-actions">
@@ -216,7 +225,7 @@ async function loadMovie() {
         ? IMG_BASE + movie.poster_path
         : "https://via.placeholder.com/500x750";
 
-    const link = `https://vixsrc.to/movie/${movie.id}`;
+    const link = `https://vixsrc.to/movie/${movie.id}?lang=it`;
     const inList = isInList(movie.id);
 
     document.getElementById("movieDetails").innerHTML = `
@@ -225,10 +234,10 @@ async function loadMovie() {
 
             <div>
                 <h1>${movie.title}</h1>
-                <p><b>Data:</b> ${movie.release_date}</p>
-                <p><b>Voto:</b> ${movie.vote_average}</p>
-                <p><b>Durata:</b> ${movie.runtime} min</p>
-                <p><b>Generi:</b> ${movie.genres.map(g => g.name).join(", ")}</p>
+                <p><b>Data:</b> ${movie.release_date || "N/D"}</p>
+                <p><b>Voto:</b> ${movie.vote_average || "N/A"}/10</p>
+                <p><b>Durata:</b> ${movie.runtime || "N/D"} min</p>
+                <p><b>Generi:</b> ${movie.genres ? movie.genres.map(g => g.name).join(", ") : "N/D"}</p>
 
                 <p style="margin-top:15px;">
                     ${movie.overview || "Nessuna descrizione disponibile"}
@@ -264,7 +273,6 @@ function openPlayer(url) {
     const modal = document.getElementById("playerModal");
     const frame = document.getElementById("videoFrame");
     
-    // Controlla se c'è un tempo salvato per questo video
     const savedTime = localStorage.getItem("time_" + url);
     let finalUrl = url;
     let savedInfo = document.getElementById("savedInfo");
@@ -323,7 +331,6 @@ function saveCurrentSpot() {
     
     if (input === null) return;
     
-    // Converti minuti (es. 15.30) in secondi
     let minuti = parseFloat(input.replace(',', '.'));
     
     if (isNaN(minuti) || minuti < 0) {
@@ -334,7 +341,6 @@ function saveCurrentSpot() {
     const secondi = Math.floor(minuti * 60);
     localStorage.setItem("time_" + currentVideoUrl, secondi);
     
-    // Aggiorna l'informazione a schermo
     const savedInfo = document.getElementById("savedInfo");
     const minutiMostra = Math.floor(secondi / 60);
     const secondiMostra = secondi % 60;
@@ -347,7 +353,7 @@ function saveCurrentSpot() {
         }
     }, 3000);
     
-    alert(`✅ Posizione salvata a ${minuti} minuti (${secondi} secondi)!\nLa prossima volta che apri questo video ripartirai da qui.`);
+    alert(`✅ Posizione salvata a ${minuti} minuti (${secondi} secondi)!`);
 }
 
 /* RESET POSIZIONE */
@@ -363,12 +369,11 @@ function resetSavedSpot() {
         return;
     }
     
-    const conferma = confirm("Sei sicuro di voler cancellare la posizione salvata?\nIl video ripartirà dall'inizio la prossima volta.");
+    const conferma = confirm("Sei sicuro di voler cancellare la posizione salvata?");
     
     if (conferma) {
         localStorage.removeItem("time_" + currentVideoUrl);
         
-        // Aggiorna l'informazione a schermo
         const savedInfo = document.getElementById("savedInfo");
         savedInfo.innerHTML = `🗑 Salvataggio rimosso! Il video ripartirà dall'inizio`;
         savedInfo.style.color = "#ef4444";
@@ -380,31 +385,31 @@ function resetSavedSpot() {
             }
         }, 3000);
         
-        alert("✅ Posizione cancellata! La prossima volta il video partirà dall'inizio.");
+        alert("✅ Posizione cancellata!");
     }
 }
 
 /* LIST */
 function getList() {
-    return JSON.parse(localStorage.getItem("myMovies")) || [];
+    return JSON.parse(localStorage.getItem("myMediaList")) || [];
 }
 
 function saveList(list) {
-    localStorage.setItem("myMovies", JSON.stringify(list));
+    localStorage.setItem("myMediaList", JSON.stringify(list));
 }
 
 function isInList(id) {
-    return getList().some(m => m.id === id);
+    return getList().some(m => m.id === id && m.type === "movie");
 }
 
 function toggleList(id, title, poster, link) {
     let list = getList();
-    const exists = list.find(m => m.id === id);
+    const exists = list.find(m => m.id === id && m.type === "movie");
 
     if (exists) {
-        list = list.filter(m => m.id !== id);
+        list = list.filter(m => !(m.id === id && m.type === "movie"));
     } else {
-        list.push({ id, title, poster, link });
+        list.push({ id, title, poster, link, type: "movie", mediaType: "Film" });
     }
 
     saveList(list);
