@@ -2,23 +2,16 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<title>La mia lista</title>
+<title>KitsuStream - La mia lista</title>
 
 <style>
-html {
-    min-height: 100%;
-    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-}
-
 body {
-    padding-top: 15px;
     margin: 0;
-    font-family: Arial, sans-serif;
-    background: transparent;
+    font-family: Arial;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
     color: white;
 }
 
-/* TOPBAR */
 .topbar {
     display: flex;
     align-items: center;
@@ -27,96 +20,58 @@ body {
     position: relative;
 }
 
-/* SINISTRA (bottone centrato verticalmente) */
-.topbar-left {
-    position: absolute;
-    left: 30px;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-/* CENTRO */
 .topbar-center {
     position: absolute;
     left: 50%;
-    flex-direction: column;
     transform: translateX(-50%);
     text-align: center;
 }
 
-.topbar-center h2 {
+h2 {
     margin: 0;
-}
-
-/* TITOLI */
-h2.title-purple {
-    color: #c084fc;
-    text-shadow: 0 0 10px rgba(168,85,247,0.6);
-}
-
-h2.title-gradient {
     font-size: 28px;
     font-weight: bold;
     background: linear-gradient(90deg, #a855f7, #00d4ff, #7c3aed);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    background-clip: text;
     text-shadow: 0 0 20px rgba(124,58,237,0.3);
 }
 
-/* BUTTON */
-button {
-    padding: 8px 12px;
-    border: none;
-    border-radius: 6px;
-    background: #7c3aed;
-    color: white;
-    cursor: pointer;
-    transition: 0.3s;
-}
-
-button:hover {
-    box-shadow: 0 0 15px rgba(168,85,247,0.8);
-    transform: translateY(-2px);
-}
-
-/* CONTAINER */
 .container {
-    max-width: 1000px;
+    max-width: 1200px;
     margin: auto;
-    padding: 20px;
-    text-align: center;
+    padding: 30px;
 }
 
-/* GRID */
 .grid {
-    margin-top: 30px;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 25px;
+    margin-top: 30px;
 }
 
-/* CARD */
 .card {
-    background: #1f1b3a;
-    border-radius: 12px;
+    background: rgba(31, 27, 58, 0.7);
+    border-radius: 15px;
     overflow: hidden;
-    transition: 0.3s;
+    backdrop-filter: blur(10px);
+    transition: transform 0.3s ease;
 }
 
 .card:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 20px rgba(168,85,247,0.8);
+    transform: translateY(-5px);
 }
 
 .card img {
     width: 100%;
-    height: 270px;
+    height: 300px;
     object-fit: cover;
     cursor: pointer;
 }
 
 .card-content {
-    padding: 10px;
+    padding: 15px;
 }
 
 .card h4 {
@@ -124,145 +79,191 @@ button:hover {
     font-size: 14px;
 }
 
-/* PLAYER */
-.player-modal {
+.media-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    margin-bottom: 8px;
+}
+
+.badge-movie {
+    background: #7c3aed;
+}
+
+.badge-tv {
+    background: #ef4444;
+}
+
+button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    background: #ef4444;
+    color: white;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 8px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px;
+    font-size: 18px;
+    color: #888;
+}
+
+.back-btn, .clear-all-btn {
+    background: #7c3aed;
+    padding: 10px 20px;
+    border-radius: 25px;
+    width: auto;
+}
+
+.top-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+}
+
+/* PULSANTE TORNA SU */
+#tornaSu {
     position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.9);
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    color: white;
+    font-size: 24px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(124,58,237,0.5);
     display: none;
     align-items: center;
     justify-content: center;
-    z-index: 9999;
+    transition: 0.3s;
+    z-index: 9998;
 }
 
-.player-box {
-    width: 90%;
-    max-width: 1000px;
-}
-
-.player-box iframe {
-    width: 100%;
-    height: 500px;
-    border: none;
-    border-radius: 10px;
-}
-
-.player-controls {
-    margin-top: 10px;
-    display: flex;
-    justify-content: center;
-}
-
-.close-btn {
-    background: red;
+#tornaSu:hover {
+    transform: translateY(-5px);
+    background: linear-gradient(135deg, #a855f7, #c084fc);
+    box-shadow: 0 6px 20px rgba(124,58,237,0.8);
 }
 </style>
 </head>
 
 <body>
-    
-<div class="topbar">
-    <div class="topbar-left">
-        <button onclick="goBack()">⬅ Torna indietro</button>
-    </div>
 
+<div class="topbar">
+    <div class="topbar-left"></div>
     <div class="topbar-center">
-        <h2 class="title-gradient">🎬 KitsuStream</h2>
-        <h2 class="title-purple">⭐ La mia lista</h2>
+        <h2>⭐ La mia lista</h2>
     </div>
+    <div class="topbar-right"></div>
 </div>
 
 <div class="container">
-    <div id="list" class="grid"></div>
-</div>
-
-<!-- PLAYER -->
-<div id="playerModal" class="player-modal" onclick="handleOutsideClick(event)">
-    <div class="player-box" id="playerBox">
-        <iframe id="videoFrame" allowfullscreen></iframe>
-
-        <div class="player-controls">
-            <button class="close-btn" onclick="closePlayer()">❌ Chiudi</button>
-        </div>
+    <div class="top-actions">
+        <button class="back-btn" onclick="goBack()">⬅ Torna indietro</button>
+        <button class="clear-all-btn" onclick="clearAll()">🗑 Svuota lista</button>
     </div>
+
+    <div id="listContainer"></div>
 </div>
+
+<button id="tornaSu" title="Torna su">↑</button>
 
 <script>
-
-function goBack() {
-    window.location.href = "index.html";
-}
-
 function getList() {
-    return JSON.parse(localStorage.getItem("myMovies")) || [];
+    return JSON.parse(localStorage.getItem("myMediaList")) || [];
 }
 
 function saveList(list) {
-    localStorage.setItem("myMovies", JSON.stringify(list));
+    localStorage.setItem("myMediaList", JSON.stringify(list));
+    displayList();
 }
 
-function removeMovie(id) {
-    let list = getList().filter(m => m.id !== id);
-    saveList(list);
-    renderList();
-}
-
-function openMoviePage(id) {
-    window.location.href = "movie.html?id=" + id;
-}
-
-function openPlayer(url) {
-    document.getElementById("videoFrame").src = url;
-    document.getElementById("playerModal").style.display = "flex";
-}
-
-function closePlayer() {
-    document.getElementById("videoFrame").src = "";
-    document.getElementById("playerModal").style.display = "none";
-}
-
-function handleOutsideClick(e) {
-    const box = document.getElementById("playerBox");
-    if (!box.contains(e.target)) closePlayer();
-}
-
-function renderList() {
-    const container = document.getElementById("list");
+function displayList() {
     const list = getList();
-
-    container.innerHTML = "";
-
+    const container = document.getElementById("listContainer");
+    
     if (list.length === 0) {
-        container.innerHTML = "<p>Nessun film salvato</p>";
+        container.innerHTML = '<div class="empty-state">📭 La tua lista è vuota<br>Aggiungi film o serie TV dalla home!</div>';
         return;
     }
-
-    list.forEach(movie => {
-
-        const link = `https://vixsrc.to/movie/${movie.id}?lang=it`;
-
-        container.innerHTML += `
-            <div class="card">
-                <img src="${movie.poster}" onclick="openMoviePage(${movie.id})">
-
-                <div class="card-content">
-                    <h4>${movie.title}</h4>
-
-                    <button onclick="openPlayer('${link}')">
-                        ▶ Guarda
-                    </button>
-
-                    <button onclick="removeMovie(${movie.id})" style="margin-top:8px; background:#ef4444;">
-                        ❌ Rimuovi
-                    </button>
+    
+    container.innerHTML = `
+        <div class="grid">
+            ${list.map(item => `
+                <div class="card">
+                    <img src="${item.poster || 'https://via.placeholder.com/500x750'}" 
+                         alt="${item.title}" 
+                         onclick="openDetails(${item.id}, '${item.type}')">
+                    <div class="card-content">
+                        <span class="media-badge ${item.type === 'movie' ? 'badge-movie' : 'badge-tv'}">
+                            ${item.mediaType || (item.type === 'movie' ? 'Film' : 'Serie TV')}
+                        </span>
+                        <h4>${escapeHtml(item.title)}</h4>
+                        <p>⭐ ${item.rating || "N/A"}/10</p>
+                        <p>📅 ${item.year || "N/D"}</p>
+                        ${item.seasons ? `<p>📺 ${item.seasons} stagioni</p>` : ''}
+                        <button onclick="removeFromList(${item.id}, '${item.type}')">❌ Rimuovi</button>
+                    </div>
                 </div>
-            </div>
-        `;
-    });
+            `).join("")}
+        </div>
+    `;
 }
 
-renderList();
+function openDetails(id, type) {
+    window.location.href = `${type === 'movie' ? 'movie' : 'tv'}.html?id=${id}`;
+}
 
+function removeFromList(id, type) {
+    let list = getList();
+    list = list.filter(item => !(item.id === id && item.type === type));
+    saveList(list);
+}
+
+function clearAll() {
+    if (confirm("⚠️ Sei sicuro di voler svuotare tutta la lista?")) {
+        saveList([]);
+    }
+}
+
+function goBack() {
+    window.history.back();
+}
+
+function escapeHtml(text) {
+    if (!text) return "";
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+/* TORNA SU */
+const tornaSuBtn = document.getElementById("tornaSu");
+
+window.addEventListener("scroll", function() {
+    if (window.scrollY > 300) {
+        tornaSuBtn.style.display = "flex";
+    } else {
+        tornaSuBtn.style.display = "none";
+    }
+});
+
+tornaSuBtn.addEventListener("click", function() {
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+});
+
+displayList();
 </script>
 
 </body>
