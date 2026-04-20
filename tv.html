@@ -174,7 +174,8 @@ h1 {
     transform: translateY(-2px);
 }
 
-.seasons-section, .episodes-section {
+/* Sezione Info Aggiuntive */
+.info-section {
     background: rgba(31, 27, 58, 0.7);
     backdrop-filter: blur(10px);
     border-radius: 20px;
@@ -186,6 +187,140 @@ h1 {
     font-size: 24px;
     margin-bottom: 20px;
     color: #c084fc;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.info-card {
+    background: rgba(0,0,0,0.3);
+    border-radius: 12px;
+    padding: 15px;
+}
+
+.info-label {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 5px;
+}
+
+.info-value {
+    font-size: 16px;
+    font-weight: bold;
+    color: #c084fc;
+}
+
+/* Sezione Cast */
+.cast-section {
+    background: rgba(31, 27, 58, 0.7);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 30px;
+    margin-top: 30px;
+}
+
+.cast-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.cast-card {
+    background: rgba(0,0,0,0.3);
+    border-radius: 12px;
+    padding: 15px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.cast-card:hover {
+    background: rgba(124, 58, 237, 0.3);
+    transform: translateY(-3px);
+}
+
+.cast-photo {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+
+.cast-name {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.cast-character {
+    font-size: 12px;
+    color: #aaa;
+}
+
+/* Sezione Simili */
+.similar-section {
+    background: rgba(31, 27, 58, 0.7);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 30px;
+    margin-top: 30px;
+}
+
+.similar-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.similar-card {
+    background: rgba(0,0,0,0.3);
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.similar-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.similar-poster {
+    width: 100%;
+    height: 225px;
+    object-fit: cover;
+}
+
+.similar-info {
+    padding: 10px;
+}
+
+.similar-title {
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.similar-year {
+    font-size: 10px;
+    color: #888;
+}
+
+/* Sezione Stagioni */
+.seasons-section {
+    background: rgba(31, 27, 58, 0.7);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 30px;
+    margin-top: 30px;
 }
 
 .seasons-grid {
@@ -224,6 +359,15 @@ h1 {
 .season-episodes {
     font-size: 12px;
     color: #aaa;
+}
+
+/* Sezione Episodi */
+.episodes-section {
+    background: rgba(31, 27, 58, 0.7);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 30px;
+    margin-top: 30px;
 }
 
 .season-selector {
@@ -295,6 +439,12 @@ h1 {
     align-items: center;
     justify-content: center;
     z-index: 9999;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 .player-box {
@@ -317,24 +467,32 @@ h1 {
     display: flex;
     justify-content: space-between;
     background: #1a1a1a;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.player-controls button {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
 }
 
 .close-btn {
     background: #ef4444;
-    padding: 8px 20px;
-    border: none;
-    border-radius: 8px;
-    color: white;
-    cursor: pointer;
 }
 
 .fullscreen-btn {
     background: #00d4ff;
-    padding: 8px 20px;
-    border: none;
-    border-radius: 8px;
-    color: white;
-    cursor: pointer;
+}
+
+.save-btn {
+    background: #f59e0b;
+}
+
+.reset-btn {
+    background: #ef4444;
 }
 
 .loading {
@@ -397,6 +555,10 @@ h1 {
     h1 {
         font-size: 20px;
     }
+    
+    .topbar-left, .topbar-right {
+        width: 70px;
+    }
 }
 </style>
 </head>
@@ -421,16 +583,21 @@ h1 {
     </div>
 </div>
 
+<!-- PLAYER -->
 <div id="playerModal" class="player-modal" onclick="handleOutsideClick(event)">
     <div class="player-box" id="playerBox">
         <iframe id="videoFrame" allowfullscreen></iframe>
         <div class="player-controls">
+            <button class="fullscreen-btn" onclick="toggleFullscreen()">🖥 Schermo intero</button>
+            <button class="save-btn" onclick="saveCurrentSpot()">💾 Salva posizione</button>
+            <button class="reset-btn" onclick="resetSavedSpot()">🗑 Reset posizione</button>
             <button class="close-btn" onclick="closePlayer()">❌ Chiudi</button>
-            <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶ Schermo intero</button>
         </div>
+        <div id="savedInfo" style="text-align: center; margin-top: 8px; min-height: 30px; padding: 0 15px 15px;"></div>
     </div>
 </div>
 
+<!-- PULSANTE TORNA SU -->
 <button id="tornaSu" title="Torna su">↑</button>
 
 <script>
@@ -441,6 +608,7 @@ const BACKDROP_BASE = "https://image.tmdb.org/t/p/original";
 let tvId = null;
 let tvData = null;
 let selectedSeason = 1;
+let currentVideoUrl = "";
 
 function getTVIdFromURL() {
     const params = new URLSearchParams(window.location.search);
@@ -456,11 +624,14 @@ async function loadTVDetails() {
     }
     
     try {
-        const response = await fetch(`https://api.themoviedb.org/3/tv/${tvId}?api_key=${API_KEY}&language=it-IT&append_to_response=credits`);
+        const response = await fetch(`https://api.themoviedb.org/3/tv/${tvId}?api_key=${API_KEY}&language=it-IT&append_to_response=credits,similar`);
         const data = await response.json();
         tvData = data;
         
         displayTVDetails(data);
+        loadAdditionalInfo(data);
+        loadCast(data.credits);
+        loadSimilar(data.similar);
         loadSeasons(data.seasons);
         loadEpisodes(1);
         
@@ -488,6 +659,7 @@ function displayTVDetails(tv) {
                     <span>⭐ <span class="rating">${tv.vote_average ? tv.vote_average.toFixed(1) : "N/A"}/10</span></span>
                     <span>🎬 ${tv.number_of_seasons} stagioni</span>
                     <span>📺 ${tv.number_of_episodes} episodi</span>
+                    <span>📊 ${tv.popularity ? Math.round(tv.popularity) : "N/D"} popolarità</span>
                 </div>
                 <div class="genres">
                     ${tv.genres ? tv.genres.map(g => `<span class="genre-tag">${g.name}</span>`).join("") : ""}
@@ -513,6 +685,95 @@ function displayTVDetails(tv) {
         document.body.style.backgroundSize = "cover";
         document.body.style.backgroundAttachment = "fixed";
     }
+}
+
+function loadAdditionalInfo(tv) {
+    const infoHtml = `
+        <div class="info-section">
+            <h3 class="section-title">ℹ️ Informazioni aggiuntive</h3>
+            <div class="info-grid">
+                <div class="info-card">
+                    <div class="info-label">Titolo originale</div>
+                    <div class="info-value">${escapeHtml(tv.original_name || "N/D")}</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">Stato</div>
+                    <div class="info-value">${tv.status || "N/D"}</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">Lingua originale</div>
+                    <div class="info-value">${tv.original_language ? tv.original_language.toUpperCase() : "N/D"}</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">Popolarità</div>
+                    <div class="info-value">📊 ${tv.popularity ? Math.round(tv.popularity) : "N/D"}</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">Produzione</div>
+                    <div class="info-value">${tv.production_companies && tv.production_companies[0] ? tv.production_companies[0].name : "N/D"}</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">Paesi</div>
+                    <div class="info-value">${tv.origin_country ? tv.origin_country.join(", ") : "N/D"}</div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById("tvDetails").insertAdjacentHTML("beforeend", infoHtml);
+}
+
+function loadCast(credits) {
+    if (!credits || !credits.cast || credits.cast.length === 0) return;
+    
+    const mainCast = credits.cast.slice(0, 8);
+    
+    const castHtml = `
+        <div class="cast-section">
+            <h3 class="section-title">🎭 Cast principale</h3>
+            <div class="cast-grid">
+                ${mainCast.map(actor => `
+                    <div class="cast-card">
+                        <img class="cast-photo" src="${actor.profile_path ? IMG_BASE + actor.profile_path : 'https://via.placeholder.com/150x150?text=No+Photo'}" alt="${actor.name}">
+                        <div class="cast-name">${escapeHtml(actor.name)}</div>
+                        <div class="cast-character">${escapeHtml(actor.character)}</div>
+                    </div>
+                `).join("")}
+            </div>
+        </div>
+    `;
+    
+    document.getElementById("tvDetails").insertAdjacentHTML("beforeend", castHtml);
+}
+
+function loadSimilar(similar) {
+    if (!similar || !similar.results || similar.results.length === 0) return;
+    
+    const similarShows = similar.results.slice(0, 6);
+    
+    const similarHtml = `
+        <div class="similar-section">
+            <h3 class="section-title">📺 Serie simili</h3>
+            <div class="similar-grid">
+                ${similarShows.map(show => `
+                    <div class="similar-card" onclick="openTVPage(${show.id})">
+                        <img class="similar-poster" src="${show.poster_path ? IMG_BASE + show.poster_path : 'https://via.placeholder.com/150x225?text=No+Poster'}" alt="${show.name}">
+                        <div class="similar-info">
+                            <div class="similar-title">${escapeHtml(show.name)}</div>
+                            <div class="similar-year">${show.first_air_date ? show.first_air_date.split("-")[0] : "N/D"}</div>
+                            <div class="similar-year">⭐ ${show.vote_average ? show.vote_average.toFixed(1) : "N/A"}</div>
+                        </div>
+                    </div>
+                `).join("")}
+            </div>
+        </div>
+    `;
+    
+    document.getElementById("tvDetails").insertAdjacentHTML("beforeend", similarHtml);
+}
+
+function openTVPage(id) {
+    window.location.href = `tv.html?id=${id}`;
 }
 
 function loadSeasons(seasons) {
@@ -662,14 +923,41 @@ function toggleListFromDetails() {
     btn.style.background = nowInList ? "#ef4444" : "#7c3aed";
 }
 
+/* PLAYER CON SALVATAGGIO POSIZIONE */
 function openPlayer(url) {
-    document.getElementById("videoFrame").src = url;
-    document.getElementById("playerModal").style.display = "flex";
+    const modal = document.getElementById("playerModal");
+    const frame = document.getElementById("videoFrame");
+    
+    const savedTime = localStorage.getItem("time_tv_" + url);
+    let finalUrl = url;
+    let savedInfo = document.getElementById("savedInfo");
+    
+    if (savedTime && parseInt(savedTime) > 0) {
+        const secondi = parseInt(savedTime);
+        const minuti = Math.floor(secondi / 60);
+        const secondiRestanti = secondi % 60;
+        finalUrl += `&startAt=${secondi}`;
+        savedInfo.innerHTML = `📌 Riprenderò da ${minuti}:${secondiRestanti.toString().padStart(2,'0')} (${secondi} secondi)`;
+        savedInfo.style.color = "#f59e0b";
+    } else {
+        savedInfo.innerHTML = `🎬 Nessun salvataggio - il video partirà dall'inizio`;
+        savedInfo.style.color = "#888";
+    }
+    
+    currentVideoUrl = url;
+    frame.src = finalUrl;
+    modal.style.display = "flex";
 }
 
 function closePlayer() {
-    document.getElementById("videoFrame").src = "";
+    const frame = document.getElementById("videoFrame");
+    frame.src = "";
     document.getElementById("playerModal").style.display = "none";
+    document.getElementById("savedInfo").innerHTML = "";
+    
+    if (document.fullscreenElement) {
+        document.exitFullscreen();
+    }
 }
 
 function handleOutsideClick(e) {
@@ -683,6 +971,73 @@ function toggleFullscreen() {
         box.requestFullscreen();
     } else {
         document.exitFullscreen();
+    }
+}
+
+function saveCurrentSpot() {
+    if (!currentVideoUrl) {
+        alert("Apri prima un video!");
+        return;
+    }
+    
+    const input = prompt("A che minuto sei? (es: 15.30 per 15 minuti e 30 secondi)\nUsa il punto per i decimali:");
+    
+    if (input === null) return;
+    
+    let minuti = parseFloat(input.replace(',', '.'));
+    
+    if (isNaN(minuti) || minuti < 0) {
+        alert("Inserisci un numero valido!");
+        return;
+    }
+    
+    const secondi = Math.floor(minuti * 60);
+    localStorage.setItem("time_tv_" + currentVideoUrl, secondi);
+    
+    const savedInfo = document.getElementById("savedInfo");
+    const minutiMostra = Math.floor(secondi / 60);
+    const secondiMostra = secondi % 60;
+    savedInfo.innerHTML = `✅ Salvato! Riprenderò da ${minutiMostra}:${secondiMostra.toString().padStart(2,'0')} (${secondi} secondi)`;
+    savedInfo.style.color = "#4ade80";
+    
+    setTimeout(() => {
+        if (document.getElementById("playerModal").style.display === "flex") {
+            savedInfo.style.color = "#f59e0b";
+        }
+    }, 3000);
+    
+    alert(`✅ Posizione salvata a ${minuti} minuti (${secondi} secondi)!`);
+}
+
+function resetSavedSpot() {
+    if (!currentVideoUrl) {
+        alert("Apri prima un video!");
+        return;
+    }
+    
+    const savedTime = localStorage.getItem("time_tv_" + currentVideoUrl);
+    if (!savedTime) {
+        alert("⚠️ Non c'è nessun salvataggio per questo video!");
+        return;
+    }
+    
+    const conferma = confirm("Sei sicuro di voler cancellare la posizione salvata?");
+    
+    if (conferma) {
+        localStorage.removeItem("time_tv_" + currentVideoUrl);
+        
+        const savedInfo = document.getElementById("savedInfo");
+        savedInfo.innerHTML = `🗑 Salvataggio rimosso! Il video ripartirà dall'inizio`;
+        savedInfo.style.color = "#ef4444";
+        
+        setTimeout(() => {
+            if (document.getElementById("playerModal").style.display === "flex") {
+                savedInfo.innerHTML = `🎬 Nessun salvataggio - il video partirà dall'inizio`;
+                savedInfo.style.color = "#888";
+            }
+        }, 3000);
+        
+        alert("✅ Posizione cancellata!");
     }
 }
 
