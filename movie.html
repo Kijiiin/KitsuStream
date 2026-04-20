@@ -510,6 +510,29 @@ const API_KEY = "7fe396e6f50677047459e8c173f2bd9d";
 const IMG_BASE = "https://image.tmdb.org/t/p/w500";
 const BACKDROP_BASE = "https://image.tmdb.org/t/p/original";
 
+// Cache per la lista italiana
+let italianMovieIds = null;
+
+// Funzione per ottenere la lista dei film disponibili in italiano
+async function getItalianMovieIds() {
+    if (italianMovieIds !== null) return italianMovieIds;
+    
+    try {
+        const response = await fetch('https://vixsrc.to/api/list/movie?lang=it');
+        const data = await response.json();
+        
+        if (data && data.results) {
+            italianMovieIds = new Set(data.results.map(item => item.tmdb_id));
+            console.log(`Caricati ${italianMovieIds.size} film italiani`);
+            return italianMovieIds;
+        }
+        return new Set();
+    } catch (error) {
+        console.error("Errore nel caricamento della lista italiana:", error);
+        return new Set();
+    }
+}
+
 let movieId = null;
 let movieData = null;
 let currentVideoUrl = "";
@@ -519,21 +542,9 @@ function getMovieIdFromURL() {
     return params.get('id');
 }
 
-async function checkItalianAvailability(type, id) {
-    try {
-        const url = `https://vixsrc.to/api/list/${type}?lang=it`;
-        const response = await fetch(url);
-        const data = await response.json();
-        
-        if (data && data.results) {
-            const found = data.results.some(item => item.id == id);
-            return found;
-        }
-        return false;
-    } catch (error) {
-        console.error("Errore verifica disponibilità italiana:", error);
-        return false;
-    }
+async function checkItalianAvailability() {
+    const italianIds = await getItalianMovieIds();
+    return italianIds.has(parseInt(movieId));
 }
 
 async function loadMovieDetails() {
@@ -549,7 +560,7 @@ async function loadMovieDetails() {
         const data = await response.json();
         movieData = data;
         
-        const hasItalian = await checkItalianAvailability('movie', movieId);
+        const hasItalian = await checkItalianAvailability();
         
         displayMovieDetails(data, hasItalian);
         loadAdditionalInfo(data, hasItalian);
