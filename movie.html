@@ -190,7 +190,7 @@ h1 {
 }
 
 /* Sezioni mobile */
-.info-section, .cast-section, .similar-section, .related-section {
+.info-section, .cast-section, .similar-section, .collection-section {
     background: rgba(31, 27, 58, 0.6);
     backdrop-filter: blur(10px);
     border-radius: 16px;
@@ -263,30 +263,30 @@ h1 {
 }
 
 /* Similar mobile */
-.similar-grid, .related-grid {
+.similar-grid, .collection-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
 }
 
-.similar-card, .related-card {
+.similar-card, .collection-card {
     background: rgba(0,0,0,0.3);
     border-radius: 10px;
     overflow: hidden;
     cursor: pointer;
 }
 
-.similar-poster, .related-poster {
+.similar-poster, .collection-poster {
     width: 100%;
     height: 160px;
     object-fit: cover;
 }
 
-.similar-info, .related-info {
+.similar-info, .collection-info {
     padding: 8px;
 }
 
-.similar-title, .related-title {
+.similar-title, .collection-title {
     font-size: 11px;
     font-weight: bold;
     white-space: nowrap;
@@ -294,18 +294,9 @@ h1 {
     text-overflow: ellipsis;
 }
 
-.similar-year, .related-year {
+.similar-year, .collection-year {
     font-size: 9px;
     color: #888;
-}
-
-.related-badge {
-    display: inline-block;
-    background: #f59e0b;
-    padding: 2px 6px;
-    border-radius: 10px;
-    font-size: 8px;
-    margin-top: 4px;
 }
 
 /* Player mobile */
@@ -514,7 +505,7 @@ h1 {
     }
     
     /* Sezioni desktop */
-    .info-section, .cast-section, .similar-section, .related-section {
+    .info-section, .cast-section, .similar-section, .collection-section {
         padding: 30px;
         margin-top: 30px;
         border-radius: 20px;
@@ -572,34 +563,34 @@ h1 {
     }
     
     /* Similar desktop */
-    .similar-grid, .related-grid {
+    .similar-grid, .collection-grid {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
         gap: 20px;
     }
     
-    .similar-card, .related-card {
+    .similar-card, .collection-card {
         border-radius: 12px;
         transition: all 0.3s ease;
     }
     
-    .similar-card:hover, .related-card:hover {
+    .similar-card:hover, .collection-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     }
     
-    .similar-poster, .related-poster {
+    .similar-poster, .collection-poster {
         height: 225px;
     }
     
-    .similar-info, .related-info {
+    .similar-info, .collection-info {
         padding: 10px;
     }
     
-    .similar-title, .related-title {
+    .similar-title, .collection-title {
         font-size: 12px;
     }
     
-    .similar-year, .related-year {
+    .similar-year, .collection-year {
         font-size: 10px;
     }
     
@@ -650,7 +641,7 @@ h1 {
 
 /* Tablet (769px - 1024px) */
 @media (min-width: 769px) and (max-width: 1024px) {
-    .cast-grid, .similar-grid, .related-grid {
+    .cast-grid, .similar-grid, .collection-grid {
         grid-template-columns: repeat(3, 1fr);
     }
     
@@ -665,7 +656,7 @@ h1 {
     to { opacity: 1; transform: translateY(0); }
 }
 
-.movie-details, .info-section, .cast-section, .similar-section, .related-section {
+.movie-details, .info-section, .cast-section, .similar-section, .collection-section {
     animation: fadeIn 0.3s ease;
 }
 </style>
@@ -736,7 +727,7 @@ async function loadMovieDetails() {
         
         displayMovieDetails(data);
         loadAdditionalInfo(data);
-        loadRelatedMovies(data);
+        loadCollection(data);
         loadSimilar(data.similar);
         loadCast(data.credits);
         
@@ -828,56 +819,45 @@ function loadAdditionalInfo(movie) {
     document.getElementById("movieDetails").insertAdjacentHTML("beforeend", infoHtml);
 }
 
-async function loadRelatedMovies(movie) {
-    try {
-        // Recupera i film correlati (prequel, sequel, spin-off)
-        const response = await fetch(`https://api.themoviedb.org/3/movie/${movie.id}/recommendations?api_key=${API_KEY}&language=it-IT`);
-        const recommendations = await response.json();
-        
-        // Cerca anche i film della stessa collezione
-        let collectionMovies = [];
-        if (movie.belongs_to_collection) {
-            const collectionResponse = await fetch(`https://api.themoviedb.org/3/collection/${movie.belongs_to_collection.id}?api_key=${API_KEY}&language=it-IT`);
-            const collectionData = await collectionResponse.json();
-            collectionMovies = collectionData.parts || [];
-            // Filtra per rimuovere il film corrente
-            collectionMovies = collectionMovies.filter(m => m.id != movie.id);
-        }
-        
-        // Unisci e rimuovi duplicati
-        let allRelated = [...recommendations.results, ...collectionMovies];
-        const uniqueRelated = [];
-        const ids = new Set();
-        
-        for (const movie of allRelated) {
-            if (!ids.has(movie.id) && movie.id != movieId) {
-                ids.add(movie.id);
-                uniqueRelated.push(movie);
+async function loadCollection(movie) {
+    // Verifica se il film fa parte di una collezione (saga)
+    if (movie.belongs_to_collection && movie.belongs_to_collection.id) {
+        try {
+            const response = await fetch(`https://api.themoviedb.org/3/collection/${movie.belongs_to_collection.id}?api_key=${API_KEY}&language=it-IT`);
+            const collectionData = await response.json();
+            
+            if (collectionData.parts && collectionData.parts.length > 1) {
+                // Filtra per rimuovere il film corrente
+                const otherMovies = collectionData.parts.filter(m => m.id != movie.id);
+                
+                if (otherMovies.length > 0) {
+                    displayCollection(otherMovies, collectionData.name);
+                }
             }
+        } catch (error) {
+            console.error("Errore nel caricamento della collezione:", error);
         }
-        
-        // Prendi i primi 6 correlati
-        const relatedMovies = uniqueRelated.slice(0, 6);
-        
-        if (relatedMovies.length > 0) {
-            displayRelatedMovies(relatedMovies);
-        }
-    } catch (error) {
-        console.error("Errore nel caricamento film correlati:", error);
     }
 }
 
-function displayRelatedMovies(movies) {
-    const relatedHtml = `
-        <div class="related-section">
-            <h3 class="section-title">🔗 Film correlati</h3>
-            <div class="related-grid">
-                ${movies.map(movie => `
-                    <div class="related-card" onclick="openMoviePage(${movie.id})">
-                        <img class="related-poster" src="${movie.poster_path ? IMG_BASE + movie.poster_path : 'https://via.placeholder.com/150x225?text=No+Poster'}" alt="${movie.title}" loading="lazy">
-                        <div class="related-info">
-                            <div class="related-title">${escapeHtml(movie.title)}</div>
-                            <div class="related-year">${movie.release_date ? movie.release_date.split("-")[0] : "N/D"} | ⭐ ${movie.vote_average ? movie.vote_average.toFixed(1) : "N/A"}</div>
+function displayCollection(movies, collectionName) {
+    // Ordina i film per data di uscita
+    const sortedMovies = [...movies].sort((a, b) => {
+        const dateA = a.release_date ? new Date(a.release_date) : new Date(0);
+        const dateB = b.release_date ? new Date(b.release_date) : new Date(0);
+        return dateA - dateB;
+    });
+    
+    const collectionHtml = `
+        <div class="collection-section">
+            <h3 class="section-title">📀 ${escapeHtml(collectionName)}</h3>
+            <div class="collection-grid">
+                ${sortedMovies.map(movie => `
+                    <div class="collection-card" onclick="openMoviePage(${movie.id})">
+                        <img class="collection-poster" src="${movie.poster_path ? IMG_BASE + movie.poster_path : 'https://via.placeholder.com/150x225?text=No+Poster'}" alt="${movie.title}" loading="lazy">
+                        <div class="collection-info">
+                            <div class="collection-title">${escapeHtml(movie.title)}</div>
+                            <div class="collection-year">${movie.release_date ? movie.release_date.split("-")[0] : "N/D"} | ⭐ ${movie.vote_average ? movie.vote_average.toFixed(1) : "N/A"}</div>
                         </div>
                     </div>
                 `).join("")}
@@ -885,7 +865,7 @@ function displayRelatedMovies(movies) {
         </div>
     `;
     
-    document.getElementById("movieDetails").insertAdjacentHTML("beforeend", relatedHtml);
+    document.getElementById("movieDetails").insertAdjacentHTML("beforeend", collectionHtml);
 }
 
 function loadSimilar(similar) {
