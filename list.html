@@ -65,7 +65,16 @@ h1 {
 
 .login-btn { background: rgba(16, 185, 129, 0.9); }
 .logout-btn { background: rgba(239, 68, 68, 0.9); }
-.user-email { font-size: 11px; background: rgba(0,0,0,0.5); padding: 4px 10px; border-radius: 20px; }
+.user-info { 
+    font-size: 12px; 
+    background: rgba(0,0,0,0.5); 
+    padding: 4px 12px; 
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.username { font-weight: bold; color: #c084fc; }
 
 .modal {
     display: none;
@@ -250,6 +259,7 @@ h1 {
         </div>
         <div id="registerPanel" style="display:none;">
             <h2>📝 Registrati</h2>
+            <input type="text" id="regUsername" placeholder="Nome utente" autocomplete="off">
             <input type="email" id="regEmail" placeholder="Email">
             <input type="password" id="regPassword" placeholder="Password (min 6)">
             <button onclick="register()">Registrati</button>
@@ -294,18 +304,18 @@ h1 {
 <script type="module">
     // 👇 INSERISCI QUI LA TUA CONFIGURAZIONE FIREBASE 👇
     const firebaseConfig = {
-        apiKey: "AIzaSyCeM7KVc9lZsdd8HM5b-PAfhx0usN8Aubo",
-        authDomain: "kitsustream-454e8.firebaseapp.com",
-        projectId: "kitsustream-454e8",
-        storageBucket: "kitsustream-454e8.firebasestorage.app",
-        messagingSenderId: "1008216243036",
-        appId: "1:1008216243036:web:73dfb15639862757b0df99"
+        apiKey: "LA_TUA_API_KEY",
+        authDomain: "il-tuo-progetto.firebaseapp.com",
+        projectId: "il-tuo-progetto",
+        storageBucket: "il-tuo-progetto.appspot.com",
+        messagingSenderId: "numero",
+        appId: "1:...:web:..."
     };
     // 👆 COPIA I DATI DALLA TUA CONSOLE FIREBASE 👆
 
     import { initializeApp } from 'firebase/app';
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
-    import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+    import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
@@ -313,6 +323,7 @@ h1 {
 
     let currentUser = null;
     let currentList = [];
+    let currentUsername = "";
 
     // Funzioni di autenticazione
     window.login = async function() {
@@ -333,10 +344,21 @@ h1 {
     };
 
     window.register = async function() {
+        const username = document.getElementById('regUsername')?.value?.trim() || "";
         const email = document.getElementById('regEmail').value;
         const password = document.getElementById('regPassword').value;
         const errorDiv = document.getElementById('regError');
         const successDiv = document.getElementById('regSuccess');
+        
+        if (!username) {
+            errorDiv.textContent = 'Inserisci un nome utente';
+            return;
+        }
+        
+        if (username.length < 3) {
+            errorDiv.textContent = 'Il nome utente deve avere almeno 3 caratteri';
+            return;
+        }
         
         if (password.length < 6) {
             errorDiv.textContent = 'La password deve essere almeno di 6 caratteri';
@@ -345,7 +367,14 @@ h1 {
         
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            await setDoc(doc(db, 'users', userCredential.user.uid), { list: [] });
+            
+            await setDoc(doc(db, 'users', userCredential.user.uid), { 
+                list: [],
+                username: username,
+                email: email,
+                createdAt: new Date()
+            });
+            
             successDiv.textContent = '✅ Registrazione completata! Ora puoi accedere.';
             setTimeout(() => window.showLoginPanel(), 2000);
         } catch (error) {
@@ -365,6 +394,9 @@ h1 {
         document.getElementById('loginError').textContent = '';
         document.getElementById('regError').textContent = '';
         document.getElementById('regSuccess').textContent = '';
+        document.getElementById('regUsername').value = '';
+        document.getElementById('regEmail').value = '';
+        document.getElementById('regPassword').value = '';
     };
 
     window.showRegisterPanel = function() {
@@ -385,6 +417,12 @@ h1 {
         if (!currentUser) return [];
         const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
         return userDoc.exists() ? (userDoc.data().list || []) : [];
+    }
+
+    async function loadUserData() {
+        if (!currentUser) return null;
+        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+        return userDoc.exists() ? userDoc.data() : null;
     }
 
     async function saveUserList(list) {
@@ -542,12 +580,21 @@ h1 {
         const authButtons = document.getElementById('authButtons');
         
         if (user) {
-            const emailShort = user.email.split('@')[0];
-            authButtons.innerHTML = `<span class="user-email">👤 ${emailShort}</span><button class="logout-btn" onclick="window.logout()">🚪</button>`;
+            const userData = await loadUserData();
+            currentUsername = userData?.username || user.email.split('@')[0];
+            
+            authButtons.innerHTML = `
+                <div class="user-info">
+                    <span>👤</span>
+                    <span class="username">${escapeHtml(currentUsername)}</span>
+                    <button class="logout-btn" onclick="window.logout()" style="padding: 4px 10px;">🚪</button>
+                </div>
+            `;
             currentList = await loadUserList();
             displayList();
         } else {
             authButtons.innerHTML = `<button class="login-btn" onclick="window.openLoginModal()">🔐 Accedi</button>`;
+            currentUsername = "";
             currentList = [];
             displayList();
         }
