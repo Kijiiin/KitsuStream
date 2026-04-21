@@ -307,6 +307,9 @@ input::placeholder {
     padding: 8px 16px;
     border-radius: 30px;
     font-size: 13px;
+    cursor: pointer;
+    border: none;
+    color: white;
 }
 
 .close-btn {
@@ -315,6 +318,23 @@ input::placeholder {
 
 .fullscreen-btn {
     background: #00d4ff;
+}
+
+.save-btn {
+    background: #f59e0b;
+}
+
+.reset-btn {
+    background: #ef4444;
+}
+
+.saved-info {
+    text-align: center;
+    margin-top: 8px;
+    min-height: 30px;
+    padding: 0 15px 15px;
+    font-size: 12px;
+    transition: all 0.3s ease;
 }
 
 .loading, .no-results {
@@ -616,9 +636,12 @@ input::placeholder {
     <div class="player-box" id="playerBox">
         <iframe id="videoFrame" allowfullscreen></iframe>
         <div class="player-controls">
-            <button class="close-btn" onclick="closePlayer()">❌ Chiudi</button>
+            <button class="save-btn" onclick="saveCurrentSpot()">💾 Salva posizione</button>
+            <button class="reset-btn" onclick="resetSavedSpot()">🗑 Reset</button>
             <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶ Schermo intero</button>
+            <button class="close-btn" onclick="closePlayer()">❌ Chiudi</button>
         </div>
+        <div id="savedInfo" class="saved-info"></div>
     </div>
 </div>
 
@@ -631,6 +654,7 @@ let selectedGenres = [];
 let currentMediaType = "movie";
 let searchQuery = "";
 let totalPages = 1;
+let currentVideoUrl = "";
 
 const movieGenres = [
     { id: "28", name: "Azione" }, { id: "12", name: "Avventura" }, { id: "16", name: "Animazione" },
@@ -851,14 +875,167 @@ function updatePageNumber() {
     document.getElementById("pageNumber").innerText = `${currentPage} / ${totalPages}`;
 }
 
+/* FUNZIONI SALVATAGGIO POSIZIONE */
+function formatTime(seconds) {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    
+    if (h > 0) {
+        return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    } else {
+        return `${m}:${s.toString().padStart(2, '0')}`;
+    }
+}
+
+function parseTimeInput(input) {
+    // Rimuove spazi e sostituisce virgole con punti
+    input = input.trim().replace(',', '.');
+    
+    // Formato con ore:minuti:secondi (es: 1:30:15)
+    if (input.includes(':') && input.split(':').length === 3) {
+        const parts = input.split(':');
+        const ore = parseInt(parts[0]);
+        const minuti = parseInt(parts[1]);
+        const secondi = parseInt(parts[2]);
+        
+        if (!isNaN(ore) && !isNaN(minuti) && !isNaN(secondi) && ore >= 0 && minuti >= 0 && minuti < 60 && secondi >= 0 && secondi < 60) {
+            return { success: true, seconds: (ore * 3600) + (minuti * 60) + secondi };
+        }
+    }
+    // Formato con ore:minuti (es: 1:30)
+    else if (input.includes(':') && input.split(':').length === 2) {
+        const parts = input.split(':');
+        const ore = parseInt(parts[0]);
+        const minuti = parseInt(parts[1]);
+        
+        if (!isNaN(ore) && !isNaN(minuti) && ore >= 0 && minuti >= 0 && minuti < 60) {
+            return { success: true, seconds: (ore * 3600) + (minuti * 60) };
+        }
+    }
+    // Formato con minuti decimali (es: 15.30)
+    else if (input.includes('.')) {
+        let minuti = parseFloat(input);
+        if (!isNaN(minuti) && minuti >= 0) {
+            return { success: true, seconds: Math.floor(minuti * 60) };
+        }
+    }
+    // Formato con solo minuti (es: 15)
+    else {
+        let minuti = parseFloat(input);
+        if (!isNaN(minuti) && minuti >= 0) {
+            return { success: true, seconds: Math.floor(minuti * 60) };
+        }
+    }
+    
+    return { success: false, seconds: 0 };
+}
+
+function saveCurrentSpot() {
+    if (!currentVideoUrl) {
+        alert("⚠️ Apri prima un video!");
+        return;
+    }
+    
+    const helpText = "Formati supportati:\n\n" +
+                     "• Minuti: 15.30 (15 minuti e 30 secondi)\n" +
+                     "• Ore:Minuti: 1:30 (1 ora e 30 minuti)\n" +
+                     "• Ore:Minuti:Secondi: 1:30:15\n\n" +
+                     "Esempi: 15.30, 1:30, 1:30:15";
+    
+    const input = prompt("A che punto sei?\n\n" + helpText);
+    
+    if (input === null) return;
+    
+    const result = parseTimeInput(input);
+    
+    if (!result.success) {
+        alert("❌ Formato non valido!\n\n" + helpText);
+        return;
+    }
+    
+    const secondi = result.seconds;
+    localStorage.setItem(`time_${currentMediaType}_${currentVideoUrl}`, secondi);
+    
+    const savedInfo = document.getElementById("savedInfo");
+    const timeString = formatTime(secondi);
+    savedInfo.innerHTML = `✅ Salvato! Riprenderò da ${timeString}`;
+    savedInfo.style.color = "#4ade80";
+    
+    setTimeout(() => {
+        if (document.getElementById("playerModal").style.display === "flex") {
+            savedInfo.innerHTML = `📌 Posizione salvata: ${timeString}`;
+            savedInfo.style.color = "#f59e0b";
+        }
+    }, 3000);
+    
+    alert(`✅ Posizione salvata: ${timeString}`);
+}
+
+function resetSavedSpot() {
+    if (!currentVideoUrl) {
+        alert("⚠️ Apri prima un video!");
+        return;
+    }
+    
+    const savedTime = localStorage.getItem(`time_${currentMediaType}_${currentVideoUrl}`);
+    if (!savedTime) {
+        alert("⚠️ Nessun salvataggio trovato per questo video!");
+        return;
+    }
+    
+    if (confirm("Sei sicuro di voler cancellare la posizione salvata?")) {
+        localStorage.removeItem(`time_${currentMediaType}_${currentVideoUrl}`);
+        
+        const savedInfo = document.getElementById("savedInfo");
+        savedInfo.innerHTML = `🗑 Salvataggio rimosso! Il video ripartirà dall'inizio`;
+        savedInfo.style.color = "#ef4444";
+        
+        setTimeout(() => {
+            if (document.getElementById("playerModal").style.display === "flex") {
+                savedInfo.innerHTML = `🎬 Nessun salvataggio - riparto dall'inizio`;
+                savedInfo.style.color = "#888";
+            }
+        }, 3000);
+        
+        alert("✅ Posizione cancellata!");
+    }
+}
+
 function openPlayer(url) {
-    document.getElementById("videoFrame").src = url;
-    document.getElementById("playerModal").style.display = "flex";
+    const modal = document.getElementById("playerModal");
+    const frame = document.getElementById("videoFrame");
+    
+    currentVideoUrl = url;
+    const savedTime = localStorage.getItem(`time_${currentMediaType}_${url}`);
+    let finalUrl = url;
+    let savedInfo = document.getElementById("savedInfo");
+    
+    if (savedTime && parseInt(savedTime) > 0) {
+        const secondi = parseInt(savedTime);
+        const timeString = formatTime(secondi);
+        finalUrl += `&startAt=${secondi}`;
+        savedInfo.innerHTML = `📌 Riprenderò da ${timeString}`;
+        savedInfo.style.color = "#f59e0b";
+    } else {
+        savedInfo.innerHTML = `🎬 Nessun salvataggio - riparto dall'inizio`;
+        savedInfo.style.color = "#888";
+    }
+    
+    frame.src = finalUrl;
+    modal.style.display = "flex";
 }
 
 function closePlayer() {
-    document.getElementById("videoFrame").src = "";
+    const frame = document.getElementById("videoFrame");
+    frame.src = "";
     document.getElementById("playerModal").style.display = "none";
+    document.getElementById("savedInfo").innerHTML = "";
+    currentVideoUrl = "";
+    
+    if (document.fullscreenElement) {
+        document.exitFullscreen();
+    }
 }
 
 function handleOutsideClick(e) {
