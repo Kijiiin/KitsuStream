@@ -45,7 +45,7 @@ body {
     text-align: center;
 }
 
-h2 {
+h1 {
     margin: 0;
     font-size: 18px;
     font-weight: bold;
@@ -53,6 +53,29 @@ h2 {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+}
+
+.subtitle {
+    font-size: 10px;
+    color: rgba(255,255,255,0.6);
+    margin-top: 2px;
+    letter-spacing: 0.5px;
+}
+
+.back-btn, .clear-all-btn {
+    background: rgba(124, 58, 237, 0.9);
+    border: none;
+    padding: 6px 12px;
+    border-radius: 30px;
+    color: white;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.back-btn:active, .clear-all-btn:active {
+    transform: scale(0.95);
 }
 
 .container {
@@ -67,22 +90,6 @@ h2 {
     justify-content: space-between;
     gap: 12px;
     margin-bottom: 20px;
-}
-
-.back-btn, .clear-all-btn {
-    background: #7c3aed;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 30px;
-    color: white;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 500;
-    width: auto;
-}
-
-.back-btn:active, .clear-all-btn:active {
-    transform: scale(0.96);
 }
 
 /* Grid mobile: 2 colonne */
@@ -219,11 +226,28 @@ h2 {
         left: 50%;
         transform: translateX(-50%);
         text-align: center;
+        white-space: nowrap;
     }
     
-    h2 {
+    h1 {
         font-size: 28px;
         text-shadow: 0 0 20px rgba(124,58,237,0.3);
+    }
+    
+    .subtitle {
+        font-size: 14px;
+        margin-top: 4px;
+    }
+    
+    .back-btn, .clear-all-btn {
+        padding: 10px 20px;
+        font-size: 14px;
+        transition: all 0.2s ease;
+    }
+    
+    .back-btn:hover, .clear-all-btn:hover {
+        transform: translateY(-2px);
+        background: #7c3aed;
     }
     
     .container {
@@ -236,22 +260,10 @@ h2 {
         gap: 20px;
     }
     
-    .back-btn, .clear-all-btn {
-        padding: 10px 24px;
-        font-size: 14px;
-        transition: all 0.2s ease;
-    }
-    
-    .back-btn:hover, .clear-all-btn:hover {
-        transform: translateY(-2px);
-        opacity: 0.9;
-    }
-    
     /* Grid desktop: 5 colonne */
     .grid {
         grid-template-columns: repeat(5, 1fr);
         gap: 25px;
-        margin-top: 0;
     }
     
     .card {
@@ -300,7 +312,7 @@ h2 {
         font-size: 18px;
     }
     
-    /* PULSANTE TORNA SU desktop */
+    /* Torna su desktop */
     #tornaSu {
         bottom: 30px;
         right: 30px;
@@ -317,7 +329,7 @@ h2 {
     }
 }
 
-/* Tablet (tra 769px e 1024px) */
+/* Tablet (769px - 1024px) */
 @media (min-width: 769px) and (max-width: 1024px) {
     .grid {
         grid-template-columns: repeat(4, 1fr);
@@ -347,19 +359,19 @@ h2 {
 <body>
 
 <div class="topbar">
-    <div class="topbar-left"></div>
-    <div class="topbar-center">
-        <h2>⭐ La mia lista</h2>
+    <div class="topbar-left">
+        <button class="back-btn" onclick="goBack()">⬅️</button>
     </div>
-    <div class="topbar-right"></div>
+    <div class="topbar-center">
+        <h1>🎬 KitsuStream</h1>
+        <div class="subtitle">⭐ La mia lista</div>
+    </div>
+    <div class="topbar-right">
+        <button class="clear-all-btn" onclick="clearAll()">🗑 Svuota</button>
+    </div>
 </div>
 
 <div class="container">
-    <div class="top-actions">
-        <button class="back-btn" onclick="goBack()">⬅ Indietro</button>
-        <button class="clear-all-btn" onclick="clearAll()">🗑 Svuota</button>
-    </div>
-
     <div id="listContainer"></div>
 </div>
 
