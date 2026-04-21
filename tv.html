@@ -17,11 +17,7 @@
 </script>
 
 <style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -69,7 +65,16 @@ h1 {
 
 .login-btn { background: rgba(16, 185, 129, 0.9); }
 .logout-btn { background: rgba(239, 68, 68, 0.9); }
-.user-email { font-size: 11px; background: rgba(0,0,0,0.5); padding: 4px 10px; border-radius: 20px; }
+.user-info { 
+    font-size: 12px; 
+    background: rgba(0,0,0,0.5); 
+    padding: 4px 12px; 
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.username { font-weight: bold; color: #c084fc; }
 
 .modal {
     display: none;
@@ -238,6 +243,11 @@ h1 {
     .player-box { width: 90%; max-width: 1100px; height: auto; border-radius: 15px; }
     .player-box iframe { height: 60vh; min-height: 400px; }
     #tornaSu { bottom: 30px; right: 30px; width: 50px; height: 50px; font-size: 24px; }
+    #tornaSu:hover { transform: translateY(-5px); }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    .cast-grid, .collection-grid, .similar-grid { grid-template-columns: repeat(3, 1fr); }
 }
 </style>
 </head>
@@ -270,6 +280,7 @@ h1 {
         </div>
         <div id="registerPanel" style="display:none;">
             <h2>📝 Registrati</h2>
+            <input type="text" id="regUsername" placeholder="Nome utente" autocomplete="off">
             <input type="email" id="regEmail" placeholder="Email">
             <input type="password" id="regPassword" placeholder="Password (min 6)">
             <button onclick="register()">Registrati</button>
@@ -323,6 +334,7 @@ h1 {
 
     let currentUser = null;
     let userList = [];
+    let currentUsername = "";
 
     // Funzioni di autenticazione
     window.login = async function() {
@@ -343,10 +355,21 @@ h1 {
     };
 
     window.register = async function() {
+        const username = document.getElementById('regUsername')?.value?.trim() || "";
         const email = document.getElementById('regEmail').value;
         const password = document.getElementById('regPassword').value;
         const errorDiv = document.getElementById('regError');
         const successDiv = document.getElementById('regSuccess');
+        
+        if (!username) {
+            errorDiv.textContent = 'Inserisci un nome utente';
+            return;
+        }
+        
+        if (username.length < 3) {
+            errorDiv.textContent = 'Il nome utente deve avere almeno 3 caratteri';
+            return;
+        }
         
         if (password.length < 6) {
             errorDiv.textContent = 'La password deve essere almeno di 6 caratteri';
@@ -355,7 +378,14 @@ h1 {
         
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            await setDoc(doc(db, 'users', userCredential.user.uid), { list: [] });
+            
+            await setDoc(doc(db, 'users', userCredential.user.uid), { 
+                list: [],
+                username: username,
+                email: email,
+                createdAt: new Date()
+            });
+            
             successDiv.textContent = '✅ Registrazione completata! Ora puoi accedere.';
             setTimeout(() => window.showLoginPanel(), 2000);
         } catch (error) {
@@ -375,6 +405,9 @@ h1 {
         document.getElementById('loginError').textContent = '';
         document.getElementById('regError').textContent = '';
         document.getElementById('regSuccess').textContent = '';
+        document.getElementById('regUsername').value = '';
+        document.getElementById('regEmail').value = '';
+        document.getElementById('regPassword').value = '';
     };
 
     window.showRegisterPanel = function() {
@@ -395,6 +428,12 @@ h1 {
         if (!currentUser) return [];
         const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
         return userDoc.exists() ? (userDoc.data().list || []) : [];
+    }
+
+    async function loadUserData() {
+        if (!currentUser) return null;
+        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+        return userDoc.exists() ? userDoc.data() : null;
     }
 
     async function saveUserList(list) {
@@ -433,8 +472,16 @@ h1 {
         const authButtons = document.getElementById('authButtons');
         
         if (user) {
-            const emailShort = user.email.split('@')[0];
-            authButtons.innerHTML = `<span class="user-email">👤 ${emailShort}</span><button class="logout-btn" onclick="window.logout()">🚪</button>`;
+            const userData = await loadUserData();
+            currentUsername = userData?.username || user.email.split('@')[0];
+            
+            authButtons.innerHTML = `
+                <div class="user-info">
+                    <span>👤</span>
+                    <span class="username">${escapeHtml(currentUsername)}</span>
+                    <button class="logout-btn" onclick="window.logout()" style="padding: 4px 10px;">🚪</button>
+                </div>
+            `;
             userList = await loadUserList();
             if (window.tvData) {
                 const inList = await isInCloudList(window.tvData.id, "tv");
@@ -446,6 +493,7 @@ h1 {
             }
         } else {
             authButtons.innerHTML = `<button class="login-btn" onclick="window.openLoginModal()">🔐 Accedi</button>`;
+            currentUsername = "";
             userList = [];
             if (window.tvData) {
                 const btn = document.getElementById("listBtn");
@@ -459,6 +507,13 @@ h1 {
 
     window.toggleCloudList = toggleCloudList;
     window.isInCloudList = isInCloudList;
+    
+    function escapeHtml(text) {
+        if (!text) return "";
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+    }
 </script>
 
 <script>
@@ -789,7 +844,7 @@ async function toggleListFromDetails() {
     }
 }
 
-// Funzioni player (identiche a movie.html)
+// Funzioni player
 function formatTime(seconds) {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
