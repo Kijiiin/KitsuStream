@@ -347,10 +347,6 @@ h1 {
     background: #ef4444;
 }
 
-.fullscreen-btn {
-    background: #00d4ff;
-}
-
 .save-btn {
     background: #f59e0b;
 }
@@ -691,7 +687,6 @@ h1 {
     <div class="player-box" id="playerBox">
         <iframe id="videoFrame" allowfullscreen></iframe>
         <div class="player-controls">
-            <button class="fullscreen-btn" onclick="toggleFullscreen()">🖥 Schermo intero</button>
             <button class="save-btn" onclick="saveCurrentSpot()">💾 Salva posizione</button>
             <button class="reset-btn" onclick="resetSavedSpot()">🗑 Reset</button>
             <button class="close-btn" onclick="closePlayer()">❌ Chiudi</button>
@@ -1085,15 +1080,6 @@ function closePlayer() {
 function handleOutsideClick(e) {
     const box = document.getElementById("playerBox");
     if (!box.contains(e.target)) closePlayer();
-}
-
-function toggleFullscreen() {
-    const box = document.getElementById("playerBox");
-    if (!document.fullscreenElement) {
-        box.requestFullscreen();
-    } else {
-        document.exitFullscreen();
-    }
 }
 
 /* NAVIGAZIONE */
