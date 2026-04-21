@@ -5,6 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>KitsuStream - Dettaglio Film</title>
 
+<!-- Firebase SDK -->
+<script type="importmap">
+    {
+        "imports": {
+            "firebase/app": "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js",
+            "firebase/auth": "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js",
+            "firebase/firestore": "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"
+        }
+    }
+</script>
+
 <style>
 * {
     margin: 0;
@@ -19,11 +30,6 @@ body {
     min-height: 100vh;
 }
 
-/* ============================================ */
-/* STILE MOBILE (default - fino a 768px) */
-/* ============================================ */
-
-/* Topbar mobile */
 .topbar {
     display: flex;
     align-items: center;
@@ -36,14 +42,8 @@ body {
     z-index: 100;
 }
 
-.topbar-left, .topbar-right {
-    width: auto;
-}
-
-.topbar-center {
-    flex: 1;
-    text-align: center;
-}
+.topbar-left, .topbar-right { display: flex; gap: 8px; align-items: center; }
+.topbar-center { flex: 1; text-align: center; }
 
 h1 {
     margin: 0;
@@ -55,7 +55,7 @@ h1 {
     background-clip: text;
 }
 
-.back-btn, .list-btn {
+.back-btn, .list-btn, .login-btn, .logout-btn {
     background: rgba(124, 58, 237, 0.9);
     border: none;
     padding: 6px 12px;
@@ -67,17 +67,48 @@ h1 {
     transition: all 0.2s ease;
 }
 
-.back-btn:active, .list-btn:active {
-    transform: scale(0.95);
+.login-btn { background: rgba(16, 185, 129, 0.9); }
+.logout-btn { background: rgba(239, 68, 68, 0.9); }
+.user-email { font-size: 11px; background: rgba(0,0,0,0.5); padding: 4px 10px; border-radius: 20px; }
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.95);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
 }
 
-.container {
-    max-width: 1200px;
-    margin: auto;
-    padding: 16px;
+.modal-content {
+    background: #1e1b4b;
+    padding: 30px;
+    border-radius: 20px;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
 }
 
-/* Movie details mobile */
+.modal-content input {
+    width: 100%;
+    margin: 10px 0;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    background: #2d2a5e;
+    color: white;
+}
+
+.modal-content button { margin: 5px; padding: 10px 20px; }
+.error-msg { color: #f87171; font-size: 12px; margin-top: 10px; }
+.success-msg { color: #4ade80; font-size: 12px; margin-top: 10px; }
+
+.container { max-width: 1200px; margin: auto; padding: 16px; }
+
 .movie-details {
     background: rgba(31, 27, 58, 0.6);
     backdrop-filter: blur(10px);
@@ -94,102 +125,20 @@ h1 {
     gap: 20px;
 }
 
-.movie-poster {
-    flex-shrink: 0;
-}
+.movie-poster { flex-shrink: 0; }
+.movie-poster img { width: 180px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
+.movie-info { flex: 1; }
+.movie-title { font-size: 24px; margin-bottom: 8px; color: #c084fc; }
+.movie-meta { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 12px 0; color: #aaa; font-size: 12px; }
+.rating { color: #ffd700; font-size: 14px; }
+.overview { margin: 16px 0; line-height: 1.5; color: #ddd; font-size: 13px; text-align: left; }
+.genres { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 16px 0; }
+.genre-tag { background: rgba(124, 58, 237, 0.3); padding: 4px 12px; border-radius: 20px; font-size: 11px; }
+.watch-buttons { display: flex; gap: 12px; margin-top: 20px; justify-content: center; }
+.watch-btn, .list-toggle-btn { padding: 10px 20px; border: none; border-radius: 30px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.watch-btn { background: #ef4444; color: white; }
+.list-toggle-btn { background: #7c3aed; color: white; }
 
-.movie-poster img {
-    width: 180px;
-    border-radius: 12px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-}
-
-.movie-info {
-    flex: 1;
-}
-
-.movie-title {
-    font-size: 24px;
-    margin-bottom: 8px;
-    color: #c084fc;
-}
-
-.movie-meta {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 12px;
-    margin: 12px 0;
-    color: #aaa;
-    font-size: 12px;
-}
-
-.rating {
-    color: #ffd700;
-    font-size: 14px;
-}
-
-.overview {
-    margin: 16px 0;
-    line-height: 1.5;
-    color: #ddd;
-    font-size: 13px;
-    text-align: left;
-}
-
-.genres {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-    margin: 16px 0;
-}
-
-.genre-tag {
-    background: rgba(124, 58, 237, 0.3);
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 11px;
-}
-
-.watch-buttons {
-    display: flex;
-    gap: 12px;
-    margin-top: 20px;
-    justify-content: center;
-}
-
-.watch-btn, .list-toggle-btn {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 30px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.watch-btn {
-    background: #ef4444;
-    color: white;
-}
-
-.watch-btn:active {
-    transform: scale(0.96);
-    background: #dc2626;
-}
-
-.list-toggle-btn {
-    background: #7c3aed;
-    color: white;
-}
-
-.list-toggle-btn:active {
-    transform: scale(0.96);
-    background: #6d28d9;
-}
-
-/* Sezioni mobile */
 .info-section, .collection-section, .similar-section, .cast-section {
     background: rgba(31, 27, 58, 0.6);
     backdrop-filter: blur(10px);
@@ -197,146 +146,24 @@ h1 {
     padding: 20px;
     margin-top: 16px;
 }
+.section-title { font-size: 18px; margin-bottom: 16px; color: #c084fc; }
+.info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.info-card { background: rgba(0,0,0,0.3); border-radius: 10px; padding: 10px; }
+.info-label { font-size: 10px; color: #888; margin-bottom: 4px; }
+.info-value { font-size: 12px; font-weight: bold; color: #c084fc; }
 
-.section-title {
-    font-size: 18px;
-    margin-bottom: 16px;
-    color: #c084fc;
-}
+.cast-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.cast-card { background: rgba(0,0,0,0.3); border-radius: 10px; padding: 10px; text-align: center; }
+.cast-photo { width: 100%; height: 100px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; }
+.cast-name { font-size: 12px; font-weight: bold; }
+.cast-character { font-size: 10px; color: #aaa; }
 
-.info-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-}
+.collection-grid, .similar-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.collection-card, .similar-card { background: rgba(0,0,0,0.3); border-radius: 10px; overflow: hidden; cursor: pointer; }
+.collection-poster, .similar-poster { width: 100%; height: 160px; object-fit: cover; }
+.collection-info, .similar-info { padding: 8px; }
+.collection-title, .similar-title { font-size: 11px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.info-card {
-    background: rgba(0,0,0,0.3);
-    border-radius: 10px;
-    padding: 10px;
-}
-
-.info-label {
-    font-size: 10px;
-    color: #888;
-    margin-bottom: 4px;
-}
-
-.info-value {
-    font-size: 12px;
-    font-weight: bold;
-    color: #c084fc;
-    word-break: break-word;
-}
-
-/* Cast mobile */
-.cast-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-}
-
-.cast-card {
-    background: rgba(0,0,0,0.3);
-    border-radius: 10px;
-    padding: 10px;
-    text-align: center;
-}
-
-.cast-photo {
-    width: 100%;
-    height: 100px;
-    object-fit: cover;
-    border-radius: 8px;
-    margin-bottom: 8px;
-}
-
-.cast-name {
-    font-size: 12px;
-    font-weight: bold;
-    margin-bottom: 4px;
-}
-
-.cast-character {
-    font-size: 10px;
-    color: #aaa;
-}
-
-/* Collection mobile */
-.collection-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-}
-
-.collection-card {
-    background: rgba(0,0,0,0.3);
-    border-radius: 10px;
-    overflow: hidden;
-    cursor: pointer;
-}
-
-.collection-poster {
-    width: 100%;
-    height: 160px;
-    object-fit: cover;
-}
-
-.collection-info {
-    padding: 8px;
-}
-
-.collection-title {
-    font-size: 11px;
-    font-weight: bold;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.collection-year {
-    font-size: 9px;
-    color: #888;
-}
-
-/* Similar mobile */
-.similar-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-}
-
-.similar-card {
-    background: rgba(0,0,0,0.3);
-    border-radius: 10px;
-    overflow: hidden;
-    cursor: pointer;
-}
-
-.similar-poster {
-    width: 100%;
-    height: 160px;
-    object-fit: cover;
-}
-
-.similar-info {
-    padding: 8px;
-}
-
-.similar-title {
-    font-size: 11px;
-    font-weight: bold;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.similar-year {
-    font-size: 9px;
-    color: #888;
-}
-
-/* Player mobile */
 .player-modal {
     position: fixed;
     inset: 0;
@@ -346,69 +173,16 @@ h1 {
     justify-content: center;
     z-index: 9999;
 }
+.player-box { width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; }
+.player-box iframe { width: 100%; height: 50vh; border: none; }
+.player-controls { padding: 12px; display: flex; justify-content: center; gap: 10px; background: #1a1a1a; flex-wrap: wrap; }
+.player-controls button { padding: 8px 16px; border-radius: 30px; font-size: 12px; cursor: pointer; border: none; color: white; }
+.close-btn { background: #ef4444; }
+.save-btn { background: #f59e0b; }
+.reset-btn { background: #ef4444; }
+.saved-info { text-align: center; margin-top: 8px; min-height: 30px; padding: 0 15px 15px; font-size: 12px; }
 
-.player-box {
-    width: 100%;
-    height: 100%;
-    background: #000;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.player-box iframe {
-    width: 100%;
-    height: 50vh;
-    border: none;
-}
-
-.player-controls {
-    padding: 12px;
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    background: #1a1a1a;
-    flex-wrap: wrap;
-}
-
-.player-controls button {
-    padding: 8px 16px;
-    border-radius: 30px;
-    font-size: 12px;
-    cursor: pointer;
-    border: none;
-    color: white;
-}
-
-.close-btn {
-    background: #ef4444;
-}
-
-.save-btn {
-    background: #f59e0b;
-}
-
-.reset-btn {
-    background: #ef4444;
-}
-
-.saved-info {
-    text-align: center;
-    margin-top: 8px;
-    min-height: 30px;
-    padding: 0 15px 15px;
-    font-size: 12px;
-    transition: all 0.3s ease;
-}
-
-.loading {
-    text-align: center;
-    padding: 40px;
-    font-size: 14px;
-    color: #c084fc;
-}
-
-/* Torna su mobile */
+.loading { text-align: center; padding: 40px; font-size: 14px; color: #c084fc; }
 #tornaSu {
     position: fixed;
     bottom: 20px;
@@ -421,312 +195,40 @@ h1 {
     font-size: 20px;
     border: none;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(124,58,237,0.4);
     display: none;
     align-items: center;
     justify-content: center;
-    transition: 0.2s;
     z-index: 9998;
 }
 
-#tornaSu:active {
-    transform: scale(0.92);
-}
-
-/* ============================================ */
-/* STILE DESKTOP (sopra i 768px) */
-/* ============================================ */
-
 @media (min-width: 769px) {
-    
-    /* Topbar desktop */
-    .topbar {
-        padding: 20px 30px;
-        background: rgba(0,0,0,0.3);
-    }
-    
-    .topbar-left, .topbar-right {
-        width: 120px;
-    }
-    
-    .topbar-center {
-        flex: 1;
-    }
-    
-    h1 {
-        font-size: 28px;
-        text-shadow: 0 0 20px rgba(124,58,237,0.3);
-    }
-    
-    .back-btn, .list-btn {
-        padding: 10px 20px;
-        font-size: 14px;
-    }
-    
-    .back-btn:hover, .list-btn:hover {
-        transform: translateY(-2px);
-        background: #7c3aed;
-    }
-    
-    .container {
-        padding: 30px;
-        margin: 40px auto;
-    }
-    
-    /* Movie details desktop */
-    .movie-details {
-        padding: 30px;
-        margin-bottom: 40px;
-        border-radius: 20px;
-    }
-    
-    .movie-header {
-        flex-direction: row;
-        align-items: flex-start;
-        text-align: left;
-        gap: 30px;
-    }
-    
-    .movie-poster img {
-        width: 300px;
-        border-radius: 15px;
-    }
-    
-    .movie-title {
-        font-size: 32px;
-    }
-    
-    .movie-meta {
-        justify-content: flex-start;
-        gap: 20px;
-        font-size: 14px;
-    }
-    
-    .rating {
-        font-size: 18px;
-    }
-    
-    .overview {
-        font-size: 16px;
-        text-align: left;
-    }
-    
-    .genres {
-        justify-content: flex-start;
-        gap: 10px;
-    }
-    
-    .genre-tag {
-        padding: 5px 15px;
-        font-size: 12px;
-    }
-    
-    .watch-buttons {
-        justify-content: flex-start;
-        gap: 15px;
-    }
-    
-    .watch-btn, .list-toggle-btn {
-        padding: 12px 30px;
-        font-size: 16px;
-    }
-    
-    .watch-btn:hover {
-        transform: translateY(-2px);
-        background: #dc2626;
-    }
-    
-    .list-toggle-btn:hover {
-        transform: translateY(-2px);
-        background: #6d28d9;
-    }
-    
-    /* Sezioni desktop */
-    .info-section, .collection-section, .similar-section, .cast-section {
-        padding: 30px;
-        margin-top: 30px;
-        border-radius: 20px;
-    }
-    
-    .section-title {
-        font-size: 24px;
-        margin-bottom: 20px;
-    }
-    
-    .info-grid {
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 20px;
-    }
-    
-    .info-card {
-        padding: 15px;
-    }
-    
-    .info-label {
-        font-size: 12px;
-    }
-    
-    .info-value {
-        font-size: 16px;
-    }
-    
-    /* Cast desktop */
-    .cast-grid {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 20px;
-    }
-    
-    .cast-card {
-        padding: 15px;
-        transition: all 0.3s ease;
-    }
-    
-    .cast-card:hover {
-        background: rgba(124, 58, 237, 0.3);
-        transform: translateY(-3px);
-    }
-    
-    .cast-photo {
-        height: 150px;
-        border-radius: 10px;
-    }
-    
-    .cast-name {
-        font-size: 14px;
-    }
-    
-    .cast-character {
-        font-size: 12px;
-    }
-    
-    /* Collection desktop */
-    .collection-grid {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 20px;
-    }
-    
-    .collection-card {
-        border-radius: 12px;
-        transition: all 0.3s ease;
-    }
-    
-    .collection-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    }
-    
-    .collection-poster {
-        height: 225px;
-    }
-    
-    .collection-info {
-        padding: 10px;
-    }
-    
-    .collection-title {
-        font-size: 12px;
-    }
-    
-    .collection-year {
-        font-size: 10px;
-    }
-    
-    /* Similar desktop */
-    .similar-grid {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 20px;
-    }
-    
-    .similar-card {
-        border-radius: 12px;
-        transition: all 0.3s ease;
-    }
-    
-    .similar-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    }
-    
-    .similar-poster {
-        height: 225px;
-    }
-    
-    .similar-info {
-        padding: 10px;
-    }
-    
-    .similar-title {
-        font-size: 12px;
-    }
-    
-    .similar-year {
-        font-size: 10px;
-    }
-    
-    /* Player desktop */
-    .player-box {
-        width: 90%;
-        max-width: 1100px;
-        height: auto;
-        border-radius: 15px;
-    }
-    
-    .player-box iframe {
-        height: 60vh;
-        min-height: 400px;
-    }
-    
-    .player-controls {
-        padding: 15px;
-        gap: 10px;
-    }
-    
-    .player-controls button {
-        padding: 8px 20px;
-        font-size: 14px;
-    }
-    
-    .loading {
-        padding: 50px;
-        font-size: 18px;
-    }
-    
-    /* Torna su desktop */
-    #tornaSu {
-        bottom: 30px;
-        right: 30px;
-        width: 50px;
-        height: 50px;
-        font-size: 24px;
-        transition: 0.3s;
-    }
-    
-    #tornaSu:hover {
-        transform: translateY(-5px);
-        background: linear-gradient(135deg, #a855f7, #c084fc);
-        box-shadow: 0 6px 20px rgba(124,58,237,0.8);
-    }
+    .topbar { padding: 20px 30px; }
+    h1 { font-size: 28px; }
+    .back-btn, .list-btn, .login-btn, .logout-btn { padding: 10px 20px; font-size: 14px; }
+    .container { padding: 30px; margin: 40px auto; }
+    .movie-details { padding: 30px; margin-bottom: 40px; border-radius: 20px; }
+    .movie-header { flex-direction: row; align-items: flex-start; text-align: left; gap: 30px; }
+    .movie-poster img { width: 300px; border-radius: 15px; }
+    .movie-title { font-size: 32px; }
+    .movie-meta { justify-content: flex-start; gap: 20px; font-size: 14px; }
+    .rating { font-size: 18px; }
+    .overview { font-size: 16px; }
+    .genres { justify-content: flex-start; }
+    .watch-buttons { justify-content: flex-start; }
+    .watch-btn, .list-toggle-btn { padding: 12px 30px; font-size: 16px; }
+    .info-section, .collection-section, .similar-section, .cast-section { padding: 30px; margin-top: 30px; border-radius: 20px; }
+    .section-title { font-size: 24px; }
+    .info-grid { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+    .cast-grid, .collection-grid, .similar-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px; }
+    .cast-photo { height: 150px; }
+    .collection-poster, .similar-poster { height: 225px; }
+    .player-box { width: 90%; max-width: 1100px; height: auto; border-radius: 15px; }
+    .player-box iframe { height: 60vh; min-height: 400px; }
+    #tornaSu { bottom: 30px; right: 30px; width: 50px; height: 50px; font-size: 24px; }
 }
 
-/* Tablet (769px - 1024px) */
 @media (min-width: 769px) and (max-width: 1024px) {
-    .cast-grid, .collection-grid, .similar-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-    
-    .info-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-/* Animazioni */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.movie-details, .info-section, .collection-section, .similar-section, .cast-section {
-    animation: fadeIn 0.3s ease;
+    .cast-grid, .collection-grid, .similar-grid { grid-template-columns: repeat(3, 1fr); }
 }
 </style>
 </head>
@@ -741,7 +243,31 @@ h1 {
         <h1>🎬 KitsuStream</h1>
     </div>
     <div class="topbar-right">
+        <div id="authButtons"></div>
         <button class="list-btn" onclick="goToList()">⭐</button>
+    </div>
+</div>
+
+<!-- Modale Login/Registrazione -->
+<div id="authModal" class="modal">
+    <div class="modal-content">
+        <div id="loginPanel">
+            <h2>🔐 Accedi</h2>
+            <input type="email" id="loginEmail" placeholder="Email">
+            <input type="password" id="loginPassword" placeholder="Password">
+            <button onclick="login()">Accedi</button>
+            <button class="login-btn" onclick="showRegisterPanel()">Registrati</button>
+            <div id="loginError" class="error-msg"></div>
+        </div>
+        <div id="registerPanel" style="display:none;">
+            <h2>📝 Registrati</h2>
+            <input type="email" id="regEmail" placeholder="Email">
+            <input type="password" id="regPassword" placeholder="Password (min 6)">
+            <button onclick="register()">Registrati</button>
+            <button onclick="showLoginPanel()">Torna al Login</button>
+            <div id="regError" class="error-msg"></div>
+            <div id="regSuccess" class="success-msg"></div>
+        </div>
     </div>
 </div>
 
@@ -764,8 +290,170 @@ h1 {
     </div>
 </div>
 
-<!-- PULSANTE TORNA SU -->
 <button id="tornaSu" title="Torna su">↑</button>
+
+<script type="module">
+    // 👇 INSERISCI QUI LA TUA CONFIGURAZIONE FIREBASE 👇
+    const firebaseConfig = {
+        apiKey: "AIzaSyCeM7KVc9lZsdd8HM5b-PAfhx0usN8Aubo",
+        authDomain: "kitsustream-454e8.firebaseapp.com",
+        projectId: "kitsustream-454e8",
+        storageBucket: "kitsustream-454e8.firebasestorage.app",
+        messagingSenderId: "1008216243036",
+        appId: "1:1008216243036:web:73dfb15639862757b0df99"
+    };
+    // 👆 COPIA I DATI DALLA TUA CONSOLE FIREBASE 👆
+
+    import { initializeApp } from 'firebase/app';
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
+    import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+    let userList = [];
+
+    // Funzioni di autenticazione
+    window.login = async function() {
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        const errorDiv = document.getElementById('loginError');
+        
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            document.getElementById('authModal').style.display = 'none';
+            errorDiv.textContent = '';
+        } catch (error) {
+            let msg = error.code === 'auth/invalid-email' ? 'Email non valida' :
+                      error.code === 'auth/user-not-found' ? 'Utente non trovato' :
+                      error.code === 'auth/wrong-password' ? 'Password errata' : error.message;
+            errorDiv.textContent = msg;
+        }
+    };
+
+    window.register = async function() {
+        const email = document.getElementById('regEmail').value;
+        const password = document.getElementById('regPassword').value;
+        const errorDiv = document.getElementById('regError');
+        const successDiv = document.getElementById('regSuccess');
+        
+        if (password.length < 6) {
+            errorDiv.textContent = 'La password deve essere almeno di 6 caratteri';
+            return;
+        }
+        
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            await setDoc(doc(db, 'users', userCredential.user.uid), { list: [] });
+            successDiv.textContent = '✅ Registrazione completata! Ora puoi accedere.';
+            setTimeout(() => window.showLoginPanel(), 2000);
+        } catch (error) {
+            let msg = error.code === 'auth/email-already-in-use' ? 'Email già registrata' :
+                      error.code === 'auth/invalid-email' ? 'Email non valida' : error.message;
+            errorDiv.textContent = msg;
+        }
+    };
+
+    window.logout = async function() {
+        await signOut(auth);
+    };
+
+    window.showLoginPanel = function() {
+        document.getElementById('loginPanel').style.display = 'block';
+        document.getElementById('registerPanel').style.display = 'none';
+        document.getElementById('loginError').textContent = '';
+        document.getElementById('regError').textContent = '';
+        document.getElementById('regSuccess').textContent = '';
+    };
+
+    window.showRegisterPanel = function() {
+        document.getElementById('loginPanel').style.display = 'none';
+        document.getElementById('registerPanel').style.display = 'block';
+        document.getElementById('loginError').textContent = '';
+        document.getElementById('regError').textContent = '';
+        document.getElementById('regSuccess').textContent = '';
+    };
+
+    window.openLoginModal = function() {
+        window.showLoginPanel();
+        document.getElementById('authModal').style.display = 'flex';
+    };
+
+    // Funzioni per la lista cloud
+    async function loadUserList() {
+        if (!currentUser) return [];
+        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+        return userDoc.exists() ? (userDoc.data().list || []) : [];
+    }
+
+    async function saveUserList(list) {
+        if (!currentUser) return;
+        await setDoc(doc(db, 'users', currentUser.uid), { list: list }, { merge: true });
+    }
+
+    async function isInCloudList(id, type) {
+        if (!currentUser) return false;
+        return userList.some(item => item.id === id && item.type === type);
+    }
+
+    async function toggleCloudList(itemData) {
+        if (!currentUser) {
+            window.openLoginModal();
+            return false;
+        }
+        
+        let list = [...userList];
+        const exists = list.some(item => item.id === itemData.id && item.type === itemData.type);
+        
+        if (exists) {
+            list = list.filter(item => !(item.id === itemData.id && item.type === itemData.type));
+        } else {
+            list.push(itemData);
+        }
+        
+        await saveUserList(list);
+        userList = list;
+        return !exists;
+    }
+
+    // Aggiorna UI auth
+    onAuthStateChanged(auth, async (user) => {
+        currentUser = user;
+        const authButtons = document.getElementById('authButtons');
+        
+        if (user) {
+            const emailShort = user.email.split('@')[0];
+            authButtons.innerHTML = `<span class="user-email">👤 ${emailShort}</span><button class="logout-btn" onclick="window.logout()">🚪</button>`;
+            userList = await loadUserList();
+            // Aggiorna il bottone nella pagina se il film è già caricato
+            if (window.movieData) {
+                const inList = await isInCloudList(window.movieData.id, "movie");
+                const btn = document.getElementById("listBtn");
+                if (btn) {
+                    btn.innerHTML = inList ? "❌ Rimuovi" : "⭐ Aggiungi";
+                    btn.style.background = inList ? "#ef4444" : "#7c3aed";
+                }
+            }
+        } else {
+            authButtons.innerHTML = `<button class="login-btn" onclick="window.openLoginModal()">🔐 Accedi</button>`;
+            userList = [];
+            if (window.movieData) {
+                const btn = document.getElementById("listBtn");
+                if (btn) {
+                    btn.innerHTML = "⭐ Aggiungi";
+                    btn.style.background = "#7c3aed";
+                }
+            }
+        }
+    });
+
+    // Esponi funzioni globalmente
+    window.toggleCloudList = toggleCloudList;
+    window.isInCloudList = isInCloudList;
+    window.getCurrentUser = () => currentUser;
+</script>
 
 <script>
 const API_KEY = "7fe396e6f50677047459e8c173f2bd9d";
@@ -793,6 +481,7 @@ async function loadMovieDetails() {
         const response = await fetch(`https://api.themoviedb.org/3/movie/${movieId}?api_key=${API_KEY}&language=it-IT&append_to_response=credits,similar,release_dates`);
         const data = await response.json();
         movieData = data;
+        window.movieData = data;
         
         displayMovieDetails(data);
         loadAdditionalInfo(data);
@@ -806,11 +495,11 @@ async function loadMovieDetails() {
     }
 }
 
-function displayMovieDetails(movie) {
+async function displayMovieDetails(movie) {
     const posterUrl = movie.poster_path ? IMG_BASE + movie.poster_path : "https://via.placeholder.com/300x450?text=No+Image";
     const backdropUrl = movie.backdrop_path ? BACKDROP_BASE + movie.backdrop_path : "";
     
-    const inList = isInList(movie.id);
+    const inList = await window.isInCloudList(movie.id, "movie");
     const link = `https://vixsrc.to/movie/${movie.id}?lang=it`;
     
     const html = `
@@ -835,7 +524,7 @@ function displayMovieDetails(movie) {
                 </div>
                 <div class="watch-buttons">
                     <button class="watch-btn" onclick="openPlayer('${link}')">▶ Guarda</button>
-                    <button class="list-toggle-btn" id="listBtn" onclick="toggleListFromDetails('${link}')">
+                    <button class="list-toggle-btn" id="listBtn" onclick="toggleListFromDetails()">
                         ${inList ? "❌ Rimuovi" : "⭐ Aggiungi"}
                     </button>
                 </div>
@@ -889,16 +578,13 @@ function loadAdditionalInfo(movie) {
 }
 
 async function loadCollection(movie) {
-    // Verifica se il film fa parte di una collezione (saga)
     if (movie.belongs_to_collection && movie.belongs_to_collection.id) {
         try {
             const response = await fetch(`https://api.themoviedb.org/3/collection/${movie.belongs_to_collection.id}?api_key=${API_KEY}&language=it-IT`);
             const collectionData = await response.json();
             
             if (collectionData.parts && collectionData.parts.length > 1) {
-                // Filtra per rimuovere il film corrente
                 const otherMovies = collectionData.parts.filter(m => m.id != movie.id);
-                
                 if (otherMovies.length > 0) {
                     displayCollection(otherMovies, collectionData.name);
                 }
@@ -910,7 +596,6 @@ async function loadCollection(movie) {
 }
 
 function displayCollection(movies, collectionName) {
-    // Ordina i film per data di uscita
     const sortedMovies = [...movies].sort((a, b) => {
         const dateA = a.release_date ? new Date(a.release_date) : new Date(0);
         const dateB = b.release_date ? new Date(b.release_date) : new Date(0);
@@ -989,56 +674,33 @@ function openMoviePage(id) {
     window.location.href = `movie.html?id=${id}`;
 }
 
-function getList() {
-    return JSON.parse(localStorage.getItem("myMediaList")) || [];
-}
-
-function saveList(list) {
-    localStorage.setItem("myMediaList", JSON.stringify(list));
-}
-
-function isInList(id) {
-    return getList().some(item => item.id === id && item.type === "movie");
-}
-
-function toggleListFromDetails(link) {
+async function toggleListFromDetails() {
     if (!movieData) return;
     
-    let list = getList();
-    const exists = list.find(item => item.id === movieData.id && item.type === "movie");
+    const itemData = {
+        id: movieData.id,
+        title: movieData.title,
+        poster: movieData.poster_path ? IMG_BASE + movieData.poster_path : "",
+        rating: movieData.vote_average,
+        year: movieData.release_date ? movieData.release_date.split("-")[0] : "N/D",
+        type: "movie",
+        mediaType: "Film"
+    };
     
-    if (exists) {
-        list = list.filter(item => !(item.id === movieData.id && item.type === "movie"));
-    } else {
-        list.push({
-            id: movieData.id,
-            title: movieData.title,
-            poster: movieData.poster_path ? IMG_BASE + movieData.poster_path : "",
-            rating: movieData.vote_average,
-            year: movieData.release_date ? movieData.release_date.split("-")[0] : "N/D",
-            type: "movie",
-            mediaType: "Film",
-            link: link
-        });
-    }
-    
-    saveList(list);
+    const added = await window.toggleCloudList(itemData);
     
     const btn = document.getElementById("listBtn");
-    const nowInList = !exists;
-    btn.innerHTML = nowInList ? "❌ Rimuovi" : "⭐ Aggiungi";
-    btn.style.background = nowInList ? "#ef4444" : "#7c3aed";
+    if (btn) {
+        btn.innerHTML = added ? "❌ Rimuovi" : "⭐ Aggiungi";
+        btn.style.background = added ? "#ef4444" : "#7c3aed";
+    }
 }
 
-/* ============================================ */
-/* FUNZIONI SALVATAGGIO POSIZIONE */
-/* ============================================ */
-
+// Funzioni player
 function formatTime(seconds) {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
     const s = seconds % 60;
-    
     if (h > 0) {
         return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     } else {
@@ -1054,7 +716,6 @@ function parseTimeInput(input) {
         const ore = parseInt(parts[0]);
         const minuti = parseInt(parts[1]);
         const secondi = parseInt(parts[2]);
-        
         if (!isNaN(ore) && !isNaN(minuti) && !isNaN(secondi) && ore >= 0 && minuti >= 0 && minuti < 60 && secondi >= 0 && secondi < 60) {
             return { success: true, seconds: (ore * 3600) + (minuti * 60) + secondi };
         }
@@ -1063,15 +724,8 @@ function parseTimeInput(input) {
         const parts = input.split(':');
         const ore = parseInt(parts[0]);
         const minuti = parseInt(parts[1]);
-        
         if (!isNaN(ore) && !isNaN(minuti) && ore >= 0 && minuti >= 0 && minuti < 60) {
             return { success: true, seconds: (ore * 3600) + (minuti * 60) };
-        }
-    }
-    else if (input.includes('.')) {
-        let minuti = parseFloat(input);
-        if (!isNaN(minuti) && minuti >= 0) {
-            return { success: true, seconds: Math.floor(minuti * 60) };
         }
     }
     else {
@@ -1080,7 +734,6 @@ function parseTimeInput(input) {
             return { success: true, seconds: Math.floor(minuti * 60) };
         }
     }
-    
     return { success: false, seconds: 0 };
 }
 
@@ -1090,20 +743,13 @@ function saveCurrentSpot() {
         return;
     }
     
-    const helpText = "Formati supportati:\n\n" +
-                     "• Minuti: 15.30 (15 minuti e 30 secondi)\n" +
-                     "• Ore:Minuti: 1:30 (1 ora e 30 minuti)\n" +
-                     "• Ore:Minuti:Secondi: 1:30:15\n\n" +
-                     "Esempi: 15.30, 1:30, 1:30:15";
-    
+    const helpText = "Formati supportati:\n\n• Minuti: 15.30\n• Ore:Minuti: 1:30\n• Ore:Minuti:Secondi: 1:30:15";
     const input = prompt("A che punto sei?\n\n" + helpText);
-    
     if (input === null) return;
     
     const result = parseTimeInput(input);
-    
     if (!result.success) {
-        alert("❌ Formato non valido!\n\n" + helpText);
+        alert("❌ Formato non valido!");
         return;
     }
     
@@ -1121,8 +767,6 @@ function saveCurrentSpot() {
             savedInfo.style.color = "#f59e0b";
         }
     }, 3000);
-    
-    alert(`✅ Posizione salvata: ${timeString}`);
 }
 
 function resetSavedSpot() {
@@ -1133,25 +777,21 @@ function resetSavedSpot() {
     
     const savedTime = localStorage.getItem(`time_movie_${currentVideoUrl}`);
     if (!savedTime) {
-        alert("⚠️ Nessun salvataggio trovato per questo video!");
+        alert("⚠️ Nessun salvataggio trovato!");
         return;
     }
     
-    if (confirm("Sei sicuro di voler cancellare la posizione salvata?")) {
+    if (confirm("Cancellare la posizione salvata?")) {
         localStorage.removeItem(`time_movie_${currentVideoUrl}`);
-        
         const savedInfo = document.getElementById("savedInfo");
-        savedInfo.innerHTML = `🗑 Salvataggio rimosso! Il video ripartirà dall'inizio`;
+        savedInfo.innerHTML = `🗑 Salvataggio rimosso!`;
         savedInfo.style.color = "#ef4444";
-        
         setTimeout(() => {
             if (document.getElementById("playerModal").style.display === "flex") {
-                savedInfo.innerHTML = `🎬 Nessun salvataggio - riparto dall'inizio`;
+                savedInfo.innerHTML = `🎬 Nessun salvataggio`;
                 savedInfo.style.color = "#888";
             }
         }, 3000);
-        
-        alert("✅ Posizione cancellata!");
     }
 }
 
@@ -1171,7 +811,7 @@ function openPlayer(url) {
         savedInfo.innerHTML = `📌 Riprenderò da ${timeString}`;
         savedInfo.style.color = "#f59e0b";
     } else {
-        savedInfo.innerHTML = `🎬 Nessun salvataggio - riparto dall'inizio`;
+        savedInfo.innerHTML = `🎬 Nessun salvataggio`;
         savedInfo.style.color = "#888";
     }
     
@@ -1185,10 +825,7 @@ function closePlayer() {
     document.getElementById("playerModal").style.display = "none";
     document.getElementById("savedInfo").innerHTML = "";
     currentVideoUrl = "";
-    
-    if (document.fullscreenElement) {
-        document.exitFullscreen();
-    }
+    if (document.fullscreenElement) document.exitFullscreen();
 }
 
 function handleOutsideClick(e) {
@@ -1196,37 +833,17 @@ function handleOutsideClick(e) {
     if (!box.contains(e.target)) closePlayer();
 }
 
-function goBack() {
-    window.history.back();
-}
+function goBack() { window.history.back(); }
+function goToList() { window.location.href = "list.html"; }
+function escapeHtml(text) { if (!text) return ""; const div = document.createElement("div"); div.textContent = text; return div.innerHTML; }
 
-function goToList() {
-    window.location.href = "list.html";
-}
-
-function escapeHtml(text) {
-    if (!text) return "";
-    const div = document.createElement("div");
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-/* TORNA SU */
+// Torna su
 const tornaSuBtn = document.getElementById("tornaSu");
-
 window.addEventListener("scroll", function() {
-    if (window.scrollY > 300) {
-        tornaSuBtn.style.display = "flex";
-    } else {
-        tornaSuBtn.style.display = "none";
-    }
+    tornaSuBtn.style.display = window.scrollY > 300 ? "flex" : "none";
 });
-
 tornaSuBtn.addEventListener("click", function() {
-    window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
 });
 
 loadMovieDetails();
