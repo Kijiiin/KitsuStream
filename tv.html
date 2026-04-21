@@ -1094,7 +1094,6 @@ function changeSeason(seasonNumber) {
 
 function selectSeason(seasonNumber) {
     loadEpisodes(seasonNumber);
-    // Scroll alla sezione episodi su tutti i dispositivi
     setTimeout(() => {
         const episodesSection = document.querySelector(".episodes-section");
         if (episodesSection) {
@@ -1229,10 +1228,8 @@ function formatTime(seconds) {
 }
 
 function parseTimeInput(input) {
-    // Rimuove spazi e sostituisce virgole con punti
     input = input.trim().replace(',', '.');
     
-    // Formato con ore:minuti:secondi (es: 1:30:15)
     if (input.includes(':') && input.split(':').length === 3) {
         const parts = input.split(':');
         const ore = parseInt(parts[0]);
@@ -1243,7 +1240,6 @@ function parseTimeInput(input) {
             return { success: true, seconds: (ore * 3600) + (minuti * 60) + secondi };
         }
     }
-    // Formato con ore:minuti (es: 1:30)
     else if (input.includes(':') && input.split(':').length === 2) {
         const parts = input.split(':');
         const ore = parseInt(parts[0]);
@@ -1253,14 +1249,12 @@ function parseTimeInput(input) {
             return { success: true, seconds: (ore * 3600) + (minuti * 60) };
         }
     }
-    // Formato con minuti decimali (es: 15.30)
     else if (input.includes('.')) {
         let minuti = parseFloat(input);
         if (!isNaN(minuti) && minuti >= 0) {
             return { success: true, seconds: Math.floor(minuti * 60) };
         }
     }
-    // Formato con solo minuti (es: 15)
     else {
         let minuti = parseFloat(input);
         if (!isNaN(minuti) && minuti >= 0) {
