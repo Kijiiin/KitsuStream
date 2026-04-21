@@ -580,7 +580,7 @@ input::placeholder {
     <div class="order-selector">
         <button class="order-btn active" data-order="popular" onclick="changeOrder('popular')">🔥 Popolari</button>
         <button class="order-btn" data-order="top_rated" onclick="changeOrder('top_rated')">⭐ Più votati</button>
-        <button class="order-btn" data-order="latest" onclick="changeOrder('latest')">🆕 Ultimi usciti</button>
+        <button class="order-btn" data-order="latest" onclick="changeOrder('latest')">🆕 Più recenti</button>
     </div>
 
     <div id="genresContainer" class="genres"></div>
@@ -694,18 +694,6 @@ function clearSearch() {
     loadContent();
 }
 
-function getOrderParam() {
-    switch(currentOrder) {
-        case 'top_rated':
-            return 'vote_average.desc';
-        case 'latest':
-            return 'primary_release_date.desc';
-        case 'popular':
-        default:
-            return 'popularity.desc';
-    }
-}
-
 async function loadContent() {
     showLoading();
     
@@ -714,14 +702,29 @@ async function loadContent() {
         
         if (searchQuery) {
             const searchType = currentMediaType === "movie" ? "movie" : "tv";
-            url = `https://api.themoviedb.org/3/search/${searchType}?api_key=${API_KEY}&query=${encodeURIComponent(searchQuery)}&language=it-IT&page=${currentPage}&sort_by=${getOrderParam()}`;
+            url = `https://api.themoviedb.org/3/search/${searchType}?api_key=${API_KEY}&query=${encodeURIComponent(searchQuery)}&language=it-IT&page=${currentPage}`;
         } else if (selectedGenres.length > 0) {
             const genreQuery = selectedGenres.join(",");
-            url = `https://api.themoviedb.org/3/discover/${currentMediaType}?api_key=${API_KEY}&with_genres=${genreQuery}&language=it-IT&page=${currentPage}&sort_by=${getOrderParam()}`;
+            // Per i filtri, usiamo discover con ordinamento
+            let sortBy = "";
+            if (currentOrder === 'top_rated') {
+                sortBy = 'vote_average.desc';
+            } else if (currentOrder === 'latest') {
+                sortBy = 'primary_release_date.desc';
+            } else {
+                sortBy = 'popularity.desc';
+            }
+            url = `https://api.themoviedb.org/3/discover/${currentMediaType}?api_key=${API_KEY}&with_genres=${genreQuery}&language=it-IT&page=${currentPage}&sort_by=${sortBy}`;
         } else {
+            // Nessun filtro, nessuna ricerca
             if (currentOrder === 'latest') {
-                // Per "ultimi usciti" usiamo discover con data decrescente
-                url = `https://api.themoviedb.org/3/discover/${currentMediaType}?api_key=${API_KEY}&language=it-IT&page=${currentPage}&sort_by=primary_release_date.desc`;
+                // Per "più recenti", usiamo discover con data <= oggi e ordinamento decrescente
+                const today = new Date().toISOString().split('T')[0];
+                if (currentMediaType === 'movie') {
+                    url = `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&language=it-IT&page=${currentPage}&sort_by=primary_release_date.desc&primary_release_date_lte=${today}`;
+                } else {
+                    url = `https://api.themoviedb.org/3/discover/tv?api_key=${API_KEY}&language=it-IT&page=${currentPage}&sort_by=first_air_date.desc&first_air_date_lte=${today}`;
+                }
             } else if (currentOrder === 'top_rated') {
                 url = `https://api.themoviedb.org/3/${currentMediaType}/top_rated?api_key=${API_KEY}&language=it-IT&page=${currentPage}`;
             } else {
@@ -733,7 +736,20 @@ async function loadContent() {
         const data = await response.json();
         
         totalPages = Math.min(data.total_pages, 500);
-        displayItems(data.results);
+        
+        // Filtraggio aggiuntivo per rimuovere contenuti non ancora usciti (solo per "latest")
+        let results = data.results;
+        if (currentOrder === 'latest' && !searchQuery && selectedGenres.length === 0) {
+            const today = new Date();
+            results = results.filter(item => {
+                const dateStr = currentMediaType === 'movie' ? item.release_date : item.first_air_date;
+                if (!dateStr) return false;
+                const itemDate = new Date(dateStr);
+                return itemDate <= today;
+            });
+        }
+        
+        displayItems(results);
         updatePageNumber();
     } catch (error) {
         console.error("Errore:", error);
