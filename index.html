@@ -135,6 +135,35 @@ input::placeholder {
     border-color: #7c3aed;
 }
 
+/* Selettore ordine mobile */
+.order-selector {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.order-btn {
+    background: rgba(124, 58, 237, 0.4);
+    border: 1px solid rgba(124, 58, 237, 0.5);
+    padding: 5px 10px;
+    border-radius: 30px;
+    color: white;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.order-btn.active {
+    background: #7c3aed;
+    border-color: #7c3aed;
+}
+
+.order-btn:active {
+    transform: scale(0.95);
+}
+
 /* Generi scrollabili orizzontalmente (mobile) */
 .genres {
     margin: 12px 0 16px;
@@ -369,6 +398,22 @@ input::placeholder {
         background: #7c3aed;
     }
     
+    /* Selettore ordine desktop */
+    .order-selector {
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+    
+    .order-btn {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+    
+    .order-btn:hover {
+        background: rgba(124, 58, 237, 0.6);
+        transform: translateY(-1px);
+    }
+    
     /* Generi desktop: griglia normale (non scrollabile) */
     .genres {
         flex-wrap: wrap;
@@ -531,6 +576,13 @@ input::placeholder {
         <button class="media-btn" data-type="tv" onclick="switchMediaType('tv')">📺 Serie TV</button>
     </div>
 
+    <!-- Selettore ordine -->
+    <div class="order-selector">
+        <button class="order-btn active" data-order="popular" onclick="changeOrder('popular')">🔥 Popolari</button>
+        <button class="order-btn" data-order="top_rated" onclick="changeOrder('top_rated')">⭐ Più votati</button>
+        <button class="order-btn" data-order="latest" onclick="changeOrder('latest')">🆕 Ultimi usciti</button>
+    </div>
+
     <div id="genresContainer" class="genres"></div>
 
     <div id="results" class="grid"></div>
@@ -551,6 +603,7 @@ let selectedGenres = [];
 let currentMediaType = "movie";
 let searchQuery = "";
 let totalPages = 1;
+let currentOrder = "popular"; // popular, top_rated, latest
 
 const movieGenres = [
     { id: "28", name: "Azione" }, { id: "12", name: "Avventura" }, { id: "16", name: "Animazione" },
@@ -574,6 +627,19 @@ window.onload = function() {
     loadContent();
     document.getElementById("searchInput").addEventListener("input", handleSearch);
 };
+
+function changeOrder(order) {
+    currentOrder = order;
+    currentPage = 1;
+    
+    // Aggiorna classe attiva dei bottoni ordine
+    document.querySelectorAll(".order-btn").forEach(btn => {
+        btn.classList.remove("active");
+    });
+    document.querySelector(`.order-btn[data-order="${order}"]`).classList.add("active");
+    
+    loadContent();
+}
 
 function switchMediaType(type) {
     currentMediaType = type;
@@ -628,6 +694,18 @@ function clearSearch() {
     loadContent();
 }
 
+function getOrderParam() {
+    switch(currentOrder) {
+        case 'top_rated':
+            return 'vote_average.desc';
+        case 'latest':
+            return 'primary_release_date.desc';
+        case 'popular':
+        default:
+            return 'popularity.desc';
+    }
+}
+
 async function loadContent() {
     showLoading();
     
@@ -636,12 +714,19 @@ async function loadContent() {
         
         if (searchQuery) {
             const searchType = currentMediaType === "movie" ? "movie" : "tv";
-            url = `https://api.themoviedb.org/3/search/${searchType}?api_key=${API_KEY}&query=${encodeURIComponent(searchQuery)}&language=it-IT&page=${currentPage}`;
+            url = `https://api.themoviedb.org/3/search/${searchType}?api_key=${API_KEY}&query=${encodeURIComponent(searchQuery)}&language=it-IT&page=${currentPage}&sort_by=${getOrderParam()}`;
         } else if (selectedGenres.length > 0) {
             const genreQuery = selectedGenres.join(",");
-            url = `https://api.themoviedb.org/3/discover/${currentMediaType}?api_key=${API_KEY}&with_genres=${genreQuery}&language=it-IT&page=${currentPage}&sort_by=popularity.desc`;
+            url = `https://api.themoviedb.org/3/discover/${currentMediaType}?api_key=${API_KEY}&with_genres=${genreQuery}&language=it-IT&page=${currentPage}&sort_by=${getOrderParam()}`;
         } else {
-            url = `https://api.themoviedb.org/3/${currentMediaType}/popular?api_key=${API_KEY}&language=it-IT&page=${currentPage}`;
+            if (currentOrder === 'latest') {
+                // Per "ultimi usciti" usiamo discover con data decrescente
+                url = `https://api.themoviedb.org/3/discover/${currentMediaType}?api_key=${API_KEY}&language=it-IT&page=${currentPage}&sort_by=primary_release_date.desc`;
+            } else if (currentOrder === 'top_rated') {
+                url = `https://api.themoviedb.org/3/${currentMediaType}/top_rated?api_key=${API_KEY}&language=it-IT&page=${currentPage}`;
+            } else {
+                url = `https://api.themoviedb.org/3/${currentMediaType}/popular?api_key=${API_KEY}&language=it-IT&page=${currentPage}`;
+            }
         }
         
         const response = await fetch(url);
@@ -740,8 +825,11 @@ function goHome() {
     searchQuery = "";
     selectedGenres = [];
     currentPage = 1;
+    currentOrder = "popular";
     document.getElementById("searchInput").value = "";
     document.querySelectorAll(".genre-btn").forEach(btn => btn.classList.remove("active"));
+    document.querySelectorAll(".order-btn").forEach(btn => btn.classList.remove("active"));
+    document.querySelector(`.order-btn[data-order="popular"]`).classList.add("active");
     loadContent();
 }
 
