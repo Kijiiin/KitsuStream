@@ -5,12 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>KitsuStream - La mia lista</title>
 
+<!-- Firebase SDK -->
+<script type="importmap">
+    {
+        "imports": {
+            "firebase/app": "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js",
+            "firebase/auth": "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js",
+            "firebase/firestore": "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"
+        }
+    }
+</script>
+
 <style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -19,11 +26,6 @@ body {
     min-height: 100vh;
 }
 
-/* ============================================ */
-/* STILE MOBILE (default - fino a 768px) */
-/* ============================================ */
-
-/* Topbar mobile */
 .topbar {
     display: flex;
     align-items: center;
@@ -36,14 +38,8 @@ body {
     z-index: 100;
 }
 
-.topbar-left, .topbar-right {
-    width: auto;
-}
-
-.topbar-center {
-    flex: 1;
-    text-align: center;
-}
+.topbar-left, .topbar-right { display: flex; gap: 8px; align-items: center; }
+.topbar-center { flex: 1; text-align: center; }
 
 h1 {
     margin: 0;
@@ -55,7 +51,7 @@ h1 {
     background-clip: text;
 }
 
-.back-btn, .clear-all-btn {
+.back-btn, .clear-all-btn, .login-btn, .logout-btn {
     background: rgba(124, 58, 237, 0.9);
     border: none;
     padding: 6px 12px;
@@ -67,39 +63,52 @@ h1 {
     transition: all 0.2s ease;
 }
 
-.back-btn:active, .clear-all-btn:active {
-    transform: scale(0.95);
+.login-btn { background: rgba(16, 185, 129, 0.9); }
+.logout-btn { background: rgba(239, 68, 68, 0.9); }
+.user-email { font-size: 11px; background: rgba(0,0,0,0.5); padding: 4px 10px; border-radius: 20px; }
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.95);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
 }
 
-.container {
-    max-width: 1200px;
-    margin: auto;
-    padding: 16px;
-}
-
-/* Titolo lista mobile */
-.lista-title {
+.modal-content {
+    background: #1e1b4b;
+    padding: 30px;
+    border-radius: 20px;
+    max-width: 400px;
+    width: 90%;
     text-align: center;
-    margin-bottom: 20px;
 }
 
-.lista-title h2 {
-    font-size: 20px;
-    font-weight: bold;
-    background: linear-gradient(90deg, #a855f7, #00d4ff, #7c3aed);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    display: inline-block;
+.modal-content input {
+    width: 100%;
+    margin: 10px 0;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    background: #2d2a5e;
+    color: white;
 }
 
-.lista-title p {
-    font-size: 12px;
-    color: rgba(255,255,255,0.5);
-    margin-top: 4px;
-}
+.modal-content button { margin: 5px; padding: 10px 20px; }
+.error-msg { color: #f87171; font-size: 12px; margin-top: 10px; }
+.success-msg { color: #4ade80; font-size: 12px; margin-top: 10px; }
 
-/* Filtri e ordinamento mobile */
+.container { max-width: 1200px; margin: auto; padding: 16px; }
+
+.lista-title { text-align: center; margin-bottom: 20px; }
+.lista-title h2 { font-size: 20px; background: linear-gradient(90deg, #a855f7, #00d4ff, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; display: inline-block; }
+.lista-title p { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+
 .filters-bar {
     background: rgba(31, 27, 58, 0.6);
     backdrop-filter: blur(10px);
@@ -108,27 +117,9 @@ h1 {
     margin-bottom: 16px;
 }
 
-.filter-group {
-    margin-bottom: 10px;
-}
-
-.filter-group:last-child {
-    margin-bottom: 0;
-}
-
-.filter-label {
-    font-size: 11px;
-    color: rgba(255,255,255,0.6);
-    margin-bottom: 6px;
-    display: block;
-}
-
-.sort-buttons, .type-buttons {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
+.filter-group { margin-bottom: 10px; }
+.filter-label { font-size: 11px; color: rgba(255,255,255,0.6); margin-bottom: 6px; display: block; }
+.sort-buttons, .type-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
 .sort-btn, .type-btn {
     background: rgba(124, 58, 237, 0.4);
     border: 1px solid rgba(124, 58, 237, 0.5);
@@ -138,28 +129,10 @@ h1 {
     cursor: pointer;
     font-size: 11px;
     font-weight: 500;
-    transition: all 0.2s ease;
 }
+.sort-btn.active, .type-btn.active { background: #7c3aed; border-color: #7c3aed; }
+.stats { font-size: 11px; color: rgba(255,255,255,0.5); text-align: center; margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); }
 
-.sort-btn.active, .type-btn.active {
-    background: #7c3aed;
-    border-color: #7c3aed;
-}
-
-.sort-btn:active, .type-btn:active {
-    transform: scale(0.95);
-}
-
-.stats {
-    font-size: 11px;
-    color: rgba(255,255,255,0.5);
-    text-align: center;
-    margin-top: 10px;
-    padding-top: 8px;
-    border-top: 1px solid rgba(255,255,255,0.1);
-}
-
-/* Grid mobile: 2 colonne */
 .grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -174,54 +147,19 @@ h1 {
     backdrop-filter: blur(10px);
     transition: transform 0.2s ease;
 }
-
-.card:active {
-    transform: scale(0.98);
-}
-
+.card:active { transform: scale(0.98); }
 .card img {
     width: 100%;
     aspect-ratio: 2 / 3;
     object-fit: cover;
     cursor: pointer;
 }
-
-.card-content {
-    padding: 8px;
-}
-
-.card h4 {
-    margin: 0 0 3px;
-    font-size: 12px;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.media-badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 20px;
-    font-size: 9px;
-    font-weight: 600;
-    margin-bottom: 6px;
-}
-
-.badge-movie {
-    background: #7c3aed;
-}
-
-.badge-tv {
-    background: #ef4444;
-}
-
-.card p {
-    font-size: 9px;
-    color: #c084fc;
-    margin-bottom: 3px;
-}
-
+.card-content { padding: 8px; }
+.card h4 { margin: 0 0 3px; font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.media-badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 9px; font-weight: 600; margin-bottom: 6px; }
+.badge-movie { background: #7c3aed; }
+.badge-tv { background: #ef4444; }
+.card p { font-size: 9px; color: #c084fc; margin-bottom: 3px; }
 .card button {
     padding: 6px 0;
     border: none;
@@ -234,19 +172,8 @@ h1 {
     width: 100%;
     margin-top: 6px;
 }
+.empty-state { text-align: center; padding: 50px 20px; font-size: 13px; color: #888; }
 
-.card button:active {
-    opacity: 0.8;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 50px 20px;
-    font-size: 13px;
-    color: #888;
-}
-
-/* PULSANTE TORNA SU mobile */
 #tornaSu {
     position: fixed;
     bottom: 20px;
@@ -263,192 +190,35 @@ h1 {
     display: none;
     align-items: center;
     justify-content: center;
-    transition: 0.2s;
     z-index: 9998;
 }
 
-#tornaSu:active {
-    transform: scale(0.92);
-}
-
-/* ============================================ */
-/* STILE DESKTOP (sopra i 768px) */
-/* ============================================ */
-
 @media (min-width: 769px) {
-    
-    /* Topbar desktop */
-    .topbar {
-        padding: 20px 40px;
-        background: rgba(0,0,0,0.3);
-    }
-    
-    .topbar-left, .topbar-right {
-        width: 140px;
-    }
-    
-    .topbar-center {
-        flex: 1;
-        text-align: center;
-    }
-    
-    h1 {
-        font-size: 28px;
-    }
-    
-    .back-btn, .clear-all-btn {
-        padding: 10px 20px;
-        font-size: 14px;
-        transition: all 0.2s ease;
-    }
-    
-    .back-btn:hover, .clear-all-btn:hover {
-        transform: translateY(-2px);
-        background: #7c3aed;
-    }
-    
-    .container {
-        padding: 30px;
-    }
-    
-    /* Titolo lista desktop */
-    .lista-title {
-        margin-bottom: 30px;
-    }
-    
-    .lista-title h2 {
-        font-size: 28px;
-    }
-    
-    .lista-title p {
-        font-size: 14px;
-    }
-    
-    /* Filtri desktop */
-    .filters-bar {
-        padding: 20px;
-        margin-bottom: 30px;
-        border-radius: 20px;
-    }
-    
-    .filter-group {
-        margin-bottom: 15px;
-    }
-    
-    .filter-label {
-        font-size: 13px;
-        margin-bottom: 10px;
-    }
-    
-    .sort-btn, .type-btn {
-        padding: 8px 16px;
-        font-size: 13px;
-    }
-    
-    .sort-btn:hover, .type-btn:hover {
-        background: rgba(124, 58, 237, 0.6);
-        transform: translateY(-1px);
-    }
-    
-    .stats {
-        font-size: 13px;
-        margin-top: 15px;
-        padding-top: 12px;
-    }
-    
-    /* Grid desktop: 5 colonne */
-    .grid {
-        grid-template-columns: repeat(5, 1fr);
-        gap: 25px;
-    }
-    
-    .card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    
-    .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    }
-    
-    .card-content {
-        padding: 15px;
-    }
-    
-    .card h4 {
-        font-size: 14px;
-        margin: 5px 0;
-    }
-    
-    .media-badge {
-        padding: 3px 10px;
-        font-size: 10px;
-        margin-bottom: 8px;
-    }
-    
-    .card p {
-        font-size: 11px;
-        margin-bottom: 5px;
-    }
-    
-    .card button {
-        padding: 8px 12px;
-        font-size: 12px;
-        margin-top: 8px;
-        transition: all 0.2s ease;
-    }
-    
-    .card button:hover {
-        opacity: 0.9;
-        transform: scale(0.98);
-    }
-    
-    .empty-state {
-        padding: 80px;
-        font-size: 18px;
-    }
-    
-    /* Torna su desktop */
-    #tornaSu {
-        bottom: 30px;
-        right: 30px;
-        width: 50px;
-        height: 50px;
-        font-size: 24px;
-        transition: 0.3s;
-    }
-    
-    #tornaSu:hover {
-        transform: translateY(-5px);
-        background: linear-gradient(135deg, #a855f7, #c084fc);
-        box-shadow: 0 6px 20px rgba(124,58,237,0.8);
-    }
+    .topbar { padding: 20px 40px; background: rgba(0,0,0,0.3); }
+    h1 { font-size: 28px; }
+    .back-btn, .clear-all-btn, .login-btn, .logout-btn { padding: 10px 20px; font-size: 14px; }
+    .container { padding: 30px; }
+    .lista-title { margin-bottom: 30px; }
+    .lista-title h2 { font-size: 28px; }
+    .filters-bar { padding: 20px; margin-bottom: 30px; border-radius: 20px; }
+    .filter-label { font-size: 13px; }
+    .sort-btn, .type-btn { padding: 8px 16px; font-size: 13px; }
+    .stats { font-size: 13px; }
+    .grid { grid-template-columns: repeat(5, 1fr); gap: 25px; }
+    .card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+    .card-content { padding: 15px; }
+    .card h4 { font-size: 14px; }
+    .media-badge { padding: 3px 10px; font-size: 10px; }
+    .card p { font-size: 11px; }
+    .card button { padding: 8px 12px; font-size: 12px; }
+    #tornaSu { bottom: 30px; right: 30px; width: 50px; height: 50px; font-size: 24px; }
+    #tornaSu:hover { transform: translateY(-5px); }
 }
 
-/* Tablet (769px - 1024px) */
-@media (min-width: 769px) and (max-width: 1024px) {
-    .grid {
-        grid-template-columns: repeat(4, 1fr);
-        gap: 20px;
-    }
-}
-
-/* Desktop grande */
-@media (min-width: 1400px) {
-    .grid {
-        grid-template-columns: repeat(6, 1fr);
-    }
-}
-
-/* Animazioni */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.card {
-    animation: fadeIn 0.3s ease;
-}
+@media (min-width: 769px) and (max-width: 1024px) { .grid { grid-template-columns: repeat(4, 1fr); gap: 20px; } }
+@media (min-width: 1400px) { .grid { grid-template-columns: repeat(6, 1fr); } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.card { animation: fadeIn 0.3s ease; }
 </style>
 </head>
 
@@ -462,7 +232,31 @@ h1 {
         <h1>🎬 KitsuStream</h1>
     </div>
     <div class="topbar-right">
+        <div id="authButtons"></div>
         <button class="clear-all-btn" onclick="clearAll()">🗑 Svuota</button>
+    </div>
+</div>
+
+<!-- Modale Login/Registrazione -->
+<div id="authModal" class="modal">
+    <div class="modal-content">
+        <div id="loginPanel">
+            <h2>🔐 Accedi per vedere la tua lista</h2>
+            <input type="email" id="loginEmail" placeholder="Email">
+            <input type="password" id="loginPassword" placeholder="Password">
+            <button onclick="login()">Accedi</button>
+            <button class="login-btn" onclick="showRegisterPanel()">Registrati</button>
+            <div id="loginError" class="error-msg"></div>
+        </div>
+        <div id="registerPanel" style="display:none;">
+            <h2>📝 Registrati</h2>
+            <input type="email" id="regEmail" placeholder="Email">
+            <input type="password" id="regPassword" placeholder="Password (min 6)">
+            <button onclick="register()">Registrati</button>
+            <button onclick="showLoginPanel()">Torna al Login</button>
+            <div id="regError" class="error-msg"></div>
+            <div id="regSuccess" class="success-msg"></div>
+        </div>
     </div>
 </div>
 
@@ -472,7 +266,6 @@ h1 {
         <p>I tuoi film e serie TV preferiti</p>
     </div>
 
-    <!-- Barra filtri e ordinamento -->
     <div class="filters-bar">
         <div class="filter-group">
             <div class="filter-label">📋 Ordina per:</div>
@@ -482,7 +275,6 @@ h1 {
                 <button class="sort-btn" data-sort="title" onclick="changeSort('title')">🔤 Titolo</button>
             </div>
         </div>
-
         <div class="filter-group">
             <div class="filter-label">🎬 Tipo:</div>
             <div class="type-buttons">
@@ -491,10 +283,7 @@ h1 {
                 <button class="type-btn" data-type="tv" onclick="filterByType('tv')">📺 Serie TV</button>
             </div>
         </div>
-
-        <div class="stats" id="stats">
-            <!-- Statistiche -->
-        </div>
+        <div class="stats" id="stats"></div>
     </div>
 
     <div id="listContainer"></div>
@@ -502,165 +291,276 @@ h1 {
 
 <button id="tornaSu" title="Torna su">↑</button>
 
-<script>
-let currentSort = "date";
-let currentTypeFilter = "all";
+<script type="module">
+    // 👇 INSERISCI QUI LA TUA CONFIGURAZIONE FIREBASE 👇
+    const firebaseConfig = {
+        apiKey: "LA_TUA_API_KEY",
+        authDomain: "il-tuo-progetto.firebaseapp.com",
+        projectId: "il-tuo-progetto",
+        storageBucket: "il-tuo-progetto.appspot.com",
+        messagingSenderId: "numero",
+        appId: "1:...:web:..."
+    };
+    // 👆 COPIA I DATI DALLA TUA CONSOLE FIREBASE 👆
 
-function getList() {
-    return JSON.parse(localStorage.getItem("myMediaList")) || [];
-}
+    import { initializeApp } from 'firebase/app';
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 
-function saveList(list) {
-    localStorage.setItem("myMediaList", JSON.stringify(list));
-}
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-function changeSort(sort) {
-    currentSort = sort;
-    document.querySelectorAll(".sort-btn").forEach(btn => btn.classList.remove("active"));
-    document.querySelector(`.sort-btn[data-sort="${sort}"]`).classList.add("active");
-    displayList();
-}
+    let currentUser = null;
+    let currentList = [];
 
-function filterByType(type) {
-    currentTypeFilter = type;
-    document.querySelectorAll(".type-btn").forEach(btn => btn.classList.remove("active"));
-    document.querySelector(`.type-btn[data-type="${type}"]`).classList.add("active");
-    displayList();
-}
+    // Funzioni di autenticazione
+    window.login = async function() {
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        const errorDiv = document.getElementById('loginError');
+        
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            document.getElementById('authModal').style.display = 'none';
+            errorDiv.textContent = '';
+        } catch (error) {
+            let msg = error.code === 'auth/invalid-email' ? 'Email non valida' :
+                      error.code === 'auth/user-not-found' ? 'Utente non trovato' :
+                      error.code === 'auth/wrong-password' ? 'Password errata' : error.message;
+            errorDiv.textContent = msg;
+        }
+    };
 
-function sortItems(items) {
-    const sorted = [...items];
-    switch(currentSort) {
-        case "rating":
-            sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-            break;
-        case "title":
-            sorted.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
-            break;
-        case "date":
-        default:
-            sorted.sort((a, b) => (b.year || 0) - (a.year || 0));
-            break;
+    window.register = async function() {
+        const email = document.getElementById('regEmail').value;
+        const password = document.getElementById('regPassword').value;
+        const errorDiv = document.getElementById('regError');
+        const successDiv = document.getElementById('regSuccess');
+        
+        if (password.length < 6) {
+            errorDiv.textContent = 'La password deve essere almeno di 6 caratteri';
+            return;
+        }
+        
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            await setDoc(doc(db, 'users', userCredential.user.uid), { list: [] });
+            successDiv.textContent = '✅ Registrazione completata! Ora puoi accedere.';
+            setTimeout(() => window.showLoginPanel(), 2000);
+        } catch (error) {
+            let msg = error.code === 'auth/email-already-in-use' ? 'Email già registrata' :
+                      error.code === 'auth/invalid-email' ? 'Email non valida' : error.message;
+            errorDiv.textContent = msg;
+        }
+    };
+
+    window.logout = async function() {
+        await signOut(auth);
+    };
+
+    window.showLoginPanel = function() {
+        document.getElementById('loginPanel').style.display = 'block';
+        document.getElementById('registerPanel').style.display = 'none';
+        document.getElementById('loginError').textContent = '';
+        document.getElementById('regError').textContent = '';
+        document.getElementById('regSuccess').textContent = '';
+    };
+
+    window.showRegisterPanel = function() {
+        document.getElementById('loginPanel').style.display = 'none';
+        document.getElementById('registerPanel').style.display = 'block';
+        document.getElementById('loginError').textContent = '';
+        document.getElementById('regError').textContent = '';
+        document.getElementById('regSuccess').textContent = '';
+    };
+
+    window.openLoginModal = function() {
+        window.showLoginPanel();
+        document.getElementById('authModal').style.display = 'flex';
+    };
+
+    // Funzioni per la lista
+    async function loadUserList() {
+        if (!currentUser) return [];
+        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+        return userDoc.exists() ? (userDoc.data().list || []) : [];
     }
-    return sorted;
-}
 
-function filterItems(items) {
-    let filtered = [...items];
-    
-    // Filtra per tipo
-    if (currentTypeFilter !== "all") {
-        filtered = filtered.filter(item => item.type === currentTypeFilter);
+    async function saveUserList(list) {
+        if (!currentUser) return;
+        await setDoc(doc(db, 'users', currentUser.uid), { list: list }, { merge: true });
     }
-    
-    return filtered;
-}
 
-function updateStats(filteredItems, totalItems) {
-    const statsDiv = document.getElementById("stats");
-    const moviesCount = filteredItems.filter(i => i.type === "movie").length;
-    const tvCount = filteredItems.filter(i => i.type === "tv").length;
-    const avgRating = filteredItems.length > 0 
-        ? (filteredItems.reduce((sum, i) => sum + (i.rating || 0), 0) / filteredItems.length).toFixed(1)
-        : 0;
-    
-    statsDiv.innerHTML = `📊 Mostrati ${filteredItems.length} su ${totalItems} totali | 🎬 Film: ${moviesCount} | 📺 Serie: ${tvCount} | ⭐ Media voto: ${avgRating}`;
-}
-
-function displayList() {
-    const list = getList();
-    const container = document.getElementById("listContainer");
-    
-    if (list.length === 0) {
-        container.innerHTML = '<div class="empty-state">📭 La tua lista è vuota<br>Aggiungi film o serie TV dalla home!</div>';
-        updateStats([], 0);
-        return;
-    }
-    
-    let filtered = filterItems(list);
-    const totalItems = list.length;
-    const sorted = sortItems(filtered);
-    
-    updateStats(filtered, totalItems);
-    
-    if (sorted.length === 0) {
-        container.innerHTML = '<div class="empty-state">😕 Nessun elemento corrisponde ai filtri selezionati</div>';
-        return;
-    }
-    
-    container.innerHTML = `
-        <div class="grid">
-            ${sorted.map(item => `
-                <div class="card">
-                    <img src="${item.poster || 'https://via.placeholder.com/500x750'}" 
-                         alt="${item.title}" 
-                         onclick="openDetails(${item.id}, '${item.type}')"
-                         loading="lazy">
-                    <div class="card-content">
-                        <span class="media-badge ${item.type === 'movie' ? 'badge-movie' : 'badge-tv'}">
-                            ${item.mediaType || (item.type === 'movie' ? 'Film' : 'Serie TV')}
-                        </span>
-                        <h4>${escapeHtml(item.title)}</h4>
-                        <p>⭐ ${item.rating || "N/A"}/10</p>
-                        <p>📅 ${item.year || "N/D"}</p>
-                        ${item.seasons ? `<p>📺 ${item.seasons} stagioni</p>` : ''}
-                        <button onclick="removeFromList(${item.id}, '${item.type}')">❌ Rimuovi</button>
-                    </div>
-                </div>
-            `).join("")}
-        </div>
-    `;
-}
-
-function openDetails(id, type) {
-    window.location.href = `${type === 'movie' ? 'movie' : 'tv'}.html?id=${id}`;
-}
-
-function removeFromList(id, type) {
-    let list = getList();
-    list = list.filter(item => !(item.id === id && item.type === type));
-    saveList(list);
-    displayList();
-}
-
-function clearAll() {
-    if (confirm("⚠️ Sei sicuro di voler svuotare tutta la lista?")) {
-        saveList([]);
+    async function removeFromCloudList(id, type) {
+        if (!currentUser) return;
+        let list = await loadUserList();
+        list = list.filter(item => !(item.id === id && item.type === type));
+        await saveUserList(list);
+        currentList = list;
         displayList();
     }
-}
 
-function goBack() {
-    window.history.back();
-}
-
-function escapeHtml(text) {
-    if (!text) return "";
-    const div = document.createElement("div");
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-/* TORNA SU */
-const tornaSuBtn = document.getElementById("tornaSu");
-
-window.addEventListener("scroll", function() {
-    if (window.scrollY > 300) {
-        tornaSuBtn.style.display = "flex";
-    } else {
-        tornaSuBtn.style.display = "none";
+    async function clearCloudList() {
+        if (!currentUser) return;
+        await saveUserList([]);
+        currentList = [];
+        displayList();
     }
-});
 
-tornaSuBtn.addEventListener("click", function() {
-    window.scrollTo({
-        top: 0,
-        behavior: "smooth"
+    // Funzioni UI
+    let currentSort = "date";
+    let currentTypeFilter = "all";
+
+    window.changeSort = function(sort) {
+        currentSort = sort;
+        document.querySelectorAll(".sort-btn").forEach(btn => btn.classList.remove("active"));
+        document.querySelector(`.sort-btn[data-sort="${sort}"]`).classList.add("active");
+        displayList();
+    };
+
+    window.filterByType = function(type) {
+        currentTypeFilter = type;
+        document.querySelectorAll(".type-btn").forEach(btn => btn.classList.remove("active"));
+        document.querySelector(`.type-btn[data-type="${type}"]`).classList.add("active");
+        displayList();
+    };
+
+    function sortItems(items) {
+        const sorted = [...items];
+        switch(currentSort) {
+            case "rating":
+                sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+                break;
+            case "title":
+                sorted.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+                break;
+            case "date":
+            default:
+                sorted.sort((a, b) => (b.year || 0) - (a.year || 0));
+                break;
+        }
+        return sorted;
+    }
+
+    function filterItems(items) {
+        if (currentTypeFilter === "all") return items;
+        return items.filter(item => item.type === currentTypeFilter);
+    }
+
+    function updateStats(filteredItems, totalItems) {
+        const statsDiv = document.getElementById("stats");
+        const moviesCount = filteredItems.filter(i => i.type === "movie").length;
+        const tvCount = filteredItems.filter(i => i.type === "tv").length;
+        const avgRating = filteredItems.length > 0 
+            ? (filteredItems.reduce((sum, i) => sum + (i.rating || 0), 0) / filteredItems.length).toFixed(1)
+            : 0;
+        
+        statsDiv.innerHTML = `📊 Mostrati ${filteredItems.length} su ${totalItems} totali | 🎬 Film: ${moviesCount} | 📺 Serie: ${tvCount} | ⭐ Media voto: ${avgRating}`;
+    }
+
+    window.displayList = function() {
+        const container = document.getElementById("listContainer");
+        
+        if (!currentUser) {
+            container.innerHTML = '<div class="empty-state">🔐 Accedi per vedere la tua lista salvata!</div>';
+            updateStats([], 0);
+            return;
+        }
+        
+        if (currentList.length === 0) {
+            container.innerHTML = '<div class="empty-state">📭 La tua lista è vuota<br>Aggiungi film o serie TV dalla home!</div>';
+            updateStats([], 0);
+            return;
+        }
+        
+        let filtered = filterItems(currentList);
+        const totalItems = currentList.length;
+        const sorted = sortItems(filtered);
+        
+        updateStats(filtered, totalItems);
+        
+        if (sorted.length === 0) {
+            container.innerHTML = '<div class="empty-state">😕 Nessun elemento corrisponde ai filtri selezionati</div>';
+            return;
+        }
+        
+        container.innerHTML = `
+            <div class="grid">
+                ${sorted.map(item => `
+                    <div class="card">
+                        <img src="${item.poster || 'https://via.placeholder.com/500x750'}" 
+                             alt="${item.title}" 
+                             onclick="openDetails(${item.id}, '${item.type}')"
+                             loading="lazy">
+                        <div class="card-content">
+                            <span class="media-badge ${item.type === 'movie' ? 'badge-movie' : 'badge-tv'}">
+                                ${item.mediaType || (item.type === 'movie' ? 'Film' : 'Serie TV')}
+                            </span>
+                            <h4>${escapeHtml(item.title)}</h4>
+                            <p>⭐ ${item.rating || "N/A"}/10</p>
+                            <p>📅 ${item.year || "N/D"}</p>
+                            ${item.seasons ? `<p>📺 ${item.seasons} stagioni</p>` : ''}
+                            <button onclick="removeFromList(${item.id}, '${item.type}')">❌ Rimuovi</button>
+                        </div>
+                    </div>
+                `).join("")}
+            </div>
+        `;
+    };
+
+    window.openDetails = function(id, type) {
+        window.location.href = `${type === 'movie' ? 'movie' : 'tv'}.html?id=${id}`;
+    };
+
+    window.removeFromList = async function(id, type) {
+        if (confirm("Rimuovere questo elemento dalla lista?")) {
+            await removeFromCloudList(id, type);
+        }
+    };
+
+    window.clearAll = async function() {
+        if (confirm("⚠️ Sei sicuro di voler svuotare tutta la lista?")) {
+            await clearCloudList();
+        }
+    };
+
+    window.goBack = function() {
+        window.history.back();
+    };
+
+    function escapeHtml(text) {
+        if (!text) return "";
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Stato autenticazione
+    onAuthStateChanged(auth, async (user) => {
+        currentUser = user;
+        const authButtons = document.getElementById('authButtons');
+        
+        if (user) {
+            const emailShort = user.email.split('@')[0];
+            authButtons.innerHTML = `<span class="user-email">👤 ${emailShort}</span><button class="logout-btn" onclick="window.logout()">🚪</button>`;
+            currentList = await loadUserList();
+            displayList();
+        } else {
+            authButtons.innerHTML = `<button class="login-btn" onclick="window.openLoginModal()">🔐 Accedi</button>`;
+            currentList = [];
+            displayList();
+        }
     });
-});
 
-// Inizializzazione
-displayList();
+    // Torna su
+    const tornaSuBtn = document.getElementById("tornaSu");
+    window.addEventListener("scroll", function() {
+        tornaSuBtn.style.display = window.scrollY > 300 ? "flex" : "none";
+    });
+    tornaSuBtn.addEventListener("click", function() {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    });
 </script>
 
 </body>
