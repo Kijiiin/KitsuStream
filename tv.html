@@ -1044,9 +1044,11 @@ async function loadEpisodes(seasonNumber) {
 }
 
 function displayEpisodes(seasonData) {
+    // Rimuovo la sezione episodi esistente se c'è
     const existingSection = document.querySelector(".episodes-section");
     if (existingSection) existingSection.remove();
     
+    // Creo la nuova sezione episodi
     const episodesHtml = `
         <div class="episodes-section">
             <h3 class="section-title">📺 Stagione ${seasonData.season_number}</h3>
@@ -1073,7 +1075,13 @@ function displayEpisodes(seasonData) {
         </div>
     `;
     
-    document.getElementById("tvDetails").insertAdjacentHTML("beforeend", episodesHtml);
+    // Inserisco la sezione episodi DOPO la sezione stagioni e PRIMA di simili e cast
+    const seasonsSection = document.querySelector(".seasons-section");
+    if (seasonsSection) {
+        seasonsSection.insertAdjacentHTML("afterend", episodesHtml);
+    } else {
+        document.getElementById("tvDetails").insertAdjacentHTML("beforeend", episodesHtml);
+    }
 }
 
 function getSeasonOptions() {
@@ -1099,7 +1107,7 @@ function selectSeason(seasonNumber) {
         if (episodesSection) {
             episodesSection.scrollIntoView({ behavior: "smooth", block: "start" });
         }
-    }, 100);
+    }, 150);
 }
 
 function loadSimilar(similar) {
