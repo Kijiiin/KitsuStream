@@ -112,6 +112,10 @@ h1 {
     margin-bottom: 10px;
 }
 
+.filter-group:last-child {
+    margin-bottom: 0;
+}
+
 .filter-label {
     font-size: 11px;
     color: rgba(255,255,255,0.6);
@@ -125,7 +129,7 @@ h1 {
     flex-wrap: wrap;
 }
 
-.sort-btn, .type-btn, .genre-filter-btn {
+.sort-btn, .type-btn {
     background: rgba(124, 58, 237, 0.4);
     border: 1px solid rgba(124, 58, 237, 0.5);
     padding: 5px 10px;
@@ -137,22 +141,13 @@ h1 {
     transition: all 0.2s ease;
 }
 
-.sort-btn.active, .type-btn.active, .genre-filter-btn.active {
+.sort-btn.active, .type-btn.active {
     background: #7c3aed;
     border-color: #7c3aed;
 }
 
-.sort-btn:active, .type-btn:active, .genre-filter-btn:active {
+.sort-btn:active, .type-btn:active {
     transform: scale(0.95);
-}
-
-.genre-filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 6px;
-    max-height: 100px;
-    overflow-y: auto;
 }
 
 .stats {
@@ -345,19 +340,14 @@ h1 {
         margin-bottom: 10px;
     }
     
-    .sort-btn, .type-btn, .genre-filter-btn {
+    .sort-btn, .type-btn {
         padding: 8px 16px;
         font-size: 13px;
     }
     
-    .sort-btn:hover, .type-btn:hover, .genre-filter-btn:hover {
+    .sort-btn:hover, .type-btn:hover {
         background: rgba(124, 58, 237, 0.6);
         transform: translateY(-1px);
-    }
-    
-    .genre-filters {
-        max-height: 120px;
-        gap: 10px;
     }
     
     .stats {
@@ -502,13 +492,6 @@ h1 {
             </div>
         </div>
 
-        <div class="filter-group">
-            <div class="filter-label">🎭 Filtra per genere:</div>
-            <div class="genre-filters" id="genreFilters">
-                <!-- I generi vengono caricati dinamicamente -->
-            </div>
-        </div>
-
         <div class="stats" id="stats">
             <!-- Statistiche -->
         </div>
@@ -520,31 +503,8 @@ h1 {
 <button id="tornaSu" title="Torna su">↑</button>
 
 <script>
-// Lista dei generi disponibili
-const availableGenres = [
-    { id: "action", name: "Azione", type: "both" },
-    { id: "adventure", name: "Avventura", type: "both" },
-    { id: "animation", name: "Animazione", type: "both" },
-    { id: "comedy", name: "Commedia", type: "both" },
-    { id: "crime", name: "Crime", type: "both" },
-    { id: "documentary", name: "Documentario", type: "both" },
-    { id: "drama", name: "Dramma", type: "both" },
-    { id: "family", name: "Famiglia", type: "both" },
-    { id: "fantasy", name: "Fantasy", type: "both" },
-    { id: "history", name: "Storico", type: "both" },
-    { id: "horror", name: "Horror", type: "both" },
-    { id: "music", name: "Musica", type: "both" },
-    { id: "mystery", name: "Mistero", type: "both" },
-    { id: "romance", name: "Romance", type: "both" },
-    { id: "scifi", name: "Fantascienza", type: "both" },
-    { id: "thriller", name: "Thriller", type: "both" },
-    { id: "war", name: "Guerra", type: "both" },
-    { id: "western", name: "Western", type: "both" }
-];
-
 let currentSort = "date";
 let currentTypeFilter = "all";
-let currentGenreFilters = [];
 
 function getList() {
     return JSON.parse(localStorage.getItem("myMediaList")) || [];
@@ -566,32 +526,6 @@ function filterByType(type) {
     document.querySelectorAll(".type-btn").forEach(btn => btn.classList.remove("active"));
     document.querySelector(`.type-btn[data-type="${type}"]`).classList.add("active");
     displayList();
-}
-
-function toggleGenreFilter(genreId) {
-    const index = currentGenreFilters.indexOf(genreId);
-    if (index === -1) {
-        currentGenreFilters.push(genreId);
-    } else {
-        currentGenreFilters.splice(index, 1);
-    }
-    
-    // Aggiorna stile bottone
-    const btn = document.querySelector(`.genre-filter-btn[data-genre="${genreId}"]`);
-    if (btn) {
-        btn.classList.toggle("active");
-    }
-    
-    displayList();
-}
-
-function renderGenreFilters() {
-    const container = document.getElementById("genreFilters");
-    container.innerHTML = availableGenres.map(genre => `
-        <button class="genre-filter-btn" data-genre="${genre.id}" onclick="toggleGenreFilter('${genre.id}')">
-            ${genre.name}
-        </button>
-    `).join("");
 }
 
 function sortItems(items) {
@@ -617,22 +551,6 @@ function filterItems(items) {
     // Filtra per tipo
     if (currentTypeFilter !== "all") {
         filtered = filtered.filter(item => item.type === currentTypeFilter);
-    }
-    
-    // Filtra per genere (nota: i generi sono simulati, nella realtà andrebbero presi dall'API)
-    if (currentGenreFilters.length > 0) {
-        // Per ora filtriamo per titolo (simulazione)
-        // In un'implementazione reale, ogni item avrebbe un array di generi
-        filtered = filtered.filter(item => {
-            // Simulazione: se il titolo contiene parole chiave del genere
-            const titleLower = (item.title || "").toLowerCase();
-            return currentGenreFilters.some(genre => {
-                const genreName = availableGenres.find(g => g.id === genre)?.name.toLowerCase() || "";
-                return titleLower.includes(genreName) || 
-                       (item.mediaType === "Film" && genre === "movie") ||
-                       (item.mediaType === "Serie TV" && genre === "tv");
-            });
-        });
     }
     
     return filtered;
@@ -742,7 +660,6 @@ tornaSuBtn.addEventListener("click", function() {
 });
 
 // Inizializzazione
-renderGenreFilters();
 displayList();
 </script>
 
