@@ -140,8 +140,7 @@ input::placeholder {
     display: flex;
     justify-content: center;
     gap: 8px;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
+    margin-bottom: 16px;
 }
 
 .order-btn {
@@ -163,36 +162,6 @@ input::placeholder {
 
 .order-btn:active {
     transform: scale(0.95);
-}
-
-/* Selettore anno mobile */
-.year-selector {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 16px;
-}
-
-.year-select {
-    background: rgba(124, 58, 237, 0.4);
-    border: 1px solid rgba(124, 58, 237, 0.5);
-    padding: 5px 10px;
-    border-radius: 30px;
-    color: white;
-    cursor: pointer;
-    font-size: 11px;
-    font-weight: 500;
-}
-
-.year-select option {
-    background: #1f1b3a;
-    color: white;
-}
-
-.year-label {
-    font-size: 11px;
-    color: rgba(255,255,255,0.6);
 }
 
 /* Generi scrollabili orizzontalmente (mobile) */
@@ -432,7 +401,7 @@ input::placeholder {
     /* Selettore ordine desktop */
     .order-selector {
         gap: 12px;
-        margin-bottom: 15px;
+        margin-bottom: 20px;
     }
     
     .order-btn {
@@ -443,21 +412,6 @@ input::placeholder {
     .order-btn:hover {
         background: rgba(124, 58, 237, 0.6);
         transform: translateY(-1px);
-    }
-    
-    /* Selettore anno desktop */
-    .year-selector {
-        gap: 10px;
-        margin-bottom: 20px;
-    }
-    
-    .year-select {
-        padding: 8px 16px;
-        font-size: 13px;
-    }
-    
-    .year-label {
-        font-size: 13px;
     }
     
     /* Generi desktop: griglia normale (non scrollabile) */
@@ -626,40 +580,6 @@ input::placeholder {
     <div class="order-selector">
         <button class="order-btn active" data-order="popular" onclick="changeOrder('popular')">🔥 Popolari</button>
         <button class="order-btn" data-order="top_rated" onclick="changeOrder('top_rated')">⭐ Più votati</button>
-        <button class="order-btn" data-order="latest" onclick="changeOrder('latest')">📅 Per anno</button>
-    </div>
-
-    <!-- Selettore anno (visibile solo quando "Per anno" è selezionato) -->
-    <div id="yearSelector" class="year-selector" style="display: none;">
-        <span class="year-label">📅 Seleziona anno:</span>
-        <select id="yearSelect" class="year-select" onchange="changeYear()">
-            <option value="2025">2025</option>
-            <option value="2024">2024</option>
-            <option value="2023">2023</option>
-            <option value="2022">2022</option>
-            <option value="2021">2021</option>
-            <option value="2020">2020</option>
-            <option value="2019">2019</option>
-            <option value="2018">2018</option>
-            <option value="2017">2017</option>
-            <option value="2016">2016</option>
-            <option value="2015">2015</option>
-            <option value="2014">2014</option>
-            <option value="2013">2013</option>
-            <option value="2012">2012</option>
-            <option value="2011">2011</option>
-            <option value="2010">2010</option>
-            <option value="2009">2009</option>
-            <option value="2008">2008</option>
-            <option value="2007">2007</option>
-            <option value="2006">2006</option>
-            <option value="2005">2005</option>
-            <option value="2004">2004</option>
-            <option value="2003">2003</option>
-            <option value="2002">2002</option>
-            <option value="2001">2001</option>
-            <option value="2000">2000</option>
-        </select>
     </div>
 
     <div id="genresContainer" class="genres"></div>
@@ -682,8 +602,7 @@ let selectedGenres = [];
 let currentMediaType = "movie";
 let searchQuery = "";
 let totalPages = 1;
-let currentOrder = "popular"; // popular, top_rated, latest
-let currentYear = new Date().getFullYear();
+let currentOrder = "popular"; // popular, top_rated
 
 const movieGenres = [
     { id: "28", name: "Azione" }, { id: "12", name: "Avventura" }, { id: "16", name: "Animazione" },
@@ -712,27 +631,11 @@ function changeOrder(order) {
     currentOrder = order;
     currentPage = 1;
     
-    // Aggiorna classe attiva dei bottoni ordine
     document.querySelectorAll(".order-btn").forEach(btn => {
         btn.classList.remove("active");
     });
     document.querySelector(`.order-btn[data-order="${order}"]`).classList.add("active");
     
-    // Mostra/nascondi selettore anno
-    const yearSelector = document.getElementById("yearSelector");
-    if (order === 'latest') {
-        yearSelector.style.display = "flex";
-    } else {
-        yearSelector.style.display = "none";
-    }
-    
-    loadContent();
-}
-
-function changeYear() {
-    const yearSelect = document.getElementById("yearSelect");
-    currentYear = parseInt(yearSelect.value);
-    currentPage = 1;
     loadContent();
 }
 
@@ -795,43 +698,15 @@ async function loadContent() {
     try {
         let url = "";
         
-        // Se c'è una ricerca
         if (searchQuery) {
             const searchType = currentMediaType === "movie" ? "movie" : "tv";
             url = `https://api.themoviedb.org/3/search/${searchType}?api_key=${API_KEY}&query=${encodeURIComponent(searchQuery)}&language=it-IT&page=${currentPage}`;
-        } 
-        // Se ci sono generi selezionati
-        else if (selectedGenres.length > 0) {
+        } else if (selectedGenres.length > 0) {
             const genreQuery = selectedGenres.join(",");
-            let sortBy = "";
-            if (currentOrder === 'top_rated') {
-                sortBy = 'vote_average.desc';
-            } else if (currentOrder === 'latest') {
-                sortBy = 'primary_release_date.desc';
-            } else {
-                sortBy = 'popularity.desc';
-            }
+            let sortBy = currentOrder === 'top_rated' ? 'vote_average.desc' : 'popularity.desc';
             url = `https://api.themoviedb.org/3/discover/${currentMediaType}?api_key=${API_KEY}&with_genres=${genreQuery}&language=it-IT&page=${currentPage}&sort_by=${sortBy}`;
-            
-            // Aggiungi filtro anno se è selezionato "per anno"
-            if (currentOrder === 'latest') {
-                if (currentMediaType === 'movie') {
-                    url += `&primary_release_year=${currentYear}`;
-                } else {
-                    url += `&first_air_date_year=${currentYear}`;
-                }
-            }
-        }
-        // Nessun filtro
-        else {
-            if (currentOrder === 'latest') {
-                // Per anno specifico
-                if (currentMediaType === 'movie') {
-                    url = `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&language=it-IT&page=${currentPage}&sort_by=primary_release_date.desc&primary_release_year=${currentYear}`;
-                } else {
-                    url = `https://api.themoviedb.org/3/discover/tv?api_key=${API_KEY}&language=it-IT&page=${currentPage}&sort_by=first_air_date.desc&first_air_date_year=${currentYear}`;
-                }
-            } else if (currentOrder === 'top_rated') {
+        } else {
+            if (currentOrder === 'top_rated') {
                 url = `https://api.themoviedb.org/3/${currentMediaType}/top_rated?api_key=${API_KEY}&language=it-IT&page=${currentPage}`;
             } else {
                 url = `https://api.themoviedb.org/3/${currentMediaType}/popular?api_key=${API_KEY}&language=it-IT&page=${currentPage}`;
@@ -939,7 +814,6 @@ function goHome() {
     document.querySelectorAll(".genre-btn").forEach(btn => btn.classList.remove("active"));
     document.querySelectorAll(".order-btn").forEach(btn => btn.classList.remove("active"));
     document.querySelector(`.order-btn[data-order="popular"]`).classList.add("active");
-    document.getElementById("yearSelector").style.display = "none";
     loadContent();
 }
 
