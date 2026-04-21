@@ -65,7 +65,16 @@ h1 {
 
 .login-btn { background: rgba(16, 185, 129, 0.9); }
 .logout-btn { background: rgba(239, 68, 68, 0.9); }
-.user-email { font-size: 11px; background: rgba(0,0,0,0.5); padding: 4px 10px; border-radius: 20px; }
+.user-info { 
+    font-size: 12px; 
+    background: rgba(0,0,0,0.5); 
+    padding: 4px 12px; 
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.username { font-weight: bold; color: #c084fc; }
 
 .modal {
     display: none;
@@ -245,7 +254,6 @@ input::placeholder { color: rgba(255,255,255,0.5); font-size: 13px; }
 
 @media (min-width: 769px) and (max-width: 1024px) { .grid { grid-template-columns: repeat(4, 1fr); gap: 20px; } }
 @media (min-width: 1400px) { .grid { grid-template-columns: repeat(6, 1fr); } }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 </style>
 </head>
 
@@ -277,6 +285,7 @@ input::placeholder { color: rgba(255,255,255,0.5); font-size: 13px; }
         </div>
         <div id="registerPanel" style="display:none;">
             <h2>📝 Registrati</h2>
+            <input type="text" id="regUsername" placeholder="Nome utente" autocomplete="off">
             <input type="email" id="regEmail" placeholder="Email">
             <input type="password" id="regPassword" placeholder="Password (min 6)">
             <button onclick="register()">Registrati</button>
@@ -318,32 +327,28 @@ input::placeholder { color: rgba(255,255,255,0.5); font-size: 13px; }
 <script type="module">
     // 👇 INSERISCI QUI LA TUA CONFIGURAZIONE FIREBASE 👇
     const firebaseConfig = {
-        apiKey: "AIzaSyCeM7KVc9lZsdd8HM5b-PAfhx0usN8Aubo",
-        authDomain: "kitsustream-454e8.firebaseapp.com",
-        projectId: "kitsustream-454e8",
-        storageBucket: "kitsustream-454e8.firebasestorage.app",
-        messagingSenderId: "1008216243036",
-        appId: "1:1008216243036:web:73dfb15639862757b0df99"
+        apiKey: "LA_TUA_API_KEY",
+        authDomain: "il-tuo-progetto.firebaseapp.com",
+        projectId: "il-tuo-progetto",
+        storageBucket: "il-tuo-progetto.appspot.com",
+        messagingSenderId: "numero",
+        appId: "1:...:web:..."
     };
     // 👆 COPIA I DATI DALLA TUA CONSOLE FIREBASE 👆
 
     import { initializeApp } from 'firebase/app';
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
-    import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+    import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Rendi disponibili le funzioni globalmente
-    window.auth = auth;
-    window.db = db;
-
-    // Variabili globali per l'app
     let currentUser = null;
     let userList = [];
+    let currentUsername = "";
 
-    // Funzioni di autenticazione globali
+    // Funzioni di autenticazione
     window.login = async function() {
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
@@ -362,10 +367,21 @@ input::placeholder { color: rgba(255,255,255,0.5); font-size: 13px; }
     };
 
     window.register = async function() {
+        const username = document.getElementById('regUsername')?.value?.trim() || "";
         const email = document.getElementById('regEmail').value;
         const password = document.getElementById('regPassword').value;
         const errorDiv = document.getElementById('regError');
         const successDiv = document.getElementById('regSuccess');
+        
+        if (!username) {
+            errorDiv.textContent = 'Inserisci un nome utente';
+            return;
+        }
+        
+        if (username.length < 3) {
+            errorDiv.textContent = 'Il nome utente deve avere almeno 3 caratteri';
+            return;
+        }
         
         if (password.length < 6) {
             errorDiv.textContent = 'La password deve essere almeno di 6 caratteri';
@@ -374,7 +390,15 @@ input::placeholder { color: rgba(255,255,255,0.5); font-size: 13px; }
         
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            await setDoc(doc(db, 'users', userCredential.user.uid), { list: [] });
+            
+            // Salva il nome utente nel database Firestore
+            await setDoc(doc(db, 'users', userCredential.user.uid), { 
+                list: [],
+                username: username,
+                email: email,
+                createdAt: new Date()
+            });
+            
             successDiv.textContent = '✅ Registrazione completata! Ora puoi accedere.';
             setTimeout(() => window.showLoginPanel(), 2000);
         } catch (error) {
@@ -394,6 +418,9 @@ input::placeholder { color: rgba(255,255,255,0.5); font-size: 13px; }
         document.getElementById('loginError').textContent = '';
         document.getElementById('regError').textContent = '';
         document.getElementById('regSuccess').textContent = '';
+        document.getElementById('regUsername').value = '';
+        document.getElementById('regEmail').value = '';
+        document.getElementById('regPassword').value = '';
     };
 
     window.showRegisterPanel = function() {
@@ -416,14 +443,20 @@ input::placeholder { color: rgba(255,255,255,0.5); font-size: 13px; }
         return userDoc.exists() ? (userDoc.data().list || []) : [];
     }
 
+    async function loadUserData() {
+        if (!currentUser) return null;
+        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+        return userDoc.exists() ? userDoc.data() : null;
+    }
+
     async function saveUserList(list) {
         if (!currentUser) return;
         await setDoc(doc(db, 'users', currentUser.uid), { list: list }, { merge: true });
     }
 
     async function isInCloudList(id, type) {
-        const list = await loadUserList();
-        return list.some(item => item.id === id && item.type === type);
+        if (!currentUser) return false;
+        return userList.some(item => item.id === id && item.type === type);
     }
 
     async function toggleCloudList(itemData) {
@@ -432,7 +465,7 @@ input::placeholder { color: rgba(255,255,255,0.5); font-size: 13px; }
             return false;
         }
         
-        let list = await loadUserList();
+        let list = [...userList];
         const exists = list.some(item => item.id === itemData.id && item.type === itemData.type);
         
         if (exists) {
@@ -442,24 +475,9 @@ input::placeholder { color: rgba(255,255,255,0.5); font-size: 13px; }
         }
         
         await saveUserList(list);
+        userList = list;
         return !exists;
     }
-
-    // Rendi disponibili le funzioni per l'uso nelle card
-    window.toggleListGlobal = async function(id, title, poster, rating, year, type, mediaType) {
-        const itemData = { id, title, poster, rating, year, type, mediaType };
-        const added = await toggleCloudList(itemData);
-        
-        const btn = document.getElementById(`btn-${id}`);
-        if (btn) {
-            btn.innerText = added ? "❌ Rimuovi" : "⭐ Aggiungi";
-            btn.style.background = added ? "#ef4444" : "#7c3aed";
-        }
-    };
-
-    window.isInListGlobal = async function(id, type) {
-        return await isInCloudList(id, type);
-    };
 
     // Aggiorna UI in base allo stato autenticazione
     onAuthStateChanged(auth, async (user) => {
@@ -467,13 +485,21 @@ input::placeholder { color: rgba(255,255,255,0.5); font-size: 13px; }
         const authButtons = document.getElementById('authButtons');
         
         if (user) {
-            const emailShort = user.email.split('@')[0];
-            authButtons.innerHTML = `<span class="user-email">👤 ${emailShort}</span><button class="logout-btn" onclick="logout()">🚪</button>`;
+            const userData = await loadUserData();
+            currentUsername = userData?.username || user.email.split('@')[0];
+            
+            authButtons.innerHTML = `
+                <div class="user-info">
+                    <span>👤</span>
+                    <span class="username">${escapeHtml(currentUsername)}</span>
+                    <button class="logout-btn" onclick="window.logout()" style="padding: 4px 10px;">🚪</button>
+                </div>
+            `;
             userList = await loadUserList();
-            // Ricarica i contenuti per aggiornare i bottoni
             if (typeof loadContent === 'function') loadContent();
         } else {
-            authButtons.innerHTML = `<button class="login-btn" onclick="openLoginModal()">🔐 Accedi</button>`;
+            authButtons.innerHTML = `<button class="login-btn" onclick="window.openLoginModal()">🔐 Accedi</button>`;
+            currentUsername = "";
             userList = [];
             if (typeof loadContent === 'function') loadContent();
         }
@@ -482,6 +508,15 @@ input::placeholder { color: rgba(255,255,255,0.5); font-size: 13px; }
     // Esponi le funzioni necessarie all'ambiente non-module
     window.getCurrentUser = () => currentUser;
     window.getUserList = () => userList;
+    window.toggleCloudList = toggleCloudList;
+    window.isInCloudList = isInCloudList;
+    
+    function escapeHtml(text) {
+        if (!text) return "";
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+    }
 </script>
 
 <script>
@@ -623,7 +658,6 @@ async function displayItems(items) {
         return;
     }
     
-    // Per ogni item, controlla se è nella lista cloud
     const itemsHtml = [];
     for (const item of items) {
         const posterUrl = item.poster_path ? IMG_BASE + item.poster_path : "https://via.placeholder.com/500x750?text=No+Image";
@@ -659,6 +693,17 @@ async function displayItems(items) {
     
     resultsDiv.innerHTML = itemsHtml.join("");
 }
+
+window.toggleListGlobal = async function(id, title, poster, rating, year, type, mediaType) {
+    const itemData = { id, title, poster, rating, year, type, mediaType };
+    const added = await window.toggleCloudList(itemData);
+    
+    const btn = document.getElementById(`btn-${id}`);
+    if (btn) {
+        btn.innerText = added ? "❌ Rimuovi" : "⭐ Aggiungi";
+        btn.style.background = added ? "#ef4444" : "#7c3aed";
+    }
+};
 
 function openDetailsPage(id) {
     window.location.href = `${currentMediaType === "movie" ? "movie" : "tv"}.html?id=${id}`;
