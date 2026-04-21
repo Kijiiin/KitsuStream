@@ -190,7 +190,7 @@ h1 {
 }
 
 /* Sezioni mobile */
-.info-section, .cast-section, .similar-section {
+.info-section, .cast-section, .similar-section, .related-section {
     background: rgba(31, 27, 58, 0.6);
     backdrop-filter: blur(10px);
     border-radius: 16px;
@@ -263,30 +263,30 @@ h1 {
 }
 
 /* Similar mobile */
-.similar-grid {
+.similar-grid, .related-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
 }
 
-.similar-card {
+.similar-card, .related-card {
     background: rgba(0,0,0,0.3);
     border-radius: 10px;
     overflow: hidden;
     cursor: pointer;
 }
 
-.similar-poster {
+.similar-poster, .related-poster {
     width: 100%;
     height: 160px;
     object-fit: cover;
 }
 
-.similar-info {
+.similar-info, .related-info {
     padding: 8px;
 }
 
-.similar-title {
+.similar-title, .related-title {
     font-size: 11px;
     font-weight: bold;
     white-space: nowrap;
@@ -294,9 +294,18 @@ h1 {
     text-overflow: ellipsis;
 }
 
-.similar-year {
+.similar-year, .related-year {
     font-size: 9px;
     color: #888;
+}
+
+.related-badge {
+    display: inline-block;
+    background: #f59e0b;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 8px;
+    margin-top: 4px;
 }
 
 /* Player mobile */
@@ -505,7 +514,7 @@ h1 {
     }
     
     /* Sezioni desktop */
-    .info-section, .cast-section, .similar-section {
+    .info-section, .cast-section, .similar-section, .related-section {
         padding: 30px;
         margin-top: 30px;
         border-radius: 20px;
@@ -563,34 +572,34 @@ h1 {
     }
     
     /* Similar desktop */
-    .similar-grid {
+    .similar-grid, .related-grid {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
         gap: 20px;
     }
     
-    .similar-card {
+    .similar-card, .related-card {
         border-radius: 12px;
         transition: all 0.3s ease;
     }
     
-    .similar-card:hover {
+    .similar-card:hover, .related-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     }
     
-    .similar-poster {
+    .similar-poster, .related-poster {
         height: 225px;
     }
     
-    .similar-info {
+    .similar-info, .related-info {
         padding: 10px;
     }
     
-    .similar-title {
+    .similar-title, .related-title {
         font-size: 12px;
     }
     
-    .similar-year {
+    .similar-year, .related-year {
         font-size: 10px;
     }
     
@@ -641,7 +650,7 @@ h1 {
 
 /* Tablet (769px - 1024px) */
 @media (min-width: 769px) and (max-width: 1024px) {
-    .cast-grid, .similar-grid {
+    .cast-grid, .similar-grid, .related-grid {
         grid-template-columns: repeat(3, 1fr);
     }
     
@@ -656,7 +665,7 @@ h1 {
     to { opacity: 1; transform: translateY(0); }
 }
 
-.movie-details, .info-section, .cast-section, .similar-section {
+.movie-details, .info-section, .cast-section, .similar-section, .related-section {
     animation: fadeIn 0.3s ease;
 }
 </style>
@@ -727,8 +736,9 @@ async function loadMovieDetails() {
         
         displayMovieDetails(data);
         loadAdditionalInfo(data);
-        loadCast(data.credits);
+        loadRelatedMovies(data);
         loadSimilar(data.similar);
+        loadCast(data.credits);
         
     } catch (error) {
         console.error("Errore:", error);
@@ -818,6 +828,91 @@ function loadAdditionalInfo(movie) {
     document.getElementById("movieDetails").insertAdjacentHTML("beforeend", infoHtml);
 }
 
+async function loadRelatedMovies(movie) {
+    try {
+        // Recupera i film correlati (prequel, sequel, spin-off)
+        const response = await fetch(`https://api.themoviedb.org/3/movie/${movie.id}/recommendations?api_key=${API_KEY}&language=it-IT`);
+        const recommendations = await response.json();
+        
+        // Cerca anche i film della stessa collezione
+        let collectionMovies = [];
+        if (movie.belongs_to_collection) {
+            const collectionResponse = await fetch(`https://api.themoviedb.org/3/collection/${movie.belongs_to_collection.id}?api_key=${API_KEY}&language=it-IT`);
+            const collectionData = await collectionResponse.json();
+            collectionMovies = collectionData.parts || [];
+            // Filtra per rimuovere il film corrente
+            collectionMovies = collectionMovies.filter(m => m.id != movie.id);
+        }
+        
+        // Unisci e rimuovi duplicati
+        let allRelated = [...recommendations.results, ...collectionMovies];
+        const uniqueRelated = [];
+        const ids = new Set();
+        
+        for (const movie of allRelated) {
+            if (!ids.has(movie.id) && movie.id != movieId) {
+                ids.add(movie.id);
+                uniqueRelated.push(movie);
+            }
+        }
+        
+        // Prendi i primi 6 correlati
+        const relatedMovies = uniqueRelated.slice(0, 6);
+        
+        if (relatedMovies.length > 0) {
+            displayRelatedMovies(relatedMovies);
+        }
+    } catch (error) {
+        console.error("Errore nel caricamento film correlati:", error);
+    }
+}
+
+function displayRelatedMovies(movies) {
+    const relatedHtml = `
+        <div class="related-section">
+            <h3 class="section-title">🔗 Film correlati</h3>
+            <div class="related-grid">
+                ${movies.map(movie => `
+                    <div class="related-card" onclick="openMoviePage(${movie.id})">
+                        <img class="related-poster" src="${movie.poster_path ? IMG_BASE + movie.poster_path : 'https://via.placeholder.com/150x225?text=No+Poster'}" alt="${movie.title}" loading="lazy">
+                        <div class="related-info">
+                            <div class="related-title">${escapeHtml(movie.title)}</div>
+                            <div class="related-year">${movie.release_date ? movie.release_date.split("-")[0] : "N/D"} | ⭐ ${movie.vote_average ? movie.vote_average.toFixed(1) : "N/A"}</div>
+                        </div>
+                    </div>
+                `).join("")}
+            </div>
+        </div>
+    `;
+    
+    document.getElementById("movieDetails").insertAdjacentHTML("beforeend", relatedHtml);
+}
+
+function loadSimilar(similar) {
+    if (!similar || !similar.results || similar.results.length === 0) return;
+    
+    const similarMovies = similar.results.slice(0, 6);
+    
+    const similarHtml = `
+        <div class="similar-section">
+            <h3 class="section-title">🎬 Ti potrebbe piacere</h3>
+            <div class="similar-grid">
+                ${similarMovies.map(movie => `
+                    <div class="similar-card" onclick="openMoviePage(${movie.id})">
+                        <img class="similar-poster" src="${movie.poster_path ? IMG_BASE + movie.poster_path : 'https://via.placeholder.com/150x225?text=No+Poster'}" alt="${movie.title}" loading="lazy">
+                        <div class="similar-info">
+                            <div class="similar-title">${escapeHtml(movie.title)}</div>
+                            <div class="similar-year">${movie.release_date ? movie.release_date.split("-")[0] : "N/D"} | ⭐ ${movie.vote_average ? movie.vote_average.toFixed(1) : "N/A"}</div>
+                        </div>
+                    </div>
+                `).join("")}
+            </div>
+        </div>
+    `;
+    
+    document.getElementById("movieDetails").insertAdjacentHTML("beforeend", similarHtml);
+}
+
 function loadCast(credits) {
     if (!credits || !credits.cast || credits.cast.length === 0) return;
     
@@ -839,31 +934,6 @@ function loadCast(credits) {
     `;
     
     document.getElementById("movieDetails").insertAdjacentHTML("beforeend", castHtml);
-}
-
-function loadSimilar(similar) {
-    if (!similar || !similar.results || similar.results.length === 0) return;
-    
-    const similarMovies = similar.results.slice(0, 6);
-    
-    const similarHtml = `
-        <div class="similar-section">
-            <h3 class="section-title">🎬 Simili</h3>
-            <div class="similar-grid">
-                ${similarMovies.map(movie => `
-                    <div class="similar-card" onclick="openMoviePage(${movie.id})">
-                        <img class="similar-poster" src="${movie.poster_path ? IMG_BASE + movie.poster_path : 'https://via.placeholder.com/150x225?text=No+Poster'}" alt="${movie.title}" loading="lazy">
-                        <div class="similar-info">
-                            <div class="similar-title">${escapeHtml(movie.title)}</div>
-                            <div class="similar-year">${movie.release_date ? movie.release_date.split("-")[0] : "N/D"} | ⭐ ${movie.vote_average ? movie.vote_average.toFixed(1) : "N/A"}</div>
-                        </div>
-                    </div>
-                `).join("")}
-            </div>
-        </div>
-    `;
-    
-    document.getElementById("movieDetails").insertAdjacentHTML("beforeend", similarHtml);
 }
 
 function openMoviePage(id) {
@@ -928,10 +998,8 @@ function formatTime(seconds) {
 }
 
 function parseTimeInput(input) {
-    // Rimuove spazi e sostituisce virgole con punti
     input = input.trim().replace(',', '.');
     
-    // Formato con ore:minuti:secondi (es: 1:30:15)
     if (input.includes(':') && input.split(':').length === 3) {
         const parts = input.split(':');
         const ore = parseInt(parts[0]);
@@ -942,7 +1010,6 @@ function parseTimeInput(input) {
             return { success: true, seconds: (ore * 3600) + (minuti * 60) + secondi };
         }
     }
-    // Formato con ore:minuti (es: 1:30)
     else if (input.includes(':') && input.split(':').length === 2) {
         const parts = input.split(':');
         const ore = parseInt(parts[0]);
@@ -952,14 +1019,12 @@ function parseTimeInput(input) {
             return { success: true, seconds: (ore * 3600) + (minuti * 60) };
         }
     }
-    // Formato con minuti decimali (es: 15.30)
     else if (input.includes('.')) {
         let minuti = parseFloat(input);
         if (!isNaN(minuti) && minuti >= 0) {
             return { success: true, seconds: Math.floor(minuti * 60) };
         }
     }
-    // Formato con solo minuti (es: 15)
     else {
         let minuti = parseFloat(input);
         if (!isNaN(minuti) && minuti >= 0) {
@@ -1082,7 +1147,6 @@ function handleOutsideClick(e) {
     if (!box.contains(e.target)) closePlayer();
 }
 
-/* NAVIGAZIONE */
 function goBack() {
     window.history.back();
 }
