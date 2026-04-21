@@ -99,6 +99,71 @@ h1 {
     margin-top: 4px;
 }
 
+/* Filtri e ordinamento mobile */
+.filters-bar {
+    background: rgba(31, 27, 58, 0.6);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 12px;
+    margin-bottom: 16px;
+}
+
+.filter-group {
+    margin-bottom: 10px;
+}
+
+.filter-label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 6px;
+    display: block;
+}
+
+.sort-buttons, .type-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.sort-btn, .type-btn, .genre-filter-btn {
+    background: rgba(124, 58, 237, 0.4);
+    border: 1px solid rgba(124, 58, 237, 0.5);
+    padding: 5px 10px;
+    border-radius: 30px;
+    color: white;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.sort-btn.active, .type-btn.active, .genre-filter-btn.active {
+    background: #7c3aed;
+    border-color: #7c3aed;
+}
+
+.sort-btn:active, .type-btn:active, .genre-filter-btn:active {
+    transform: scale(0.95);
+}
+
+.genre-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 6px;
+    max-height: 100px;
+    overflow-y: auto;
+}
+
+.stats {
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    text-align: center;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
 /* Grid mobile: 2 colonne */
 .grid {
     display: grid;
@@ -264,6 +329,43 @@ h1 {
         font-size: 14px;
     }
     
+    /* Filtri desktop */
+    .filters-bar {
+        padding: 20px;
+        margin-bottom: 30px;
+        border-radius: 20px;
+    }
+    
+    .filter-group {
+        margin-bottom: 15px;
+    }
+    
+    .filter-label {
+        font-size: 13px;
+        margin-bottom: 10px;
+    }
+    
+    .sort-btn, .type-btn, .genre-filter-btn {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+    
+    .sort-btn:hover, .type-btn:hover, .genre-filter-btn:hover {
+        background: rgba(124, 58, 237, 0.6);
+        transform: translateY(-1px);
+    }
+    
+    .genre-filters {
+        max-height: 120px;
+        gap: 10px;
+    }
+    
+    .stats {
+        font-size: 13px;
+        margin-top: 15px;
+        padding-top: 12px;
+    }
+    
     /* Grid desktop: 5 colonne */
     .grid {
         grid-template-columns: repeat(5, 1fr);
@@ -379,19 +481,172 @@ h1 {
         <h2>⭐ La mia lista</h2>
         <p>I tuoi film e serie TV preferiti</p>
     </div>
+
+    <!-- Barra filtri e ordinamento -->
+    <div class="filters-bar">
+        <div class="filter-group">
+            <div class="filter-label">📋 Ordina per:</div>
+            <div class="sort-buttons">
+                <button class="sort-btn active" data-sort="date" onclick="changeSort('date')">📅 Data</button>
+                <button class="sort-btn" data-sort="rating" onclick="changeSort('rating')">⭐ Voto</button>
+                <button class="sort-btn" data-sort="title" onclick="changeSort('title')">🔤 Titolo</button>
+            </div>
+        </div>
+
+        <div class="filter-group">
+            <div class="filter-label">🎬 Tipo:</div>
+            <div class="type-buttons">
+                <button class="type-btn active" data-type="all" onclick="filterByType('all')">Tutti</button>
+                <button class="type-btn" data-type="movie" onclick="filterByType('movie')">🎬 Film</button>
+                <button class="type-btn" data-type="tv" onclick="filterByType('tv')">📺 Serie TV</button>
+            </div>
+        </div>
+
+        <div class="filter-group">
+            <div class="filter-label">🎭 Filtra per genere:</div>
+            <div class="genre-filters" id="genreFilters">
+                <!-- I generi vengono caricati dinamicamente -->
+            </div>
+        </div>
+
+        <div class="stats" id="stats">
+            <!-- Statistiche -->
+        </div>
+    </div>
+
     <div id="listContainer"></div>
 </div>
 
 <button id="tornaSu" title="Torna su">↑</button>
 
 <script>
+// Lista dei generi disponibili
+const availableGenres = [
+    { id: "action", name: "Azione", type: "both" },
+    { id: "adventure", name: "Avventura", type: "both" },
+    { id: "animation", name: "Animazione", type: "both" },
+    { id: "comedy", name: "Commedia", type: "both" },
+    { id: "crime", name: "Crime", type: "both" },
+    { id: "documentary", name: "Documentario", type: "both" },
+    { id: "drama", name: "Dramma", type: "both" },
+    { id: "family", name: "Famiglia", type: "both" },
+    { id: "fantasy", name: "Fantasy", type: "both" },
+    { id: "history", name: "Storico", type: "both" },
+    { id: "horror", name: "Horror", type: "both" },
+    { id: "music", name: "Musica", type: "both" },
+    { id: "mystery", name: "Mistero", type: "both" },
+    { id: "romance", name: "Romance", type: "both" },
+    { id: "scifi", name: "Fantascienza", type: "both" },
+    { id: "thriller", name: "Thriller", type: "both" },
+    { id: "war", name: "Guerra", type: "both" },
+    { id: "western", name: "Western", type: "both" }
+];
+
+let currentSort = "date";
+let currentTypeFilter = "all";
+let currentGenreFilters = [];
+
 function getList() {
     return JSON.parse(localStorage.getItem("myMediaList")) || [];
 }
 
 function saveList(list) {
     localStorage.setItem("myMediaList", JSON.stringify(list));
+}
+
+function changeSort(sort) {
+    currentSort = sort;
+    document.querySelectorAll(".sort-btn").forEach(btn => btn.classList.remove("active"));
+    document.querySelector(`.sort-btn[data-sort="${sort}"]`).classList.add("active");
     displayList();
+}
+
+function filterByType(type) {
+    currentTypeFilter = type;
+    document.querySelectorAll(".type-btn").forEach(btn => btn.classList.remove("active"));
+    document.querySelector(`.type-btn[data-type="${type}"]`).classList.add("active");
+    displayList();
+}
+
+function toggleGenreFilter(genreId) {
+    const index = currentGenreFilters.indexOf(genreId);
+    if (index === -1) {
+        currentGenreFilters.push(genreId);
+    } else {
+        currentGenreFilters.splice(index, 1);
+    }
+    
+    // Aggiorna stile bottone
+    const btn = document.querySelector(`.genre-filter-btn[data-genre="${genreId}"]`);
+    if (btn) {
+        btn.classList.toggle("active");
+    }
+    
+    displayList();
+}
+
+function renderGenreFilters() {
+    const container = document.getElementById("genreFilters");
+    container.innerHTML = availableGenres.map(genre => `
+        <button class="genre-filter-btn" data-genre="${genre.id}" onclick="toggleGenreFilter('${genre.id}')">
+            ${genre.name}
+        </button>
+    `).join("");
+}
+
+function sortItems(items) {
+    const sorted = [...items];
+    switch(currentSort) {
+        case "rating":
+            sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+            break;
+        case "title":
+            sorted.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+            break;
+        case "date":
+        default:
+            sorted.sort((a, b) => (b.year || 0) - (a.year || 0));
+            break;
+    }
+    return sorted;
+}
+
+function filterItems(items) {
+    let filtered = [...items];
+    
+    // Filtra per tipo
+    if (currentTypeFilter !== "all") {
+        filtered = filtered.filter(item => item.type === currentTypeFilter);
+    }
+    
+    // Filtra per genere (nota: i generi sono simulati, nella realtà andrebbero presi dall'API)
+    if (currentGenreFilters.length > 0) {
+        // Per ora filtriamo per titolo (simulazione)
+        // In un'implementazione reale, ogni item avrebbe un array di generi
+        filtered = filtered.filter(item => {
+            // Simulazione: se il titolo contiene parole chiave del genere
+            const titleLower = (item.title || "").toLowerCase();
+            return currentGenreFilters.some(genre => {
+                const genreName = availableGenres.find(g => g.id === genre)?.name.toLowerCase() || "";
+                return titleLower.includes(genreName) || 
+                       (item.mediaType === "Film" && genre === "movie") ||
+                       (item.mediaType === "Serie TV" && genre === "tv");
+            });
+        });
+    }
+    
+    return filtered;
+}
+
+function updateStats(filteredItems, totalItems) {
+    const statsDiv = document.getElementById("stats");
+    const moviesCount = filteredItems.filter(i => i.type === "movie").length;
+    const tvCount = filteredItems.filter(i => i.type === "tv").length;
+    const avgRating = filteredItems.length > 0 
+        ? (filteredItems.reduce((sum, i) => sum + (i.rating || 0), 0) / filteredItems.length).toFixed(1)
+        : 0;
+    
+    statsDiv.innerHTML = `📊 Mostrati ${filteredItems.length} su ${totalItems} totali | 🎬 Film: ${moviesCount} | 📺 Serie: ${tvCount} | ⭐ Media voto: ${avgRating}`;
 }
 
 function displayList() {
@@ -400,12 +655,24 @@ function displayList() {
     
     if (list.length === 0) {
         container.innerHTML = '<div class="empty-state">📭 La tua lista è vuota<br>Aggiungi film o serie TV dalla home!</div>';
+        updateStats([], 0);
+        return;
+    }
+    
+    let filtered = filterItems(list);
+    const totalItems = list.length;
+    const sorted = sortItems(filtered);
+    
+    updateStats(filtered, totalItems);
+    
+    if (sorted.length === 0) {
+        container.innerHTML = '<div class="empty-state">😕 Nessun elemento corrisponde ai filtri selezionati</div>';
         return;
     }
     
     container.innerHTML = `
         <div class="grid">
-            ${list.map(item => `
+            ${sorted.map(item => `
                 <div class="card">
                     <img src="${item.poster || 'https://via.placeholder.com/500x750'}" 
                          alt="${item.title}" 
@@ -435,11 +702,13 @@ function removeFromList(id, type) {
     let list = getList();
     list = list.filter(item => !(item.id === id && item.type === type));
     saveList(list);
+    displayList();
 }
 
 function clearAll() {
     if (confirm("⚠️ Sei sicuro di voler svuotare tutta la lista?")) {
         saveList([]);
+        displayList();
     }
 }
 
@@ -472,6 +741,8 @@ tornaSuBtn.addEventListener("click", function() {
     });
 });
 
+// Inizializzazione
+renderGenreFilters();
 displayList();
 </script>
 
