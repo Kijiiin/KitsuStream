@@ -1094,9 +1094,13 @@ function changeSeason(seasonNumber) {
 
 function selectSeason(seasonNumber) {
     loadEpisodes(seasonNumber);
-    if (window.innerWidth <= 768) {
-        document.querySelector(".episodes-section").scrollIntoView({ behavior: "smooth" });
-    }
+    // Scroll alla sezione episodi su tutti i dispositivi
+    setTimeout(() => {
+        const episodesSection = document.querySelector(".episodes-section");
+        if (episodesSection) {
+            episodesSection.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    }, 100);
 }
 
 function loadSimilar(similar) {
