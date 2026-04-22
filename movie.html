@@ -526,12 +526,20 @@ async function loadMovieDetails() {
     }
     
     try {
+        // Mostra loading
+        document.getElementById("movieDetails").innerHTML = '<div class="loading">⏳ Caricamento...</div>';
+        
         const response = await fetch(`https://api.themoviedb.org/3/movie/${movieId}?api_key=${API_KEY}&language=it-IT&append_to_response=credits,similar,release_dates`);
         const data = await response.json();
         movieData = data;
         window.movieData = data;
         
-        displayMovieDetails(data);
+        // Pulisci il container
+        const container = document.getElementById("movieDetails");
+        container.innerHTML = '';
+        
+        // Ora aspetta il completamento di TUTTE le funzioni in ordine
+        await displayMovieDetails(data);
         loadAdditionalInfo(data);
         await loadCollection(data);
         loadSimilar(data.similar);
