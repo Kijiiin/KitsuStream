@@ -241,14 +241,13 @@ h1 {
 
 <div class="topbar">
     <div class="topbar-left">
-        <button class="back-btn" onclick="goBack()">⬅️</button>
+        <button class="clear-all-btn" onclick="clearAll()">🗑 Svuota</button>
     </div>
     <div class="topbar-center">
-        <h1>🎬 KitsuStream</h1>
+        <h1 onclick="goHome()" style="cursor: pointer;">🎬 KitsuStream</h1>
     </div>
     <div class="topbar-right">
         <div id="authButtons"></div>
-        <button class="clear-all-btn" onclick="clearAll()">🗑 Svuota</button>
     </div>
 </div>
 
@@ -614,6 +613,12 @@ h1 {
     tornaSuBtn.addEventListener("click", function() {
         window.scrollTo({ top: 0, behavior: "smooth" });
     });
+</script>
+
+<script>
+    function goHome() {
+        window.location.href = "index.html";
+    }
 </script>
 
 </body>
