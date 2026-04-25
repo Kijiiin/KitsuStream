@@ -622,7 +622,7 @@ async function displayMovieDetails(movie) {
     const posterUrl = movie.poster_path ? IMG_BASE + movie.poster_path : "https://via.placeholder.com/300x450?text=No+Image";
     const backdropUrl = movie.backdrop_path ? BACKDROP_BASE + movie.backdrop_path : "";
     
-    const link = `https://vixsrc.to/movie/${movie.id}?lang=it`;
+    const link = `https://vixsrc.to/movie/${movie.id}?lang=it&primaryColor=302b63&secondaryColor=24243e`;
     
     // Determina lo stato iniziale del bottone (se userList è già caricato)
     let initialInList = false;
