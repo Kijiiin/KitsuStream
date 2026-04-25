@@ -612,6 +612,16 @@ h1 {
     background: #7c3aed;
     border-radius: 10px;
 }
+
+/* Animazione per la biografia */
+.bio-full {
+    transition: all 0.3s ease;
+}
+.bio-toggle-btn:hover {
+    background: rgba(124, 58, 237, 0.8) !important;
+    transform: scale(1.02);
+    transition: all 0.2s ease;
+}
 </style>
 </head>
 
@@ -624,6 +634,7 @@ h1 {
         <h1 onclick="goHome()" style="cursor: pointer;">🎬 KitsuStream</h1>
     </div>
     <div class="topbar-right">
+        <div id="authButtons"></div>
         <button class="list-btn" onclick="goToList()">❤️</button>
     </div>
 </div>
@@ -679,7 +690,7 @@ h1 {
 
     import { initializeApp } from 'firebase/app';
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
-    import { getFirestore, doc, getDoc } from 'firebase/firestore';
+    import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
@@ -1102,6 +1113,10 @@ function displayPersonProfile(person, actingCount, directingCount) {
     const birthYear = person.birthday ? person.birthday.split("-")[0] : "?";
     const deathYear = person.deathday ? ` - ${person.deathday.split("-")[0]}` : "";
     const department = person.known_for_department || "Artista";
+    const bioFull = person.biography || "";
+    const bioPreview = bioFull.substring(0, 300);
+    const hasMore = bioFull.length > 300;
+    const bioId = "bio-text-" + Date.now();
     
     const profileHtml = `
         <div class="actor-profile">
@@ -1123,13 +1138,39 @@ function displayPersonProfile(person, actingCount, directingCount) {
                     </div>
                 </div>
                 <div class="actor-bio" style="font-size: 12px;">🎭 ${department}</div>
-                ${person.biography ? `<div class="actor-bio">${escapeHtml(person.biography.substring(0, 300))}${person.biography.length > 300 ? "..." : ""}</div>` : ""}
+                ${bioFull ? `
+                    <div class="actor-bio" id="${bioId}">
+                        ${hasMore ? `<span class="bio-preview">${escapeHtml(bioPreview)}...</span><span class="bio-full" style="display:none;">${escapeHtml(bioFull)}</span>` : escapeHtml(bioFull)}
+                    </div>
+                    ${hasMore ? `<button class="bio-toggle-btn" onclick="toggleBio('${bioId}')" style="background: rgba(124,58,237,0.5); border: none; padding: 5px 12px; border-radius: 20px; color: white; cursor: pointer; font-size: 11px; margin-top: 8px;">📖 Mostra altro</button>` : ''}
+                ` : '<div class="actor-bio">Biografia non disponibile.</div>'}
                 <div class="actor-bio" style="font-size: 12px; margin-top: 10px;">📅 ${birthYear}${deathYear} | 🌍 ${person.place_of_birth ? escapeHtml(person.place_of_birth) : "N/D"}</div>
             </div>
         </div>
     `;
     
     container.innerHTML = profileHtml;
+}
+
+function toggleBio(bioId) {
+    const bioDiv = document.getElementById(bioId);
+    if (!bioDiv) return;
+    
+    const preview = bioDiv.querySelector('.bio-preview');
+    const full = bioDiv.querySelector('.bio-full');
+    const btn = bioDiv.parentElement.querySelector('.bio-toggle-btn');
+    
+    if (!preview || !full) return;
+    
+    if (full.style.display === 'none') {
+        preview.style.display = 'none';
+        full.style.display = 'inline';
+        btn.innerHTML = '📖 Mostra meno';
+    } else {
+        preview.style.display = 'inline';
+        full.style.display = 'none';
+        btn.innerHTML = '📖 Mostra altro';
+    }
 }
 
 function displayTabsAndControls() {
