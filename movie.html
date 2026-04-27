@@ -808,7 +808,7 @@ function loadCast(credits) {
     
     const castHtml = `
         <div class="cast-section">
-            <h3 class="section-title">🎭 Cast & Regia</h3>
+            <h3 class="section-title">🎭 Regia & Cast</h3>
             <div class="cast-grid">
                 ${castList.map(actor => `
                     <div class="cast-card" onclick="searchActorByName('${escapeHtml(actor.name).replace(/'/g, "\\'")}')">
