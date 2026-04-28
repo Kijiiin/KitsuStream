@@ -651,7 +651,9 @@ async function displayMovieDetails(movie) {
                     ${movie.overview || "Trama non disponibile."}
                 </div>
                 <div class="watch-buttons">
-                    <button class="watch-btn" onclick="openPlayer('${link}')">▶ Guarda</button>
+                    <a href="${link}" class="watch-btn">
+    ▶ Guarda
+</a>
                     <button class="list-toggle-btn" id="listBtn" onclick="toggleListFromDetails()">
                         ${initialInList ? "❌ Rimuovi" : "❤️ Aggiungi"}
                     </button>
