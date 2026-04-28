@@ -272,6 +272,9 @@ h1 {
     #tornaSu { bottom: 30px; right: 30px; width: 50px; height: 50px; font-size: 24px; }
     #tornaSu:hover { transform: translateY(-5px); }
 }
+.title-link {
+    text-decoration: none;
+}
 
 @media (min-width: 769px) and (max-width: 1024px) {
     .cast-grid, .collection-grid, .similar-grid { grid-template-columns: repeat(3, 1fr); }
@@ -286,7 +289,7 @@ h1 {
         <button class="actors-nav-btn" onclick="goToActors()">🎭 Troupe</button>
     </div>
     <div class="topbar-center">
-        <h1 onclick="goHome()" style="cursor: pointer;">🎬 KitsuStream</h1>
+        <h1 <a href="index.html" class="title-link">🎬 KitsuStream</a></h1>
     </div>
     <div class="topbar-right">
         <div id="authButtons"></div>
@@ -1002,7 +1005,6 @@ async function toggleListFromDetails() {
     }
 }
 
-function goHome() { window.location.href = "index.html"; }
 function goToList() { window.location.href = "list.html"; }
 
 function formatTime(seconds) {
