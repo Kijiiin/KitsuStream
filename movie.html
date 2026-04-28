@@ -55,7 +55,6 @@ h1 {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    text-decoration: none;
 }
 
 .back-btn, .list-btn, .login-btn, .logout-btn, .actors-nav-btn {
@@ -226,12 +225,6 @@ h1 {
 }
 .title-link {
     text-decoration: none;
-    cursor: pointer;
-    font-size: inherit;
-    font-weight: inherit;
-    background: linear-gradient(90deg, #a855f7, #00d4ff, #7c3aed);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
 }
 
 @media (min-width: 769px) {
@@ -275,7 +268,7 @@ h1 {
     </div>
     <div class="topbar-center">
         <h1>
-  <a href="index.html">🎬 KitsuStream</a>
+  <a href="index.html" class="title-link">🎬 KitsuStream</a>
 </h1>
     </div>
     <div class="topbar-right">
@@ -872,7 +865,6 @@ async function toggleListFromDetails() {
     }
 }
 
-function goHome() { window.location.href = "index.html"; }
 function goToList() { window.location.href = "list.html"; }
 
 function formatTime(seconds) {
