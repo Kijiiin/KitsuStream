@@ -848,6 +848,7 @@ async function toggleListFromDetails() {
         year: movieData.release_date ? movieData.release_date.split("-")[0] : "N/D",
         type: "movie",
         mediaType: "Film"
+        addedAt: Date.now
     };
     
     const added = await window.toggleCloudList(itemData);
