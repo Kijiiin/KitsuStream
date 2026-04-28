@@ -780,7 +780,9 @@ async function displayItems(items) {
         
         itemsHtml.push(`
             <div class="card">
-                <img src="${posterUrl}" alt="${title}" onclick="openDetailsPage(${item.id})" loading="lazy">
+    <a href="${currentMediaType === "movie" ? "movie" : "tv"}.html?id=${item.id}">
+        <img src="${posterUrl}" alt="${title}" loading="lazy">
+    </a>
                 <div class="card-content">
                     <h4>${escapeHtml(title)}</h4>
                     <div class="rating">⭐ ${rating}</div>
@@ -810,10 +812,6 @@ window.toggleListGlobal = async function(id, title, poster, rating, year, type, 
         btn.style.background = added ? "#ef4444" : "#7c3aed";
     }
 };
-
-function openDetailsPage(id) {
-    window.location.href = `${currentMediaType === "movie" ? "movie" : "tv"}.html?id=${id}`;
-}
 
 function goHome() {
     searchQuery = "";
