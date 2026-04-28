@@ -89,6 +89,7 @@ h1 {
 .list-btn:active, .actors-btn:active, .home-btn:active {
     transform: scale(0.95);
     background: rgba(124, 58, 237, 1);
+    text-decoration: none;
 }
 
 .actors-btn {
@@ -394,7 +395,7 @@ input::placeholder { color: rgba(255,255,255,0.5); font-size: 13px; }
     <div class="media-selector">
         <button class="media-btn active" data-type="movie" onclick="switchMediaType('movie')">🎬 Film</button>
         <button class="media-btn" data-type="tv" onclick="switchMediaType('tv')">📺 Serie TV</button>
-        <button class="list-btn" onclick="goToList()">❤️ Lista</button>
+        <a href="list.html" class="list-btn">❤️ Lista</a>
     </div>
 
     <div class="order-selector">
@@ -821,10 +822,6 @@ function goHome() {
     document.querySelectorAll(".order-btn").forEach(btn => btn.classList.remove("active"));
     document.querySelector(`.order-btn[data-order="popular"]`).classList.add("active");
     loadContent();
-}
-
-function goToList() {
-    window.location.href = "list.html";
 }
 
 function prevPage() {
