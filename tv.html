@@ -990,6 +990,7 @@ async function toggleListFromDetails() {
         type: "tv",
         mediaType: "Serie TV",
         seasons: tvData.number_of_seasons
+        addedAt: Date.now()
     };
     
     const added = await window.toggleCloudList(itemData);
