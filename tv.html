@@ -651,7 +651,7 @@ async function loadTVDetails() {
         const data = await response.json();
         tvData = data;
         window.tvData = data;
-        document.title = `KitsuStream - ${data.title}`;
+        document.title = `KitsuStream - ${data.name}`;
         
         const container = document.getElementById("tvDetails");
         container.innerHTML = '';
