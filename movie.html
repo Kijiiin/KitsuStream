@@ -602,7 +602,7 @@ async function loadMovieDetails() {
         const data = await response.json();
         movieData = data;
         window.movieData = data;
-        document.title = `🎬 KitsuStream - ${data.title}`;
+        document.title = `KitsuStream - ${data.title}`;
         
         const container = document.getElementById("movieDetails");
         container.innerHTML = '';
