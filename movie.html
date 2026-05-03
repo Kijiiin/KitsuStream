@@ -146,10 +146,18 @@ h1 {
 .overview { margin: 16px 0; line-height: 1.5; color: #ddd; font-size: 13px; text-align: left; }
 .genres { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 16px 0; }
 .genre-tag { background: rgba(124, 58, 237, 0.3); padding: 4px 12px; border-radius: 20px; font-size: 11px; }
-.watch-buttons { display: flex; gap: 12px; margin-top: 20px; justify-content: center; }
-.watch-btn, .list-toggle-btn { padding: 10px 20px; border: none; border-radius: 30px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.watch-buttons { display: flex; gap: 12px; margin-top: 20px; justify-content: center; flex-wrap: wrap; }
+.watch-btn, .list-toggle-btn, .trailer-btn { 
+    padding: 10px 20px; 
+    border: none; 
+    border-radius: 30px; 
+    font-size: 14px; 
+    font-weight: 600; 
+    cursor: pointer; 
+}
 .watch-btn { background: #ef4444; color: white; }
 .list-toggle-btn { background: #7c3aed; color: white; }
+.trailer-btn { background: #ff0000; color: white; }
 
 .info-section, .collection-section, .similar-section, .cast-section {
     background: rgba(31, 27, 58, 0.6);
@@ -187,7 +195,7 @@ h1 {
 .collection-info, .similar-info { padding: 8px; }
 .collection-title, .similar-title { font-size: 11px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.player-modal {
+.player-modal, .trailer-modal {
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.96);
@@ -196,10 +204,10 @@ h1 {
     justify-content: center;
     z-index: 9999;
 }
-.player-box { width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; }
-.player-box iframe { width: 100%; height: 50vh; border: none; }
-.player-controls { padding: 12px; display: flex; justify-content: center; gap: 10px; background: #1a1a1a; flex-wrap: wrap; }
-.player-controls button { padding: 8px 16px; border-radius: 30px; font-size: 12px; cursor: pointer; border: none; color: white; }
+.player-box, .trailer-box { width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; }
+.player-box iframe, .trailer-box iframe { width: 100%; height: 50vh; border: none; }
+.player-controls, .trailer-controls { padding: 12px; display: flex; justify-content: center; gap: 10px; background: #1a1a1a; flex-wrap: wrap; }
+.player-controls button, .trailer-controls button { padding: 8px 16px; border-radius: 30px; font-size: 12px; cursor: pointer; border: none; color: white; }
 .close-btn { background: #ef4444; }
 .save-btn { background: #f59e0b; }
 .reset-btn { background: #ef4444; }
@@ -241,15 +249,15 @@ h1 {
     .overview { font-size: 16px; }
     .genres { justify-content: flex-start; }
     .watch-buttons { justify-content: flex-start; }
-    .watch-btn, .list-toggle-btn { padding: 12px 30px; font-size: 16px; }
+    .watch-btn, .list-toggle-btn, .trailer-btn { padding: 12px 30px; font-size: 16px; }
     .info-section, .collection-section, .similar-section, .cast-section { padding: 30px; margin-top: 30px; border-radius: 20px; }
     .section-title { font-size: 24px; }
     .info-grid { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
     .cast-grid, .collection-grid, .similar-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px; }
     .cast-photo { height: 150px; }
     .collection-poster, .similar-poster { height: 225px; }
-    .player-box { width: 90%; max-width: 1100px; height: auto; border-radius: 15px; }
-    .player-box iframe { height: 60vh; min-height: 400px; }
+    .player-box, .trailer-box { width: 90%; max-width: 1100px; height: auto; border-radius: 15px; }
+    .player-box iframe, .trailer-box iframe { height: 60vh; min-height: 400px; }
     #tornaSu { bottom: 30px; right: 30px; width: 50px; height: 50px; font-size: 24px; }
     #tornaSu:hover { transform: translateY(-5px); }
 }
@@ -307,7 +315,7 @@ h1 {
     </div>
 </div>
 
-<!-- PLAYER -->
+<!-- PLAYER PER FILM -->
 <div id="playerModal" class="player-modal" onclick="handleOutsideClick(event)">
     <div class="player-box" id="playerBox">
         <iframe id="videoFrame" allowfullscreen></iframe>
@@ -317,6 +325,16 @@ h1 {
             <button class="close-btn" onclick="closePlayer()">❌ Chiudi</button>
         </div>
         <div id="savedInfo" class="saved-info"></div>
+    </div>
+</div>
+
+<!-- PLAYER PER TRAILER -->
+<div id="trailerModal" class="trailer-modal" onclick="closeTrailerOutside(event)">
+    <div class="trailer-box" id="trailerBox">
+        <iframe id="trailerFrame" allowfullscreen></iframe>
+        <div class="trailer-controls">
+            <button class="close-btn" onclick="closeTrailer()">❌ Chiudi</button>
+        </div>
     </div>
 </div>
 
@@ -344,7 +362,6 @@ h1 {
     let userList = [];
     let currentUsername = "";
     
-    // Funzione globale per aggiornare il bottone
     window.updateMovieButton = function() {
         if (!window.movieData) return;
         const btn = document.getElementById("listBtn");
@@ -355,7 +372,6 @@ h1 {
         }
     };
 
-    // ========== FUNZIONI PER IL SALVATAGGIO DEL MINUTAGGIO NEL CLOUD ==========
     window.saveMovieProgressCloud = async function(seconds) {
         if (!currentUser) return;
         if (!window.movieData) return;
@@ -402,7 +418,6 @@ h1 {
             console.error("Errore reset cloud:", error);
         }
     };
-    // =======================================================================
 
     window.login = async function() {
         const email = document.getElementById('loginEmail').value;
@@ -470,20 +485,11 @@ h1 {
     window.showLoginPanel = function() {
         document.getElementById('loginPanel').style.display = 'block';
         document.getElementById('registerPanel').style.display = 'none';
-        document.getElementById('loginError').textContent = '';
-        document.getElementById('regError').textContent = '';
-        document.getElementById('regSuccess').textContent = '';
-        document.getElementById('regUsername').value = '';
-        document.getElementById('regEmail').value = '';
-        document.getElementById('regPassword').value = '';
     };
 
     window.showRegisterPanel = function() {
         document.getElementById('loginPanel').style.display = 'none';
         document.getElementById('registerPanel').style.display = 'block';
-        document.getElementById('loginError').textContent = '';
-        document.getElementById('regError').textContent = '';
-        document.getElementById('regSuccess').textContent = '';
     };
 
     window.openLoginModal = function() {
@@ -510,9 +516,7 @@ h1 {
         }
         
         const currentList = await loadUserList();
-        
         const exists = currentList.some(item => item.id === itemData.id && item.type === itemData.type);
-        
         let newList;
         if (exists) {
             newList = currentList.filter(item => !(item.id === itemData.id && item.type === itemData.type));
@@ -522,10 +526,7 @@ h1 {
         
         await setDoc(doc(db, 'users', currentUser.uid), { list: newList }, { merge: true });
         userList = newList;
-        
-        // Aggiorna il bottone
         if (window.updateMovieButton) window.updateMovieButton();
-        
         return !exists;
     }
 
@@ -544,10 +545,7 @@ h1 {
                     <button class="logout-btn" onclick="window.logout()" style="padding: 4px 10px;">🚪</button>
                 </div>
             `;
-            
             userList = await loadUserList();
-            
-            // Aggiorna il bottone se esiste già
             if (window.updateMovieButton) window.updateMovieButton();
         } else {
             authButtons.innerHTML = `<button class="login-btn" onclick="window.openLoginModal()">🔐 Accedi</button>`;
@@ -575,6 +573,7 @@ h1 {
 
 <script>
 const API_KEY = "7fe396e6f50677047459e8c173f2bd9d";
+const YOUTUBE_API_KEY = "AIzaSyCeM7KVc9lZsdd8HM5b-PAfhx0usN8Aubo";
 const IMG_BASE = "https://image.tmdb.org/t/p/w500";
 const BACKDROP_BASE = "https://image.tmdb.org/t/p/original";
 
@@ -598,7 +597,7 @@ async function loadMovieDetails() {
     try {
         document.getElementById("movieDetails").innerHTML = '<div class="loading">⏳ Caricamento...</div>';
         
-        const response = await fetch(`https://api.themoviedb.org/3/movie/${movieId}?api_key=${API_KEY}&language=it-IT&append_to_response=credits,similar,release_dates`);
+        const response = await fetch(`https://api.themoviedb.org/3/movie/${movieId}?api_key=${API_KEY}&language=it-IT&append_to_response=credits,similar,release_dates,videos`);
         const data = await response.json();
         movieData = data;
         window.movieData = data;
@@ -613,7 +612,6 @@ async function loadMovieDetails() {
         loadSimilar(data.similar);
         loadCast(data.credits);
         
-        // Aggiorna il bottone con la lista già caricata (se disponibile)
         if (window.updateMovieButton) {
             window.updateMovieButton();
         }
@@ -627,10 +625,8 @@ async function loadMovieDetails() {
 async function displayMovieDetails(movie) {
     const posterUrl = movie.poster_path ? IMG_BASE + movie.poster_path : "https://via.placeholder.com/300x450?text=No+Image";
     const backdropUrl = movie.backdrop_path ? BACKDROP_BASE + movie.backdrop_path : "";
-    
     const link = `https://vixsrc.to/movie/${movie.id}?lang=it&primaryColor=302b63&secondaryColor=24243e`;
     
-    // Determina lo stato iniziale del bottone (se userList è già caricato)
     let initialInList = false;
     if (window.userList) {
         initialInList = window.userList.some(item => item.id === movie.id && item.type === "movie");
@@ -658,6 +654,7 @@ async function displayMovieDetails(movie) {
                 </div>
                 <div class="watch-buttons">
                     <button class="watch-btn" onclick="openPlayer('${link}')">▶ Guarda</button>
+                    <button class="trailer-btn" onclick="openTrailer()">🎬 Trailer</button>
                     <button class="list-toggle-btn" id="listBtn" onclick="toggleListFromDetails()">
                         ${initialInList ? "❌ Rimuovi" : "❤️ Aggiungi"}
                     </button>
@@ -673,6 +670,60 @@ async function displayMovieDetails(movie) {
         document.body.style.backgroundSize = "cover";
         document.body.style.backgroundAttachment = "fixed";
     }
+}
+
+async function openTrailer() {
+    if (!movieData) return;
+    
+    // Cerca il trailer dai video già presenti nei dati del film
+    if (movieData.videos && movieData.videos.results && movieData.videos.results.length > 0) {
+        const trailer = movieData.videos.results.find(v => v.type === "Trailer" && v.site === "YouTube");
+        if (trailer) {
+            const trailerUrl = `https://www.youtube.com/embed/${trailer.key}?autoplay=1`;
+            openTrailerPlayer(trailerUrl);
+            return;
+        }
+    }
+    
+    // Se non trova, cerca con l'API di YouTube
+    const modal = document.getElementById("trailerModal");
+    const frame = document.getElementById("trailerFrame");
+    const searchQuery = `${movieData.title} trailer ufficiale`;
+    
+    try {
+        const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&q=${encodeURIComponent(searchQuery)}&key=${YOUTUBE_API_KEY}&type=video`;
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.items && data.items.length > 0) {
+            const videoId = data.items[0].id.videoId;
+            const trailerUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+            openTrailerPlayer(trailerUrl);
+        } else {
+            alert("😕 Trailer non trovato per questo film");
+        }
+    } catch (error) {
+        console.error("Errore ricerca trailer:", error);
+        alert("❌ Errore nel caricamento del trailer");
+    }
+}
+
+function openTrailerPlayer(url) {
+    const modal = document.getElementById("trailerModal");
+    const frame = document.getElementById("trailerFrame");
+    frame.src = url;
+    modal.style.display = "flex";
+}
+
+function closeTrailer() {
+    const frame = document.getElementById("trailerFrame");
+    frame.src = "";
+    document.getElementById("trailerModal").style.display = "none";
+}
+
+function closeTrailerOutside(e) {
+    const box = document.getElementById("trailerBox");
+    if (!box.contains(e.target)) closeTrailer();
 }
 
 function loadAdditionalInfo(movie) {
@@ -791,7 +842,6 @@ function loadCast(credits) {
     
     let castList = [];
     
-    // 1. Aggiungi il regista come primo elemento (se disponibile)
     if (credits.crew && credits.crew.length > 0) {
         const director = credits.crew.find(member => member.job === "Director");
         if (director) {
@@ -803,9 +853,8 @@ function loadCast(credits) {
         }
     }
     
-    // 2. Aggiungi gli attori principali (max 11 per non superare i 12 totali)
     if (credits.cast && credits.cast.length > 0) {
-        const maxActors = 11; // +1 regista = 12 totali
+        const maxActors = 11;
         const mainCast = credits.cast.slice(0, maxActors);
         castList.push(...mainCast);
     }
@@ -906,10 +955,8 @@ async function saveCurrentSpot() {
     const result = parseTimeInput(input);
     if (!result.success) { alert("❌ Formato non valido!"); return; }
     
-    // Salva in locale (fallback)
     localStorage.setItem(`time_movie_${currentVideoUrl}`, result.seconds);
     
-    // Salva nel cloud se l'utente è loggato
     if (window.saveMovieProgressCloud) {
         await window.saveMovieProgressCloud(result.seconds);
     }
@@ -928,7 +975,6 @@ async function saveCurrentSpot() {
 async function resetSavedSpot() {
     if (!currentVideoUrl) { alert("⚠️ Apri prima un video!"); return; }
     
-    // Controlla se c'è un salvataggio
     let hasSave = false;
     if (window.loadMovieProgressCloud) {
         const cloudSave = await window.loadMovieProgressCloud();
@@ -941,11 +987,9 @@ async function resetSavedSpot() {
     if (!hasSave) { alert("⚠️ Nessun salvataggio trovato!"); return; }
     
     if (confirm("Cancellare la posizione salvata?")) {
-        // Rimuovi dal cloud
         if (window.resetMovieProgressCloud) {
             await window.resetMovieProgressCloud();
         }
-        // Rimuovi dal localStorage
         localStorage.removeItem(`time_movie_${currentVideoUrl}`);
         
         const savedInfo = document.getElementById("savedInfo");
@@ -967,13 +1011,11 @@ async function openPlayer(url) {
     const frame = document.getElementById("videoFrame");
     currentVideoUrl = url;
     
-    // Prova prima dal cloud (se utente loggato)
     let savedTime = null;
     if (window.loadMovieProgressCloud) {
         savedTime = await window.loadMovieProgressCloud();
     }
     
-    // Fallback al localStorage se non c'è nel cloud
     if (!savedTime) {
         const localSaved = localStorage.getItem(`time_movie_${url}`);
         if (localSaved) savedTime = parseInt(localSaved);
