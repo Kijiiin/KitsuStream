@@ -280,6 +280,237 @@ h1 {
 .sort-btn.active, .type-btn.active { background: #7c3aed; border-color: #7c3aed; }
 .stats { font-size: 11px; color: rgba(255,255,255,0.5); text-align: center; margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); }
 
+/* ===== STILI PER IMPORT COMPLETATI ===== */
+.import-completed-section {
+    background: rgba(16, 185, 129, 0.1);
+    border: 2px solid #10b981;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    display: none; /* Nascondi di default */
+}
+
+.import-completed-section.visible {
+    display: block;
+}
+
+.import-completed-section h3 {
+    color: #10b981;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.import-completed-section .subtitle {
+    color: #8892b0;
+    font-size: 12px;
+    margin-bottom: 15px;
+}
+
+.import-completed-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 600px) {
+    .import-completed-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.import-completed-box {
+    background: rgba(31, 27, 58, 0.6);
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.import-completed-box h4 {
+    color: #ccd6f6;
+    margin-bottom: 5px;
+}
+
+.import-completed-box p {
+    color: #8892b0;
+    font-size: 11px;
+    margin-bottom: 12px;
+}
+
+.import-completed-btn {
+    background: #10b981;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 30px;
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+    font-size: 13px;
+}
+
+.import-completed-btn:hover {
+    background: #059669;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+}
+
+.import-completed-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.import-progress {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #10b981;
+}
+
+.import-stats {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 15px;
+    flex-wrap: wrap;
+}
+
+.import-stat-item {
+    background: rgba(16, 185, 129, 0.15);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    color: #8892b0;
+}
+
+.import-stat-item strong {
+    color: #10b981;
+    font-size: 16px;
+}
+
+/* ===== PULSANTE MOSTRA/NASCONDI IMPORT ===== */
+.toggle-import-btn {
+    background: rgba(16, 185, 129, 0.8);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 30px;
+    color: white;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    margin-bottom: 15px;
+}
+
+.toggle-import-btn:hover {
+    background: #059669;
+    transform: translateY(-2px);
+}
+
+.toggle-import-btn.active {
+    background: rgba(239, 68, 68, 0.8);
+}
+
+.toggle-import-btn.active:hover {
+    background: #dc2626;
+}
+/* ===== FINE PULSANTE ===== */
+
+/* ===== FINE STILI IMPORT COMPLETATI ===== */
+
+.completed-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 9px;
+    font-weight: 600;
+    background: #10b981;
+    color: white;
+    margin-bottom: 4px;
+}
+
+.completed-date {
+    font-size: 8px;
+    color: rgba(255,255,255,0.4);
+    margin-left: 5px;
+}
+
+/* ===== FILTRI ===== */
+.status-filter-btn {
+    background: rgba(124, 58, 237, 0.3);
+    border: 1px solid rgba(124, 58, 237, 0.5);
+    padding: 8px 20px;
+    border-radius: 30px;
+    color: white;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    flex: 1;
+    min-width: 120px;
+}
+
+.status-filter-btn.active {
+    background: #7c3aed;
+    border-color: #7c3aed;
+}
+
+.status-filter-btn.completed-active {
+    background: #10b981;
+    border-color: #10b981;
+}
+
+.status-filter-btn:hover {
+    transform: translateY(-2px);
+}
+/* ===== FINE FILTRI ===== */
+
+.completed-stats {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 8px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+}
+
+.completed-stats span {
+    background: rgba(16, 185, 129, 0.2);
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+.completed-stats .number {
+    color: #10b981;
+    font-weight: bold;
+}
+
+.mark-completed-btn {
+    background: #10b981 !important;
+    padding: 6px 0 !important;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 500;
+    width: 100%;
+    margin-top: 4px;
+}
+
+.mark-completed-btn:hover {
+    background: #059669 !important;
+}
+
+.mark-completed-btn.completed {
+    background: #f59e0b !important;
+}
+
+.mark-completed-btn.completed:hover {
+    background: #d97706 !important;
+}
+
 .grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -300,6 +531,9 @@ h1 {
 .card.selected {
     border-color: #3b82f6;
     transform: scale(0.98);
+}
+.card.completed-card {
+    border-color: #10b981;
 }
 .card img {
     width: 100%;
@@ -361,17 +595,24 @@ h1 {
     .lista-title { margin-bottom: 30px; gap: 20px; }
     .lista-title h2 { font-size: 28px; }
     .title-btn { padding: 8px 20px; font-size: 14px; }
+    .toggle-import-btn { padding: 10px 20px; font-size: 14px; }
     .filters-bar { padding: 20px; margin-bottom: 30px; border-radius: 20px; }
     .filter-label { font-size: 13px; }
     .sort-btn, .type-btn { padding: 8px 16px; font-size: 13px; }
+    .status-filter-btn { font-size: 15px; padding: 10px 24px; }
     .stats { font-size: 13px; }
+    .completed-stats { font-size: 13px; }
+    .completed-stats span { padding: 6px 16px; }
     .grid { grid-template-columns: repeat(5, 1fr); gap: 25px; }
     .card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
     .card-content { padding: 15px; }
     .card h4 { font-size: 14px; }
     .media-badge { padding: 3px 10px; font-size: 10px; }
+    .completed-badge { font-size: 10px; padding: 3px 12px; }
+    .completed-date { font-size: 10px; }
     .card p { font-size: 11px; }
     .move-folder-btn, .card button { padding: 8px 12px; font-size: 12px; }
+    .mark-completed-btn { padding: 8px 12px !important; font-size: 12px !important; }
     #tornaSu { bottom: 30px; right: 30px; width: 50px; height: 50px; font-size: 24px; }
     #tornaSu:hover { transform: translateY(-5px); }
     .folder-btn { font-size: 14px; }
@@ -470,6 +711,51 @@ h1 {
 </div>
 
 <div class="container">
+    <!-- ===== PULSANTE MOSTRA/NASCONDI IMPORT ===== -->
+    <button class="toggle-import-btn" onclick="toggleImportSection()">
+        📥 Mostra Importazione
+    </button>
+    
+    <!-- ===== SEZIONE IMPORT COMPLETATI ===== -->
+    <div class="import-completed-section" id="importSection">
+        <h3>✅ Importa Completati da TV Time</h3>
+        <div class="subtitle">
+            Carica i file esportati da TV Time per importare automaticamente i contenuti che hai già visto
+        </div>
+        <div class="import-completed-grid">
+            <div class="import-completed-box">
+                <h4>🎬 Film</h4>
+                <p>Carica <strong>tvtime-movies-YYYY-MM-DD.json</strong></p>
+                <input type="file" id="moviesCompletedInput" accept=".json" style="display:none;">
+                <button class="import-completed-btn" onclick="document.getElementById('moviesCompletedInput').click()">
+                    📂 Importa Film Completati
+                </button>
+                <div id="moviesCompletedStatus" class="import-progress"></div>
+            </div>
+            <div class="import-completed-box">
+                <h4>📺 Serie TV</h4>
+                <p>Carica <strong>tvtime-series-YYYY-MM-DD.json</strong></p>
+                <input type="file" id="seriesCompletedInput" accept=".json" style="display:none;">
+                <button class="import-completed-btn" onclick="document.getElementById('seriesCompletedInput').click()">
+                    📂 Importa Serie Completate
+                </button>
+                <div id="seriesCompletedStatus" class="import-progress"></div>
+            </div>
+        </div>
+        <div id="importCompletedStats" class="import-stats" style="display:none;">
+            <div class="import-stat-item">
+                🎬 Film importati: <strong id="importedMoviesCount">0</strong>
+            </div>
+            <div class="import-stat-item">
+                📺 Serie importate: <strong id="importedSeriesCount">0</strong>
+            </div>
+            <div class="import-stat-item">
+                ✅ Totale completati: <strong id="importedTotalCount">0</strong>
+            </div>
+        </div>
+    </div>
+    <!-- ===== FINE SEZIONE IMPORT COMPLETATI ===== -->
+
     <div class="lista-title">
         <button id="addFolderBtn" class="title-btn add-folder" onclick="openAddFolderModal()">📁 Nuova Cartella</button>
         <h2>⭐ La mia lista</h2>
@@ -498,6 +784,23 @@ h1 {
                 <button class="type-btn" data-type="tv" onclick="filterByType('tv')">📺 Serie TV</button>
             </div>
         </div>
+        <!-- ===== FILTRI STATO ===== -->
+        <div class="filter-group">
+            <div class="filter-label">📋 Stato:</div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="status-filter-btn active" data-status="all" onclick="filterByStatus('all')">📋 Da Guardare</button>
+                <button class="status-filter-btn" data-status="completed" onclick="filterByStatus('completed')">✅ Completati</button>
+            </div>
+        </div>
+        <!-- ===== FINE FILTRI STATO ===== -->
+        
+        <!-- ===== STATISTICHE COMPLETATI ===== -->
+        <div class="completed-stats" id="completedStats">
+            <span>✅ Completati: <span class="number" id="completedCount">0</span></span>
+            <span>⏳ Da guardare: <span class="number" id="notCompletedCount">0</span></span>
+            <span>📊 Completati: <span class="number" id="completionPercentage">0</span>%</span>
+        </div>
+        <!-- ===== FINE STATISTICHE ===== -->
         <div class="stats" id="stats"></div>
     </div>
 
@@ -507,6 +810,9 @@ h1 {
 <button id="tornaSu" title="Torna su">↑</button>
 
 <script type="module">
+    const API_KEY = "7fe396e6f50677047459e8c173f2bd9d";
+    const IMG_BASE = "https://image.tmdb.org/t/p/w500";
+
     const firebaseConfig = {
         apiKey: "AIzaSyCeM7KVc9lZsdd8HM5b-PAfhx0usN8Aubo",
         authDomain: "kitsustream-454e8.firebaseapp.com",
@@ -531,11 +837,298 @@ h1 {
     let currentUsername = "";
     let currentSort = "addedDate";
     let currentTypeFilter = "all";
+    let currentStatusFilter = "all";
     let pendingMoveItem = null;
     
     // Variabili per selezione multipla
     let multiSelectMode = false;
     let selectedItems = new Set();
+
+    // ===== TOGGLE SEZIONE IMPORT =====
+    window.toggleImportSection = function() {
+        const section = document.getElementById('importSection');
+        const btn = document.querySelector('.toggle-import-btn');
+        
+        if (section.classList.contains('visible')) {
+            section.classList.remove('visible');
+            btn.textContent = '📥 Mostra Importazione';
+            btn.classList.remove('active');
+        } else {
+            section.classList.add('visible');
+            btn.textContent = '📥 Nascondi Importazione';
+            btn.classList.add('active');
+        }
+    };
+
+    // ===== FUNZIONE PER RECUPERARE I DATI DA TMDB =====
+    async function fetchMovieData(title, year, type) {
+        try {
+            let searchType = type === 'movie' ? 'movie' : 'tv';
+            let url = `https://api.themoviedb.org/3/search/${searchType}?api_key=${API_KEY}&query=${encodeURIComponent(title)}&language=it-IT`;
+            
+            if (year) {
+                url += `&year=${year}`;
+            }
+            
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            if (data.results && data.results.length > 0) {
+                let bestMatch = data.results[0];
+                
+                if (year) {
+                    const yearNum = parseInt(year);
+                    for (const result of data.results) {
+                        const resultYear = result.release_date ? parseInt(result.release_date.split('-')[0]) : 
+                                          result.first_air_date ? parseInt(result.first_air_date.split('-')[0]) : 0;
+                        if (resultYear === yearNum) {
+                            bestMatch = result;
+                            break;
+                        }
+                    }
+                }
+                
+                return {
+                    poster: bestMatch.poster_path ? IMG_BASE + bestMatch.poster_path : null,
+                    rating: bestMatch.vote_average ? parseFloat(bestMatch.vote_average.toFixed(1)) : null,
+                    year: bestMatch.release_date ? parseInt(bestMatch.release_date.split('-')[0]) : 
+                          bestMatch.first_air_date ? parseInt(bestMatch.first_air_date.split('-')[0]) : 
+                          (year ? parseInt(year) : null),
+                    overview: bestMatch.overview || null,
+                    genres: bestMatch.genre_ids || [],
+                    tmdb_id: bestMatch.id
+                };
+            }
+            return null;
+        } catch (error) {
+            console.error(`Errore nel recupero dati per ${title}:`, error);
+            return null;
+        }
+    }
+
+    // ===== FUNZIONI PER IMPORTARE COMPLETATI =====
+    
+    document.getElementById('moviesCompletedInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        importCompletedItems(file, 'movies', 'moviesCompletedStatus');
+        this.value = '';
+    });
+
+    document.getElementById('seriesCompletedInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        importCompletedItems(file, 'series', 'seriesCompletedStatus');
+        this.value = '';
+    });
+
+    async function importCompletedItems(file, type, statusId) {
+        const statusDiv = document.getElementById(statusId);
+        statusDiv.textContent = '⏳ Elaborazione in corso...';
+        statusDiv.style.color = '#667eea';
+
+        const reader = new FileReader();
+        reader.onload = async function(event) {
+            try {
+                const jsonData = JSON.parse(event.target.result);
+                
+                let completedItems = [];
+                
+                if (type === 'movies') {
+                    if (Array.isArray(jsonData)) {
+                        completedItems = jsonData.filter(item => item.is_watched === true);
+                    } else if (jsonData.movies && Array.isArray(jsonData.movies)) {
+                        completedItems = jsonData.movies.filter(item => item.is_watched === true);
+                    }
+                } else if (type === 'series') {
+                    if (Array.isArray(jsonData)) {
+                        completedItems = jsonData.filter(series => {
+                            return isSeriesCompleted(series);
+                        });
+                    } else if (jsonData.series && Array.isArray(jsonData.series)) {
+                        completedItems = jsonData.series.filter(series => {
+                            return isSeriesCompleted(series);
+                        });
+                    }
+                }
+
+                if (completedItems.length === 0) {
+                    statusDiv.textContent = '❌ Nessun contenuto completato trovato nel file.';
+                    statusDiv.style.color = '#f87171';
+                    return;
+                }
+
+                statusDiv.textContent = `🖼️ Recupero dati da TMDB (0/${completedItems.length})...`;
+                statusDiv.style.color = '#667eea';
+
+                const convertedItems = await convertToWatchTrackerFormat(completedItems, type, statusDiv);
+                
+                let addedCount = 0;
+                const existingIds = new Set(currentList.map(item => 
+                    `${item.id}_${item.type}`
+                ));
+                
+                for (const folderName in currentFolders) {
+                    currentFolders[folderName].forEach(item => {
+                        existingIds.add(`${item.id}_${item.type}`);
+                    });
+                }
+
+                convertedItems.forEach(item => {
+                    const key = `${item.id}_${item.type}`;
+                    if (!existingIds.has(key)) {
+                        item.completed = true;
+                        item.completedDate = item.watched_at || new Date().toISOString().split('T')[0];
+                        currentList.push(item);
+                        existingIds.add(key);
+                        addedCount++;
+                    }
+                });
+
+                await saveAllData();
+                updateImportStats();
+                
+                statusDiv.textContent = `✅ Importati ${addedCount} ${type === 'movies' ? 'film' : 'serie'} completati!`;
+                statusDiv.style.color = '#4ade80';
+                
+                displayList();
+                document.getElementById('importCompletedStats').style.display = 'flex';
+
+            } catch (error) {
+                statusDiv.textContent = `❌ Errore: ${error.message}`;
+                statusDiv.style.color = '#f87171';
+                console.error('Errore parsing JSON:', error);
+            }
+        };
+
+        reader.onerror = function() {
+            statusDiv.textContent = '❌ Errore nella lettura del file';
+            statusDiv.style.color = '#f87171';
+        };
+
+        reader.readAsText(file);
+    }
+
+    function isSeriesCompleted(series) {
+        if (!series.seasons || !Array.isArray(series.seasons)) return false;
+        
+        let totalEpisodes = 0;
+        let watchedEpisodes = 0;
+        
+        series.seasons.forEach(season => {
+            if (season.episodes && Array.isArray(season.episodes)) {
+                season.episodes.forEach(ep => {
+                    totalEpisodes++;
+                    if (ep.is_watched === true) {
+                        watchedEpisodes++;
+                    }
+                });
+            }
+        });
+        
+        return totalEpisodes > 0 && watchedEpisodes === totalEpisodes;
+    }
+
+    async function convertToWatchTrackerFormat(items, type, statusDiv) {
+        const converted = [];
+        let processed = 0;
+        const total = items.length;
+        
+        if (type === 'movies') {
+            for (const movie of items) {
+                processed++;
+                if (statusDiv) {
+                    statusDiv.textContent = `🖼️ Recuperando ${movie.title} (${processed}/${total})...`;
+                }
+                
+                const movieData = await fetchMovieData(movie.title, movie.year, 'movie');
+                
+                converted.push({
+                    id: movie.id?.imdb || movie.uuid || `movie_${Date.now()}_${Math.random()}`,
+                    title: movie.title || 'Film senza titolo',
+                    type: 'movie',
+                    year: movieData?.year || movie.year || null,
+                    poster: movieData?.poster || null,
+                    rating: movieData?.rating || null,
+                    overview: movieData?.overview || null,
+                    watched: true,
+                    watched_at: movie.watched_at || movie.created_at || new Date().toISOString(),
+                    genres: movieData?.genres || [],
+                    tmdb_id: movieData?.tmdb_id || null,
+                    addedAt: Date.now(),
+                    completed: true,
+                    completedDate: movie.watched_at || new Date().toISOString().split('T')[0],
+                    mediaType: 'Film'
+                });
+            }
+        } else if (type === 'series') {
+            for (const series of items) {
+                processed++;
+                if (statusDiv) {
+                    statusDiv.textContent = `🖼️ Recuperando ${series.title} (${processed}/${total})...`;
+                }
+                
+                const seriesData = await fetchMovieData(series.title, null, 'tv');
+                
+                let totalEpisodes = 0;
+                let watchedEpisodes = 0;
+                let lastWatchedDate = null;
+                
+                if (series.seasons) {
+                    series.seasons.forEach(season => {
+                        if (season.episodes) {
+                            season.episodes.forEach(ep => {
+                                totalEpisodes++;
+                                if (ep.is_watched === true) {
+                                    watchedEpisodes++;
+                                    if (ep.watched_at) {
+                                        if (!lastWatchedDate || ep.watched_at > lastWatchedDate) {
+                                            lastWatchedDate = ep.watched_at;
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
+                
+                converted.push({
+                    id: series.id?.tvdb || series.uuid || `series_${Date.now()}_${Math.random()}`,
+                    title: series.title || 'Serie senza titolo',
+                    type: 'tv',
+                    year: seriesData?.year || null,
+                    poster: seriesData?.poster || null,
+                    rating: seriesData?.rating || null,
+                    overview: seriesData?.overview || null,
+                    totalEpisodes: totalEpisodes,
+                    watchedEpisodes: watchedEpisodes,
+                    status: 'completed',
+                    genres: seriesData?.genres || [],
+                    seasons: series.seasons || [],
+                    tmdb_id: seriesData?.tmdb_id || null,
+                    addedAt: Date.now(),
+                    completed: true,
+                    completedDate: lastWatchedDate || series.created_at || new Date().toISOString().split('T')[0],
+                    watched_at: lastWatchedDate || series.created_at || new Date().toISOString(),
+                    mediaType: 'Serie TV'
+                });
+            }
+        }
+        
+        return converted;
+    }
+
+    function updateImportStats() {
+        const allCompleted = currentList.filter(item => item.completed === true);
+        const moviesCompleted = allCompleted.filter(item => item.type === 'movie');
+        const seriesCompleted = allCompleted.filter(item => item.type === 'tv' || item.type === 'series');
+        
+        document.getElementById('importedMoviesCount').textContent = moviesCompleted.length;
+        document.getElementById('importedSeriesCount').textContent = seriesCompleted.length;
+        document.getElementById('importedTotalCount').textContent = allCompleted.length;
+    }
+
+    // ===== FINE FUNZIONI IMPORT COMPLETATI =====
 
     // Funzioni di autenticazione
     window.login = async function() {
@@ -618,6 +1211,55 @@ h1 {
         window.showLoginPanel();
         document.getElementById('authModal').style.display = 'flex';
     };
+
+    // ===== FILTRO PER STATO =====
+    window.filterByStatus = function(status) {
+        currentStatusFilter = status;
+        document.querySelectorAll(".status-filter-btn").forEach(btn => btn.classList.remove("active"));
+        const btn = document.querySelector(`.status-filter-btn[data-status="${status}"]`);
+        if (btn) {
+            btn.classList.add("active");
+            if (status === 'completed') {
+                btn.classList.add("completed-active");
+            }
+        }
+        displayList();
+    };
+
+    // ===== FUNZIONE PER MARCARE COME COMPLETATO =====
+    window.markAsCompleted = async function(id, type, event) {
+        event.stopPropagation();
+        
+        let items = getCurrentItems();
+        let item = items.find(i => i.id == id && i.type === type);
+        
+        if (!item) return;
+        
+        if (item.completed) {
+            item.completed = false;
+            item.completedDate = null;
+        } else {
+            item.completed = true;
+            item.completedDate = new Date().toISOString().split('T')[0];
+            item.watched_at = new Date().toISOString();
+        }
+        
+        await saveAllData();
+        displayList();
+    };
+
+    // ===== FUNZIONE PER AGGIORNARE STATISTICHE COMPLETATI =====
+    function updateCompletedStats() {
+        const items = getCurrentItems();
+        const total = items.length;
+        const completed = items.filter(i => i.completed === true).length;
+        const notCompleted = total - completed;
+        const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+        
+        document.getElementById('completedCount').textContent = completed;
+        document.getElementById('notCompletedCount').textContent = notCompleted;
+        document.getElementById('completionPercentage').textContent = percentage;
+    }
 
     // Funzioni per cartelle
     window.openAddFolderModal = function() {
@@ -943,19 +1585,38 @@ h1 {
     }
 
     function filterItems(items) {
-        if (currentTypeFilter === "all") return items;
-        return items.filter(item => item.type === currentTypeFilter);
+        let filtered = [...items];
+        
+        if (currentTypeFilter !== "all") {
+            filtered = filtered.filter(item => item.type === currentTypeFilter);
+        }
+        
+        if (currentStatusFilter === "completed") {
+            filtered = filtered.filter(item => item.completed === true);
+            // Ordina per data di completamento (dal più recente al più vecchio)
+            filtered.sort((a, b) => {
+                const dateA = a.completedDate || a.watched_at || '';
+                const dateB = b.completedDate || b.watched_at || '';
+                return dateB.localeCompare(dateA);
+            });
+        } else {
+            filtered = filtered.filter(item => item.completed !== true);
+        }
+        
+        return filtered;
     }
 
     function updateStats(filteredItems, totalItems) {
         const statsDiv = document.getElementById("stats");
         const moviesCount = filteredItems.filter(i => i.type === "movie").length;
-        const tvCount = filteredItems.filter(i => i.type === "tv").length;
+        const tvCount = filteredItems.filter(i => i.type === "tv" || i.type === "series").length;
         const avgRating = filteredItems.length > 0 
             ? (filteredItems.reduce((sum, i) => sum + (i.rating || 0), 0) / filteredItems.length).toFixed(1)
             : 0;
         
-        statsDiv.innerHTML = `📊 Mostrati ${filteredItems.length} su ${totalItems} totali | 🎬 Film: ${moviesCount} | 📺 Serie: ${tvCount} | ⭐ Media voto: ${avgRating}`;
+        const statusLabel = currentStatusFilter === "completed" ? "Completati" : "Da Guardare";
+        statsDiv.innerHTML = `📊 ${statusLabel}: ${filteredItems.length} su ${totalItems} totali | 🎬 Film: ${moviesCount} | 📺 Serie: ${tvCount} | ⭐ Media voto: ${avgRating}`;
+        updateCompletedStats();
     }
 
     function renderFoldersBar() {
@@ -975,7 +1636,6 @@ h1 {
         container.innerHTML = html;
     }
 
-    // Funzione per gestire il click sulla card
     window.handleCardClick = function(id, type, event) {
         if (multiSelectMode) {
             event.stopPropagation();
@@ -1001,73 +1661,83 @@ h1 {
         moveItem(item);
     };
 
-window.displayList = function() {
-    const container = document.getElementById("listContainer");
-    
-    if (!currentUser) {
-        container.innerHTML = '<div class="empty-state">🔐 Accedi per vedere la tua lista salvata!</div>';
-        updateStats([], 0);
+    window.displayList = function() {
+        const container = document.getElementById("listContainer");
+        
+        if (!currentUser) {
+            container.innerHTML = '<div class="empty-state">🔐 Accedi per vedere la tua lista salvata!</div>';
+            updateStats([], 0);
+            renderFoldersBar();
+            return;
+        }
+        
         renderFoldersBar();
-        return;
-    }
-    
-    renderFoldersBar();
-    const items = getCurrentItems();
-    const totalItems = items.length;
-    
-    if (totalItems === 0) {
-        const folderText = currentFolder ? ` nella cartella "${currentFolder}"` : '';
-        container.innerHTML = `<div class="empty-state">📭 La tua lista${folderText} è vuota<br>Aggiungi film o serie TV dalla home!</div>`;
-        updateStats([], 0);
-        return;
-    }
-    
-    let filtered = filterItems(items);
-    const sorted = sortItems(filtered);
-    
-    updateStats(filtered, totalItems);
-    
-    if (sorted.length === 0) {
-        container.innerHTML = '<div class="empty-state">😕 Nessun elemento corrisponde ai filtri selezionati</div>';
-        return;
-    }
-    
-    container.innerHTML = `
-        <div class="grid">
-            ${sorted.map(item => {
-                const key = `${item.id}_${item.type}`;
-                const isSelected = selectedItems.has(key);
-                const detailsUrl = `${item.type === 'movie' ? 'movie' : 'tv'}.html?id=${item.id}`;
-                
-                return `
-                    <div class="card ${isSelected ? 'selected' : ''}" 
-                         data-id="${item.id}"
-                         data-type="${item.type}"
-                         onclick="${multiSelectMode ? `toggleSelectItem(${item.id}, '${item.type}')` : ''}">
-                        <a href="${detailsUrl}" ${multiSelectMode ? 'onclick="return false;"' : ''}>
-                            <img src="${item.poster || 'https://via.placeholder.com/500x750'}" 
-                                 alt="${item.title}" 
-                                 loading="lazy">
-                        </a>
-                        <div class="card-content">
-                            <span class="media-badge ${item.type === 'movie' ? 'badge-movie' : 'badge-tv'}">
-                                ${item.mediaType || (item.type === 'movie' ? 'Film' : 'Serie TV')}
-                            </span>
-                            <h4>${escapeHtml(item.title)}</h4>
-                            <p>⭐ ${item.rating || "N/A"}/10</p>
-                            <p>📅 ${item.year || "N/D"}</p>
-                            ${item.seasons ? `<p>📺 ${item.seasons} stagioni</p>` : ''}
-                            ${!multiSelectMode ? `
-                                <button class="move-folder-btn" onclick='event.stopPropagation(); moveItemClick(${JSON.stringify(item).replace(/'/g, "&#39;")}, event)'>📂 Sposta</button>
-                                <button onclick="event.stopPropagation(); removeFromList(${item.id}, '${item.type}', event)">❌ Rimuovi</button>
-                            ` : '<div class="selection-hint">✨ Clicca sulla card per selezionare</div>'}
+        const items = getCurrentItems();
+        const totalItems = items.length;
+        
+        if (totalItems === 0) {
+            const folderText = currentFolder ? ` nella cartella "${currentFolder}"` : '';
+            container.innerHTML = `<div class="empty-state">📭 La tua lista${folderText} è vuota<br>Aggiungi film o serie TV dalla home!</div>`;
+            updateStats([], 0);
+            return;
+        }
+        
+        let filtered = filterItems(items);
+        if (currentStatusFilter !== "completed") {
+            filtered = sortItems(filtered);
+        }
+        
+        updateStats(filtered, totalItems);
+        
+        if (filtered.length === 0) {
+            const emptyMsg = currentStatusFilter === "completed" ? 
+                '😕 Nessun elemento completato' : 
+                '😕 Nessun elemento da guardare';
+            container.innerHTML = `<div class="empty-state">${emptyMsg}</div>`;
+            return;
+        }
+        
+        container.innerHTML = `
+            <div class="grid">
+                ${filtered.map(item => {
+                    const key = `${item.id}_${item.type}`;
+                    const isSelected = selectedItems.has(key);
+                    const detailsUrl = `${item.type === 'movie' ? 'movie' : 'tv'}.html?id=${item.id}`;
+                    const isCompleted = item.completed === true;
+                    const mediaType = item.type === 'movie' ? 'Film' : 'Serie TV';
+                    
+                    return `
+                        <div class="card ${isSelected ? 'selected' : ''} ${isCompleted ? 'completed-card' : ''}" 
+                             data-id="${item.id}"
+                             data-type="${item.type}"
+                             onclick="${multiSelectMode ? `toggleSelectItem(${item.id}, '${item.type}')` : ''}">
+                            <a href="${detailsUrl}" ${multiSelectMode ? 'onclick="return false;"' : ''}>
+                                <img src="${item.poster || 'https://via.placeholder.com/500x750/302b63/8892b0?text=No+Image'}" 
+                                     alt="${item.title}" 
+                                     loading="lazy">
+                            </a>
+                            <div class="card-content">
+                                <span class="media-badge ${item.type === 'movie' ? 'badge-movie' : 'badge-tv'}">
+                                    ${mediaType}
+                                </span>
+                                ${isCompleted ? `<div class="completed-badge">✅ Completato ${item.completedDate ? '📅 ' + item.completedDate : ''}</div>` : ''}
+                                <h4>${escapeHtml(item.title)}</h4>
+                                <p>⭐ ${item.rating || "N/A"}/10</p>
+                                <p>📅 ${item.year || "N/D"}</p>
+                                ${!multiSelectMode ? `
+                                    <button class="mark-completed-btn ${isCompleted ? 'completed' : ''}" onclick="event.stopPropagation(); markAsCompleted(${item.id}, '${item.type}', event)">
+                                        ${isCompleted ? '↩️ Da completare' : '✅ Segna come completato'}
+                                    </button>
+                                    <button class="move-folder-btn" onclick='event.stopPropagation(); moveItemClick(${JSON.stringify(item).replace(/'/g, "&#39;")}, event)'>📂 Sposta</button>
+                                    <button onclick="event.stopPropagation(); removeFromList(${item.id}, '${item.type}', event)">❌ Rimuovi</button>
+                                ` : '<div class="selection-hint">✨ Clicca sulla card per selezionare</div>'}
+                            </div>
                         </div>
-                    </div>
-                `;
-            }).join("")}
-        </div>
-    `;
-};
+                    `;
+                }).join("")}
+            </div>
+        `;
+    };
 
     window.clearAll = async function() {
         const confirmMsg = currentFolder ? `⚠️ Sei sicuro di voler svuotare la cartella "${currentFolder}"?` : "⚠️ Sei sicuro di voler svuotare tutta la lista?";
