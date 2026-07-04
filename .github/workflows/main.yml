@@ -1,6 +1,6 @@
-name: Cleanup Queued Runs
+name: Delete All Runs
 on:
-  workflow_dispatch:  # Si esegue solo manualmente
+  workflow_dispatch:
 
 jobs:
   cleanup:
@@ -8,9 +8,8 @@ jobs:
     permissions:
       actions: write
     steps:
-      - name: Cancel queued runs
+      - name: Delete all runs
         run: |
-          # Elenca e cancella tutti i run in queued
-          gh run list --status queued --json databaseId -q '.[].databaseId' | xargs -I {} gh run cancel {}
+          gh run list --json databaseId -q '.[].databaseId' | xargs -I {} gh run delete {} --force
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
