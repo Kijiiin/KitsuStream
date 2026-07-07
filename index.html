@@ -428,7 +428,7 @@ input::placeholder { color: rgba(255,255,255,0.5); font-size: 13px; }
 
     import { initializeApp } from 'firebase/app';
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
-    import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
+    import { getFirestore, doc, getDoc, setDoc, runTransaction } from 'firebase/firestore';
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
@@ -536,35 +536,76 @@ input::placeholder { color: rgba(255,255,255,0.5); font-size: 13px; }
         return userDoc.exists() ? userDoc.data() : null;
     }
 
-    async function saveUserList(list) {
-        if (!currentUser) return;
-        await setDoc(doc(db, 'users', currentUser.uid), { list: list }, { merge: true });
-    }
-
-    async function isInCloudList(id, type) {
-        if (!currentUser) return false;
-        return userList.some(item => item.id === id && item.type === type);
-    }
-
+    // ============================================================
+    // 🔥 TOGGLE LISTA CON TRANSAZIONE - RISOLVE IL BUG!
+    // ============================================================
     async function toggleCloudList(itemData) {
         if (!currentUser) {
             window.openLoginModal();
             return false;
         }
-        
-        let list = [...userList];
-        const exists = list.some(item => item.id === itemData.id && item.type === itemData.type);
-        
-        if (exists) {
-            list = list.filter(item => !(item.id === itemData.id && item.type === itemData.type));
-        } else {
-            itemData.addedAt = Date.now();
-            list.push(itemData);
+
+        const userRef = doc(db, 'users', currentUser.uid);
+
+        try {
+            const result = await runTransaction(db, async (transaction) => {
+                const userDoc = await transaction.get(userRef);
+
+                if (!userDoc.exists()) {
+                    throw new Error("Utente non trovato");
+                }
+
+                const currentList = userDoc.data().list || [];
+                const exists = currentList.some(item => 
+                    item.id === itemData.id && item.type === itemData.type
+                );
+
+                let newList;
+                if (exists) {
+                    newList = currentList.filter(item => 
+                        !(item.id === itemData.id && item.type === itemData.type)
+                    );
+                } else {
+                    itemData.addedAt = Date.now();
+                    newList = [...currentList, itemData];
+                }
+
+                transaction.update(userRef, { list: newList });
+                return { newList, added: !exists };
+            });
+
+            // Aggiorna lo stato locale
+            userList = result.newList;
+
+            // Aggiorna i bottoni nella UI
+            if (typeof updateListUI === 'function') {
+                updateListUI(result.newList);
+            }
+
+            return result.added;
+
+        } catch (error) {
+            console.error("Errore transazione:", error);
+            alert("Errore durante il salvataggio. Riprova.");
+            return false;
         }
-        
-        await saveUserList(list);
-        userList = list;
-        return !exists;
+    }
+
+    // ============================================================
+    // 🔥 AGGIORNA I BOTTONI NELLA UI
+    // ============================================================
+    window.updateListUI = function(list) {
+        document.querySelectorAll('.card button[id^="btn-"]').forEach(btn => {
+            const id = btn.id.replace('btn-', '');
+            const isInList = list.some(item => item.id == id && item.type === currentMediaType);
+            btn.innerText = isInList ? "❌ Rimuovi" : "❤️ Aggiungi";
+            btn.style.background = isInList ? "#ef4444" : "#7c3aed";
+        });
+    };
+
+    async function isInCloudList(id, type) {
+        if (!currentUser) return false;
+        return userList.some(item => item.id === id && item.type === type);
     }
 
     onAuthStateChanged(auth, async (user) => {
@@ -640,7 +681,6 @@ function formatDate(dateString) {
     try {
         const date = new Date(dateString);
         if (isNaN(date.getTime())) {
-            // Se la data non è valida, prova a estrarre l'anno
             const year = dateString.split("-")[0];
             return year || 'N/D';
         }
@@ -789,6 +829,11 @@ function showLoading() {
 }
 
 async function displayItems(items) {
+    // 🔥 RICARICA LA LISTA PER ESSERE SICURI
+    if (window.getCurrentUser && window.getCurrentUser()) {
+        userList = await window.getUserList();
+    }
+    
     const resultsDiv = document.getElementById("results");
     
     if (!items || items.length === 0) {
@@ -802,7 +847,6 @@ async function displayItems(items) {
         const title = currentMediaType === "movie" ? item.title : item.name;
         const date = currentMediaType === "movie" ? item.release_date : item.first_air_date;
         
-        // Formatta la data in italiano (giorno/mese in lettere/anno)
         const releaseDate = formatDate(date);
         
         const rating = item.vote_average ? item.vote_average.toFixed(1) : "N/A";
@@ -813,7 +857,6 @@ async function displayItems(items) {
             inList = list.some(i => i.id === item.id && i.type === currentMediaType);
         }
         
-        // Prepara i dati per il salvataggio nella lista
         const releaseDateForSave = currentMediaType === "movie" ? item.release_date : item.first_air_date;
         const year = date ? date.split("-")[0] : "N/D";
         
@@ -842,7 +885,6 @@ async function displayItems(items) {
 }
 
 window.toggleListGlobal = async function(id, title, poster, rating, year, type, mediaType, releaseDateForSave) {
-    // Crea l'oggetto con i dati corretti
     const itemData = { 
         id, 
         title, 
@@ -853,7 +895,6 @@ window.toggleListGlobal = async function(id, title, poster, rating, year, type, 
         mediaType 
     };
     
-    // Aggiungi la data precisa in base al tipo
     if (type === 'movie' && releaseDateForSave) {
         itemData.release_date = releaseDateForSave;
     } else if (type === 'tv' && releaseDateForSave) {
