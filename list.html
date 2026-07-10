@@ -1529,24 +1529,55 @@ h1 {
         return sorted;
     }
 
-    // 🔥 FUNZIONE MODIFICATA - I COMPLETATI VENGONO ORDINATI PER DATA DI AGGIUNTA (addedAt)
+    // Filtra per stato (completati / da guardare)
     function filterItems(items) {
-        let filtered = [...items];
-        
-        if (currentTypeFilter !== "all") {
-            filtered = filtered.filter(item => item.type === currentTypeFilter);
-        }
-        
-        if (currentStatusFilter === "completed") {
-            filtered = filtered.filter(item => item.completed === true);
-            // 🔥 ORDINA PER DATA DI AGGIUNTA (addedAt) - IL PIÙ RECENTE IN CIMA
-            filtered.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
-        } else {
-            filtered = filtered.filter(item => item.completed !== true);
-        }
-        
-        return filtered;
+    // 🔥 CONTROLLO DI SICUREZZA
+    if (!items || !Array.isArray(items)) {
+        return [];
     }
+    
+    let filtered = [...items];
+    
+    // Filtra per tipo (movie, tv, all)
+    if (currentTypeFilter !== "all") {
+        filtered = filtered.filter(item => item.type === currentTypeFilter);
+    }
+    
+    // Filtra per stato (completati / da guardare)
+    if (currentStatusFilter === "completed") {
+        // Mostra SOLO i completati
+        filtered = filtered.filter(item => item.completed === true);
+        
+        // 🔥 ORDINA PER DATA DI COMPLETAMENTO (completedDate) - IL PIÙ RECENTE IN CIMA
+        // 🔥 In caso di parità, usa addedAt (il più recente in cima)
+        filtered.sort((a, b) => {
+            const dateA = a.completedDate || '';
+            const dateB = b.completedDate || '';
+            
+            // Confronta le date di completamento
+            if (dateA && dateB) {
+                const comparison = dateB.localeCompare(dateA);
+                if (comparison !== 0) {
+                    return comparison; // Date diverse
+                }
+                // 🔥 STESSA DATA: ordina per addedAt (più recente in cima)
+                return (b.addedAt || 0) - (a.addedAt || 0);
+            }
+            // Se solo A ha una data, va prima
+            if (dateA) return -1;
+            // Se solo B ha una data, va prima
+            if (dateB) return 1;
+            // Se nessuna ha una data, usa addedAt come fallback
+            return (b.addedAt || 0) - (a.addedAt || 0);
+        });
+    } else {
+        // Mostra SOLO i NON completati (da guardare)
+        filtered = filtered.filter(item => item.completed !== true);
+    }
+    
+    // 🔥 IMPORTANTE: restituisce SEMPRE l'array filtrato
+    return filtered;
+}
 
     function updateStats(filteredItems, totalItems) {
         const statsDiv = document.getElementById("stats");
