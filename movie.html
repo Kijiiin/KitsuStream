@@ -1240,35 +1240,18 @@ async function resetSavedSpot() {
 }
 
 async function openPlayer(url) {
-    const modal = document.getElementById("playerModal");
-    const frame = document.getElementById("videoFrame");
-    currentVideoUrl = url;
+    // Chiudi il modal del player
+    document.getElementById("playerModal").style.display = "none";
     
-    let savedTime = null;
-    if (window.loadMovieProgressCloud) {
-        savedTime = await window.loadMovieProgressCloud();
-    }
-    
-    if (!savedTime) {
-        const localSaved = localStorage.getItem(`time_movie_${url}`);
-        if (localSaved) savedTime = parseInt(localSaved);
-    }
-    
-    let finalUrl = url;
-    let savedInfo = document.getElementById("savedInfo");
-    
-    if (savedTime && savedTime > 0) {
-        const timeString = formatTime(savedTime);
-        finalUrl += `&startAt=${savedTime}`;
-        savedInfo.innerHTML = `📌 Riprenderò da ${timeString}`;
-        savedInfo.style.color = "#f59e0b";
-    } else {
-        savedInfo.innerHTML = `🎬 Nessun salvataggio - riparto dall'inizio`;
-        savedInfo.style.color = "#888";
-    }
-    
-    frame.src = finalUrl;
-    modal.style.display = "flex";
+    // Crea un link invisibile con noreferrer e cliccalo
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 }
 
 function closePlayer() {
