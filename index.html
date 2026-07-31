@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>KitsuStream - Film e Serie TV</title>
+
+<link rel="icon" type="image/x-icon" href="favicon_io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon_io/favicon-32x32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="favicon_io/apple-touch-icon.png">
+<link rel="manifest" href="favicon_io/site.webmanifest">
+
+<!-- Firebase SDK -->
+<script type="importmap">
+    {
+        "imports": {
+            "firebase/app": "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js",
+            "firebase/auth": "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js",
+            "firebase/firestore": "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"
+        }
+    }
+</script>
+
+<style>
+/* IL TUO CSS ESISTENTE (invariato) */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: white; min-height: 100vh; }
+.topbar { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(124, 58, 237, 0.3); }
+.topbar-left, .topbar-right { display: flex; gap: 6px; align-items: center; }
+.topbar-center { flex: 1; text-align: center; }
+h1 { margin: 0; font-size: 18px; font-weight: bold; background: linear-gradient(90deg, #a855f7, #00d4ff, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.list-btn, .actors-btn, .home-btn { background: rgba(124, 58, 237, 0.85); border: none; padding: 7px 12px; border-radius: 30px; color: white; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); text-decoration: none; }
+.list-btn:active, .actors-btn:active, .home-btn:active { transform: scale(0.95); background: rgba(124, 58, 237, 1); }
+.actors-btn { background: linear-gradient(135deg, #ec4899, #be185d); text-decoration: none; }
+.login-btn { background: linear-gradient(135deg, #10b981, #059669); border: none; padding: 7px 12px; border-radius: 30px; color: white; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+.logout-btn { background: linear-gradient(135deg, #ef4444, #dc2626); border: none; padding: 7px 12px; border-radius: 30px; color: white; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+.login-btn:active, .logout-btn:active { transform: scale(0.95); }
+.user-info { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); padding: 5px 12px; border-radius: 30px; display: flex; align-items: center; gap: 8px; border: 1px solid rgba(124, 58, 237, 0.4); }
+.username { font-weight: bold; color: #c084fc; font-size: 12px; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; }
+.modal-content { background: #1e1b4b; padding: 30px; border-radius: 20px; max-width: 400px; width: 90%; text-align: center; }
+.modal-content input { width: 100%; margin: 10px 0; padding: 12px; border-radius: 10px; border: none; background: #2d2a5e; color: white; }
+.modal-content button { margin: 5px; padding: 10px 20px; }
+.error-msg { color: #f87171; font-size: 12px; margin-top: 10px; }
+.success-msg { color: #4ade80; font-size: 12px; margin-top: 10px; }
+.container { max-width: 1200px; margin: auto; padding: 16px; }
+.search-section { margin-bottom: 16px; }
+.search-box { display: flex; gap: 8px; }
+input { flex: 1; padding: 10px 14px; border-radius: 30px; border: none; background: rgba(31, 27, 58, 0.9); color: white; outline: none; font-size: 14px; }
+input::placeholder { color: rgba(255,255,255,0.5); font-size: 13px; }
+.clear-btn { background: rgba(239, 68, 68, 0.9); padding: 0 14px; border-radius: 30px; font-size: 12px; }
+.media-selector { display: flex; justify-content: center; gap: 10px; margin-bottom: 16px; }
+.media-btn { background: rgba(124, 58, 237, 0.5); border: 1px solid rgba(124, 58, 237, 0.5); padding: 8px 16px; border-radius: 40px; color: white; cursor: pointer; font-size: 13px; font-weight: 500; }
+.media-btn.active { background: #7c3aed; border-color: #7c3aed; }
+.order-selector { display: flex; justify-content: center; gap: 8px; margin-bottom: 16px; }
+.order-btn { background: rgba(124, 58, 237, 0.4); border: 1px solid rgba(124, 58, 237, 0.5); padding: 5px 10px; border-radius: 30px; color: white; cursor: pointer; font-size: 11px; }
+.order-btn.active { background: #7c3aed; border-color: #7c3aed; }
+.genres { margin: 12px 0 16px; display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 8px; padding: 4px 0 8px; scrollbar-width: thin; }
+.genres::-webkit-scrollbar { height: 3px; }
+.genres::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); border-radius: 10px; }
+.genres::-webkit-scrollbar-thumb { background: #7c3aed; border-radius: 10px; }
+.genre-btn { padding: 5px 12px; border-radius: 30px; border: 1px solid #7c3aed; background: transparent; color: white; cursor: pointer; font-size: 11px; white-space: nowrap; flex-shrink: 0; }
+.genre-btn.active { background: #7c3aed; }
+.grid { margin-top: 16px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.card { background: rgba(31, 27, 58, 0.6); border-radius: 12px; overflow: hidden; backdrop-filter: blur(10px); transition: transform 0.2s ease; }
+.card:active { transform: scale(0.98); }
+.card img { width: 100%; aspect-ratio: 2 / 3; object-fit: cover; cursor: pointer; }
+.card-content { padding: 8px; }
+.card h4 { margin: 0 0 3px; font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rating { color: #ffd700; font-size: 10px; margin-bottom: 3px; }
+.card p { font-size: 9px; color: #c084fc; margin-bottom: 6px; }
+.card button { padding: 6px 0; border: none; border-radius: 8px; background: #7c3aed; color: white; cursor: pointer; font-size: 10px; font-weight: 500; width: 100%; }
+.pagination { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 24px; margin-bottom: 16px; }
+.pagination button { padding: 6px 14px; background: rgba(124, 58, 237, 0.8); border-radius: 30px; font-size: 12px; }
+#pageNumber { font-size: 11px; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 30px; }
+.loading, .no-results { text-align: center; padding: 40px; font-size: 13px; color: #c084fc; }
+@media (min-width: 769px) {
+    .topbar { padding: 15px 30px; background: rgba(0, 0, 0, 0.5); }
+    h1 { font-size: 28px; }
+    .list-btn, .actors-btn, .home-btn, .login-btn, .logout-btn { padding: 10px 20px; font-size: 14px; }
+    .user-info { padding: 6px 16px; }
+    .username { font-size: 14px; max-width: 200px; }
+    .container { padding: 30px; }
+    .search-section { margin-bottom: 30px; display: flex; justify-content: center; }
+    .search-box { max-width: 600px; }
+    input { padding: 14px 20px; font-size: 16px; }
+    .media-selector { gap: 15px; margin-bottom: 25px; }
+    .media-btn { padding: 10px 24px; font-size: 15px; }
+    .order-selector { gap: 12px; margin-bottom: 20px; }
+    .order-btn { padding: 8px 16px; font-size: 13px; }
+    .genres { flex-wrap: wrap; overflow-x: visible; justify-content: center; gap: 10px; }
+    .genre-btn { padding: 8px 16px; font-size: 13px; }
+    .grid { margin-top: 30px; grid-template-columns: repeat(5, 1fr); gap: 25px; }
+    .card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+    .card-content { padding: 15px; }
+    .card h4 { font-size: 14px; }
+    .rating { font-size: 12px; }
+    .card p { font-size: 12px; }
+    .card button { padding: 8px 12px; font-size: 12px; }
+    .pagination { gap: 20px; margin-top: 40px; }
+    .pagination button { padding: 10px 20px; font-size: 14px; }
+}
+@media (min-width: 769px) and (max-width: 1024px) { .grid { grid-template-columns: repeat(4, 1fr); gap: 20px; } }
+@media (min-width: 1400px) { .grid { grid-template-columns: repeat(6, 1fr); } }
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="actors.html" class="actors-btn">🎭 Troupe</a>
+    </div>
+    <div class="topbar-center">
+        <h1 onclick="goHome()" style="cursor: pointer;">🎬 KitsuStream</h1>
+    </div>
+    <div class="topbar-right">
+        <div id="authButtons"></div>
+    </div>
+</div>
+
+<!-- Modale Login/Registrazione -->
+<div id="authModal" class="modal">
+    <div class="modal-content">
+        <div id="loginPanel">
+            <h2>🔐 Accedi</h2>
+            <input type="email" id="loginEmail" placeholder="Email">
+            <input type="password" id="loginPassword" placeholder="Password">
+            <button onclick="login()">Accedi</button>
+            <button class="login-btn" onclick="showRegisterPanel()">Registrati</button>
+            <div id="loginError" class="error-msg"></div>
+        </div>
+        <div id="registerPanel" style="display:none;">
+            <h2>📝 Registrati</h2>
+            <input type="text" id="regUsername" placeholder="Nome utente" autocomplete="off">
+            <input type="email" id="regEmail" placeholder="Email">
+            <input type="password" id="regPassword" placeholder="Password (min 6)">
+            <button onclick="register()">Registrati</button>
+            <button onclick="showLoginPanel()">Torna al Login</button>
+            <div id="regError" class="error-msg"></div>
+            <div id="regSuccess" class="success-msg"></div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="search-section">
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Cerca film, serie TV..." autocomplete="off">
+            <button class="clear-btn" onclick="clearSearch()">✖</button>
+        </div>
+    </div>
+
+    <div class="media-selector">
+        <button class="media-btn active" data-type="movie" onclick="switchMediaType('movie')">🎬 Film</button>
+        <button class="media-btn" data-type="tv" onclick="switchMediaType('tv')">📺 Serie TV</button>
+        <a href="ricerca-loonex.eu.html" class="list-btn">🎞️ Archivio Cartoni</a>
+        <a href="list.html" class="list-btn">❤️ Lista</a>
+    </div>
+
+    <div class="order-selector">
+         <button class="order-btn active" data-order="popular" onclick="changeOrder('popular')">🔥 Popolari</button>
+         <button class="order-btn" data-order="top_rated" onclick="changeOrder('top_rated')">⭐ Più votati</button>
+         <button class="order-btn" data-order="latest" onclick="changeOrder('latest')">🆕 Ultimi usciti</button>
+    </div>
+
+    <div id="genresContainer" class="genres"></div>
+    <div id="results" class="grid"></div>
+
+    <div class="pagination">
+        <button onclick="prevPage()">◀ Prec</button>
+        <span id="pageNumber">1 / 1</span>
+        <button onclick="nextPage()">Succ ▶</button>
+    </div>
+</div>
+
+<script type="module">
+    // 🔥 Importa le funzioni di backup
+    import { saveBackup } from './backup.js';
+
+    // Configurazione Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyCeM7KVc9lZsdd8HM5b-PAfhx0usN8Aubo",
+        authDomain: "kitsustream-454e8.firebaseapp.com",
+        projectId: "kitsustream-454e8",
+        storageBucket: "kitsustream-454e8.firebasestorage.app",
+        messagingSenderId: "1008216243036",
+        appId: "1:1008216243036:web:73dfb15639862757b0df99"
+    };
+
+    import { initializeApp } from 'firebase/app';
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
+    import { getFirestore, doc, getDoc, setDoc, runTransaction } from 'firebase/firestore';
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+    let userList = [];
+    let currentUsername = "";
+    let currentFolders = {};
+
+    window.login = async function() {
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        const errorDiv = document.getElementById('loginError');
+        
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            document.getElementById('authModal').style.display = 'none';
+            errorDiv.textContent = '';
+        } catch (error) {
+            let msg = error.code === 'auth/invalid-email' ? 'Email non valida' :
+                      error.code === 'auth/user-not-found' ? 'Utente non trovato' :
+                      error.code === 'auth/wrong-password' ? 'Password errata' : error.message;
+            errorDiv.textContent = msg;
+        }
+    };
+
+    window.register = async function() {
+        const username = document.getElementById('regUsername')?.value?.trim() || "";
+        const email = document.getElementById('regEmail').value;
+        const password = document.getElementById('regPassword').value;
+        const errorDiv = document.getElementById('regError');
+        const successDiv = document.getElementById('regSuccess');
+        
+        if (!username) {
+            errorDiv.textContent = 'Inserisci un nome utente';
+            return;
+        }
+        
+        if (username.length < 3) {
+            errorDiv.textContent = 'Il nome utente deve avere almeno 3 caratteri';
+            return;
+        }
+        
+        if (password.length < 6) {
+            errorDiv.textContent = 'La password deve essere almeno di 6 caratteri';
+            return;
+        }
+        
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            
+            await setDoc(doc(db, 'users', userCredential.user.uid), { 
+                list: [],
+                username: username,
+                email: email,
+                createdAt: new Date()
+            });
+            
+            successDiv.textContent = '✅ Registrazione completata! Ora puoi accedere.';
+            setTimeout(() => window.showLoginPanel(), 2000);
+        } catch (error) {
+            let msg = error.code === 'auth/email-already-in-use' ? 'Email già registrata' :
+                      error.code === 'auth/invalid-email' ? 'Email non valida' : error.message;
+            errorDiv.textContent = msg;
+        }
+    };
+
+    window.logout = async function() {
+        await signOut(auth);
+    };
+
+    window.showLoginPanel = function() {
+        document.getElementById('loginPanel').style.display = 'block';
+        document.getElementById('registerPanel').style.display = 'none';
+        document.getElementById('loginError').textContent = '';
+        document.getElementById('regError').textContent = '';
+        document.getElementById('regSuccess').textContent = '';
+        document.getElementById('regUsername').value = '';
+        document.getElementById('regEmail').value = '';
+        document.getElementById('regPassword').value = '';
+    };
+
+    window.showRegisterPanel = function() {
+        document.getElementById('loginPanel').style.display = 'none';
+        document.getElementById('registerPanel').style.display = 'block';
+        document.getElementById('loginError').textContent = '';
+        document.getElementById('regError').textContent = '';
+        document.getElementById('regSuccess').textContent = '';
+    };
+
+    window.openLoginModal = function() {
+        window.showLoginPanel();
+        document.getElementById('authModal').style.display = 'flex';
+    };
+
+    async function loadUserList() {
+        if (!currentUser) return [];
+        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+        return userDoc.exists() ? (userDoc.data().list || []) : [];
+    }
+
+    async function loadUserData() {
+        if (!currentUser) return null;
+        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+        if (userDoc.exists()) {
+            const data = userDoc.data();
+            currentFolders = data.folders || {};
+            return data;
+        }
+        return null;
+    }
+
+    // ============================================================
+    // 🔥 TOGGLE LISTA CON TRANSAZIONE E BACKUP
+    // ============================================================
+    async function toggleCloudList(itemData) {
+        if (!currentUser) {
+            window.openLoginModal();
+            return false;
+        }
+
+        const exists = userList.some(item => item.id === itemData.id && item.type === itemData.type);
+        const action = exists ? 'remove' : 'add';
+        const details = `"${itemData.title}" (${itemData.type === 'movie' ? 'Film' : 'Serie TV'})`;
+        
+        await saveBackup(action, details, 'index', currentUser, userList, currentFolders);
+
+        const userRef = doc(db, 'users', currentUser.uid);
+
+        try {
+            const result = await runTransaction(db, async (transaction) => {
+                const userDoc = await transaction.get(userRef);
+
+                if (!userDoc.exists()) {
+                    throw new Error("Utente non trovato");
+                }
+
+                const currentList = userDoc.data().list || [];
+                const existsInDb = currentList.some(item => 
+                    item.id === itemData.id && item.type === itemData.type
+                );
+
+                let newList;
+                if (existsInDb) {
+                    newList = currentList.filter(item => 
+                        !(item.id === itemData.id && item.type === itemData.type)
+                    );
+                } else {
+                    itemData.addedAt = Date.now();
+                    newList = [...currentList, itemData];
+                }
+
+                transaction.update(userRef, { list: newList });
+                return { newList, added: !existsInDb };
+            });
+
+            userList = result.newList;
+
+            if (typeof updateListUI === 'function') {
+                updateListUI(result.newList);
+            }
+
+            return result.added;
+
+        } catch (error) {
+            console.error("Errore transazione:", error);
+            alert("Errore durante il salvataggio. Riprova.");
+            return false;
+        }
+    }
+
+    window.updateListUI = function(list) {
+        document.querySelectorAll('.card button[id^="btn-"]').forEach(btn => {
+            const id = btn.id.replace('btn-', '');
+            const isInList = list.some(item => item.id == id && item.type === currentMediaType);
+            btn.innerText = isInList ? "❌ Rimuovi" : "❤️ Aggiungi";
+            btn.style.background = isInList ? "#ef4444" : "#7c3aed";
+        });
+    };
+
+    async function isInCloudList(id, type) {
+        if (!currentUser) return false;
+        return userList.some(item => item.id === id && item.type === type);
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+        currentUser = user;
+        const authButtons = document.getElementById('authButtons');
+        
+        if (user) {
+            const userData = await loadUserData();
+            currentUsername = userData?.username || user.email.split('@')[0];
+            
+            authButtons.innerHTML = `
+                <div class="user-info">
+                    <span>👤</span>
+                    <span class="username">${escapeHtml(currentUsername)}</span>
+                    <button class="logout-btn" onclick="window.logout()" style="padding: 6px 12px;">🚪</button>
+                </div>
+            `;
+            userList = await loadUserList();
+            if (typeof loadContent === 'function') loadContent();
+        } else {
+            authButtons.innerHTML = `<button class="login-btn" onclick="window.openLoginModal()">🔐 Accedi</button>`;
+            currentUsername = "";
+            userList = [];
+            if (typeof loadContent === 'function') loadContent();
+        }
+    });
+
+    window.getCurrentUser = () => currentUser;
+    window.getUserList = () => userList;
+    window.toggleCloudList = toggleCloudList;
+    window.isInCloudList = isInCloudList;
+    
+    function escapeHtml(text) {
+        if (!text) return "";
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+    }
+</script>
+
+<script>
+const API_KEY = "7fe396e6f50677047459e8c173f2bd9d";
+const IMG_BASE = "https://image.tmdb.org/t/p/w500";
+
+let currentPage = 1;
+let selectedGenres = [];
+let currentMediaType = "movie";
+let searchQuery = "";
+let totalPages = 1;
+let currentOrder = "popular";
+
+// ---------- Per StreamingCommunity (FILM) ----------
+let streamingMoviesRaw = [];
+let tmdbCache = {};
+const STREAMING_JSON_URL = 'https://raw.githubusercontent.com/Kijiiin/movie-list-scraper/refs/heads/main/movies.json';
+
+// ---------- Per StreamingCommunity (SERIE TV) ----------
+let streamingTvRaw = [];
+let tmdbCacheTv = {};
+const STREAMING_TV_JSON_URL = 'https://raw.githubusercontent.com/Kijiiin/movie-list-scraper/refs/heads/main/tv.json';
+
+const movieGenres = [
+    { id: "28", name: "Azione" }, { id: "12", name: "Avventura" }, { id: "16", name: "Animazione" },
+    { id: "35", name: "Commedia" }, { id: "80", name: "Crime" }, { id: "99", name: "Documentario" },
+    { id: "18", name: "Dramma" }, { id: "10751", name: "Famiglia" }, { id: "14", name: "Fantasy" },
+    { id: "36", name: "Storico" }, { id: "27", name: "Horror" }, { id: "10402", name: "Musica" },
+    { id: "9648", name: "Mistero" }, { id: "10749", name: "Romance" }, { id: "878", name: "Fantascienza" },
+    { id: "53", name: "Thriller" }, { id: "10752", name: "Guerra" }, { id: "37", name: "Western" }
+];
+
+const tvGenres = [
+    { id: "10759", name: "Action" }, { id: "16", name: "Animazione" }, { id: "35", name: "Commedia" },
+    { id: "80", name: "Crime" }, { id: "99", name: "Documentario" }, { id: "18", name: "Dramma" },
+    { id: "10751", name: "Famiglia" }, { id: "10762", name: "Kids" }, { id: "9648", name: "Mistero" },
+    { id: "10763", name: "News" }, { id: "10764", name: "Reality" }, { id: "10765", name: "Fantascienza" },
+    { id: "10766", name: "Soap" }, { id: "10767", name: "Talk" }, { id: "10768", name: "Guerra" },
+    { id: "37", name: "Western" }
+];
+
+// ===== FUNZIONE PER FORMARE LA DATA (FORMATO ITALIANO) =====
+function formatDate(dateString) {
+    if (!dateString) return 'N/D';
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) {
+            const year = dateString.split("-")[0];
+            return year || 'N/D';
+        }
+        const options = { day: '2-digit', month: 'short', year: 'numeric' };
+        return date.toLocaleDateString('it-IT', options);
+    } catch (e) {
+        const year = dateString.split("-")[0];
+        return year || 'N/D';
+    }
+}
+
+// ===== CARICA IL JSON DA GITHUB (generico per film e serie) =====
+async function loadStreamingData(type) {
+    if (type === 'movie') {
+        if (streamingMoviesRaw.length > 0) return;
+        try {
+            const response = await fetch(STREAMING_JSON_URL);
+            if (!response.ok) throw new Error('Errore nel caricamento film');
+            const data = await response.json();
+            streamingMoviesRaw = data;
+            console.log(`✅ Caricati ${streamingMoviesRaw.length} film da StreamingCommunity`);
+        } catch (error) {
+            console.error('Errore nel caricare i film:', error);
+            streamingMoviesRaw = [];
+        }
+    } else if (type === 'tv') {
+        if (streamingTvRaw.length > 0) return;
+        try {
+            const response = await fetch(STREAMING_TV_JSON_URL);
+            if (!response.ok) throw new Error('Errore nel caricamento serie TV');
+            const data = await response.json();
+            streamingTvRaw = data;
+            console.log(`✅ Caricate ${streamingTvRaw.length} serie TV da StreamingCommunity`);
+        } catch (error) {
+            console.error('Errore nel caricare le serie TV:', error);
+            streamingTvRaw = [];
+        }
+    }
+}
+
+// ===== CERCA UN TITOLO SU TMDB (CON CACHE SEPARATA PER TIPO) =====
+async function searchTMDB(title, type) {
+    const cache = type === 'movie' ? tmdbCache : tmdbCacheTv;
+    if (cache[title]) return cache[title];
+    const searchType = type === 'movie' ? 'movie' : 'tv';
+    const url = `https://api.themoviedb.org/3/search/${searchType}?api_key=${API_KEY}&query=${encodeURIComponent(title)}&language=it-IT`;
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        const result = (data.results && data.results.length > 0) ? data.results[0] : null;
+        cache[title] = result;
+        return result;
+    } catch (error) {
+        console.error(`Errore nella ricerca di "${title}":`, error);
+        cache[title] = null;
+        return null;
+    }
+}
+
+// ===== MOSTRA I TITOLI DI STREAMINGCOMMUNITY NELLA GRIGLIA =====
+async function displayStreamingItems(page, type) {
+    const resultsDiv = document.getElementById('results');
+    const itemsPerPage = 20;
+    const rawData = type === 'movie' ? streamingMoviesRaw : streamingTvRaw;
+    const start = (page - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const pageItems = rawData.slice(start, end);
+
+    if (pageItems.length === 0) {
+        resultsDiv.innerHTML = `<div class="no-results">😕 Nessun ${type === 'movie' ? 'film' : 'serie TV'} in questa pagina</div>`;
+        totalPages = Math.ceil(rawData.length / itemsPerPage);
+        updatePageNumber();
+        return;
+    }
+
+    resultsDiv.innerHTML = '<div class="loading">⏳ Caricamento...</div>';
+
+    const searchPromises = pageItems.map(item => searchTMDB(item.title, type));
+    const tmdbResults = await Promise.all(searchPromises);
+
+    if (window.getCurrentUser && window.getCurrentUser()) {
+        userList = await window.getUserList();
+    }
+
+    const itemsHtml = [];
+    for (let i = 0; i < pageItems.length; i++) {
+        const item = pageItems[i];
+        const tmdbData = tmdbResults[i];
+
+        if (tmdbData) {
+            const posterUrl = tmdbData.poster_path ? IMG_BASE + tmdbData.poster_path : "https://via.placeholder.com/500x750?text=No+Image";
+            const title = type === 'movie' ? tmdbData.title : tmdbData.name;
+            const date = type === 'movie' ? tmdbData.release_date : tmdbData.first_air_date;
+            const releaseDate = formatDate(date);
+            const rating = tmdbData.vote_average ? tmdbData.vote_average.toFixed(1) : "N/A";
+            const year = date ? date.split("-")[0] : "N/D";
+            const releaseDateForSave = date || '';
+
+            let inList = false;
+            if (window.getCurrentUser && window.getCurrentUser()) {
+                inList = userList.some(i => i.id === tmdbData.id && i.type === type);
+            }
+
+            itemsHtml.push(`
+                <div class="card">
+                    <a href="${type === "movie" ? "movie" : "tv"}.html?id=${tmdbData.id}">
+                        <img src="${posterUrl}" alt="${escapeHtml(title)}" loading="lazy">
+                    </a>
+                    <div class="card-content">
+                        <h4>${escapeHtml(title)}</h4>
+                        <div class="rating">⭐ ${rating}</div>
+                        <p>📅 ${releaseDate}</p>
+                        <button 
+                            id="btn-${tmdbData.id}"
+                            onclick="window.toggleListGlobal(${tmdbData.id}, '${escapeHtml(title)}', '${posterUrl}', ${tmdbData.vote_average || 0}, '${year}', '${type}', '${type === "movie" ? "Film" : "Serie TV"}', '${releaseDateForSave || ''}')"
+                            style="background:${inList ? '#ef4444' : '#7c3aed'}"
+                        >
+                            ${inList ? "❌ Rimuovi" : "❤️ Aggiungi"}
+                        </button>
+                    </div>
+                </div>
+            `);
+        } else {
+            itemsHtml.push(`
+                <div class="card">
+                    <div style="background:#2d2a5e; width:100%; aspect-ratio:2/3; display:flex; align-items:center; justify-content:center; font-size:50px; color:#7c3aed;">${type === 'movie' ? '🎬' : '📺'}</div>
+                    <div class="card-content">
+                        <h4>${escapeHtml(item.title)}</h4>
+                        <p style="font-size:10px; color:#f87171;">❌ Non trovato su TMDb</p>
+                        <a href="${item.url}" target="_blank" style="color:#c084fc; font-size:11px;">Vedi su StreamingCommunity</a>
+                    </div>
+                </div>
+            `);
+        }
+    }
+
+    resultsDiv.innerHTML = itemsHtml.join('');
+    totalPages = Math.ceil(rawData.length / itemsPerPage);
+    updatePageNumber();
+}
+
+window.onload = function() {
+    renderGenres();
+    loadContent();
+    document.getElementById("searchInput").addEventListener("input", handleSearch);
+};
+
+function changeOrder(order) {
+    currentOrder = order;
+    currentPage = 1;
+    document.querySelectorAll(".order-btn").forEach(btn => btn.classList.remove("active"));
+    document.querySelector(`.order-btn[data-order="${order}"]`).classList.add("active");
+    loadContent();
+}
+
+function switchMediaType(type) {
+    currentMediaType = type;
+    currentPage = 1;
+    selectedGenres = [];
+    searchQuery = "";
+    document.getElementById("searchInput").value = "";
+    document.querySelectorAll(".media-btn").forEach(btn => btn.classList.remove("active"));
+    document.querySelector(`[data-type="${type}"]`).classList.add("active");
+    renderGenres();
+    loadContent();
+}
+
+function renderGenres() {
+    const genresContainer = document.getElementById("genresContainer");
+    const genresList = currentMediaType === "movie" ? movieGenres : tvGenres;
+    genresContainer.innerHTML = genresList.map(genre => `
+        <button class="genre-btn" data-id="${genre.id}" onclick="toggleGenre('${genre.id}')">
+            ${genre.name}
+        </button>
+    `).join("");
+}
+
+function toggleGenre(genreId) {
+    const btn = document.querySelector(`.genre-btn[data-id="${genreId}"]`);
+    if (selectedGenres.includes(genreId)) {
+        selectedGenres = selectedGenres.filter(id => id !== genreId);
+        btn.classList.remove("active");
+    } else {
+        selectedGenres.push(genreId);
+        btn.classList.add("active");
+    }
+    currentPage = 1;
+    loadContent();
+}
+
+function handleSearch() {
+    searchQuery = document.getElementById("searchInput").value.trim();
+    currentPage = 1;
+    loadContent();
+}
+
+function clearSearch() {
+    document.getElementById("searchInput").value = "";
+    searchQuery = "";
+    currentPage = 1;
+    loadContent();
+}
+
+async function loadContent() {
+    // 🔥 SE siamo in "Ultimi usciti" senza filtri o ricerca, usa i dati da StreamingCommunity
+    if (currentOrder === 'latest' && !searchQuery && selectedGenres.length === 0) {
+        await loadStreamingData(currentMediaType);
+        const rawData = currentMediaType === 'movie' ? streamingMoviesRaw : streamingTvRaw;
+        if (rawData.length > 0) {
+            await displayStreamingItems(currentPage, currentMediaType);
+            return;
+        } else {
+            document.getElementById("results").innerHTML = `<div class="no-results">📭 Nessun ${currentMediaType === 'movie' ? 'film' : 'serie TV'} disponibile da StreamingCommunity</div>`;
+            totalPages = 0;
+            updatePageNumber();
+            return;
+        }
+    }
+
+    showLoading();
+    try {
+        let url = "";
+        if (searchQuery) {
+            const searchType = currentMediaType === "movie" ? "movie" : "tv";
+            let sortParam = "";
+            if (currentOrder === 'latest') {
+                sortParam = currentMediaType === 'movie' ? `&sort_by=release_date.desc` : `&sort_by=first_air_date.desc`;
+            } else if (currentOrder === 'top_rated') {
+                sortParam = `&sort_by=vote_average.desc`;
+            } else {
+                sortParam = `&sort_by=popularity.desc`;
+            }
+            url = `https://api.themoviedb.org/3/search/${searchType}?api_key=${API_KEY}&query=${encodeURIComponent(searchQuery)}&language=it-IT&page=${currentPage}${sortParam}`;
+        } else if (selectedGenres.length > 0) {
+            const genreQuery = selectedGenres.join(",");
+            let sortBy = 'popularity.desc';
+            if (currentOrder === 'top_rated') sortBy = 'vote_average.desc';
+            else if (currentOrder === 'latest') {
+                sortBy = currentMediaType === 'movie' ? 'release_date.desc' : 'first_air_date.desc';
+            }
+            url = `https://api.themoviedb.org/3/discover/${currentMediaType}?api_key=${API_KEY}&with_genres=${genreQuery}&language=it-IT&page=${currentPage}&sort_by=${sortBy}&vote_count.gte=50`;
+        } else {
+            if (currentOrder === 'top_rated') {
+                url = `https://api.themoviedb.org/3/${currentMediaType}/top_rated?api_key=${API_KEY}&language=it-IT&page=${currentPage}`;
+            } else if (currentOrder === 'latest') {
+                if (currentMediaType === 'movie') {
+                    url = `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&language=it-IT&page=${currentPage}&sort_by=release_date.desc&vote_count.gte=50`;
+                } else {
+                    url = `https://api.themoviedb.org/3/discover/tv?api_key=${API_KEY}&language=it-IT&page=${currentPage}&sort_by=first_air_date.desc&vote_count.gte=50`;
+                }
+            } else {
+                url = `https://api.themoviedb.org/3/${currentMediaType}/popular?api_key=${API_KEY}&language=it-IT&page=${currentPage}`;
+            }
+        }
+        const response = await fetch(url);
+        const data = await response.json();
+        totalPages = Math.min(data.total_pages, 500);
+        displayItems(data.results);
+        updatePageNumber();
+    } catch (error) {
+        console.error("Errore:", error);
+        document.getElementById("results").innerHTML = '<div class="no-results">❌ Errore nel caricamento</div>';
+    }
+}
+
+function showLoading() {
+    document.getElementById("results").innerHTML = '<div class="loading">⏳ Caricamento in corso...</div>';
+}
+
+async function displayItems(items) {
+    if (window.getCurrentUser && window.getCurrentUser()) {
+        userList = await window.getUserList();
+    }
+    const resultsDiv = document.getElementById("results");
+    if (!items || items.length === 0) {
+        resultsDiv.innerHTML = '<div class="no-results">😕 Nessun risultato trovato</div>';
+        return;
+    }
+    const itemsHtml = [];
+    for (const item of items) {
+        const posterUrl = item.poster_path ? IMG_BASE + item.poster_path : "https://via.placeholder.com/500x750?text=No+Image";
+        const title = currentMediaType === "movie" ? item.title : item.name;
+        const date = currentMediaType === "movie" ? item.release_date : item.first_air_date;
+        const releaseDate = formatDate(date);
+        const rating = item.vote_average ? item.vote_average.toFixed(1) : "N/A";
+        let inList = false;
+        if (window.getCurrentUser && window.getCurrentUser()) {
+            const list = await window.getUserList();
+            inList = list.some(i => i.id === item.id && i.type === currentMediaType);
+        }
+        const releaseDateForSave = currentMediaType === "movie" ? item.release_date : item.first_air_date;
+        const year = date ? date.split("-")[0] : "N/D";
+        itemsHtml.push(`
+            <div class="card">
+                <a href="${currentMediaType === "movie" ? "movie" : "tv"}.html?id=${item.id}">
+                    <img src="${posterUrl}" alt="${title}" loading="lazy">
+                </a>
+                <div class="card-content">
+                    <h4>${escapeHtml(title)}</h4>
+                    <div class="rating">⭐ ${rating}</div>
+                    <p>📅 ${releaseDate}</p>
+                    <button 
+                        id="btn-${item.id}"
+                        onclick="window.toggleListGlobal(${item.id}, '${escapeHtml(title)}', '${posterUrl}', ${item.vote_average || 0}, '${year}', '${currentMediaType}', '${currentMediaType === "movie" ? "Film" : "Serie TV"}', '${releaseDateForSave || ''}')"
+                        style="background:${inList ? '#ef4444' : '#7c3aed'}"
+                    >
+                        ${inList ? "❌ Rimuovi" : "❤️ Aggiungi"}
+                    </button>
+                </div>
+            </div>
+        `);
+    }
+    resultsDiv.innerHTML = itemsHtml.join("");
+}
+
+window.toggleListGlobal = async function(id, title, poster, rating, year, type, mediaType, releaseDateForSave) {
+    const itemData = { id, title, poster, rating, year, type, mediaType };
+    if (type === 'movie' && releaseDateForSave) itemData.release_date = releaseDateForSave;
+    else if (type === 'tv' && releaseDateForSave) itemData.first_air_date = releaseDateForSave;
+    const added = await window.toggleCloudList(itemData);
+    const btn = document.getElementById(`btn-${id}`);
+    if (btn) {
+        btn.innerText = added ? "❌ Rimuovi" : "❤️ Aggiungi";
+        btn.style.background = added ? "#ef4444" : "#7c3aed";
+    }
+};
+
+function goHome() {
+    searchQuery = "";
+    selectedGenres = [];
+    currentPage = 1;
+    currentOrder = "popular";
+    document.getElementById("searchInput").value = "";
+    document.querySelectorAll(".genre-btn").forEach(btn => btn.classList.remove("active"));
+    document.querySelectorAll(".order-btn").forEach(btn => btn.classList.remove("active"));
+    document.querySelector(`.order-btn[data-order="popular"]`).classList.add("active");
+    loadContent();
+}
+
+function prevPage() {
+    if (currentPage > 1) {
+        currentPage--;
+        loadContent();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+}
+
+function nextPage() {
+    if (currentPage < totalPages) {
+        currentPage++;
+        loadContent();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+}
+
+function updatePageNumber() {
+    document.getElementById("pageNumber").innerText = `${currentPage} / ${totalPages}`;
+}
+
+function escapeHtml(text) {
+    if (!text) return "";
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+
+</body>
+</html>
